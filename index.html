@@ -2015,6 +2015,37 @@ function tamamlaKaydet(){
     }
   });
 
+  // Stoktan düş — her servisin parcaTercihleri'ne göre
+  const stokDusulenler=[];
+  servisler.forEach(s=>{
+    if(!s.parcaTercihleri||!s.parcaTercihleri.length)return;
+    const m=ST.musteriler.find(x=>String(x.id)===String(s.musteriId));
+    if(!m||!m.ekipmanlar)return;
+    const ek=m.ekipmanlar.find(e=>String(e.id)===String(s.ekipmanId));
+    if(!ek||!ek.parcalar)return;
+    const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':ek.tip==='Azot Jeneratörü'?'azot':'filtre';
+
+    s.parcaTercihleri.forEach(t=>{
+      const p=ek.parcalar[parseInt(t.pi)];
+      if(!p)return;
+      const tercih=t.tercih||'oem';
+      let stokKaydi=null;
+      if(tercih==='oem'){
+        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.orijinal===p.orijinal&&(!x.parcaTuru||x.parcaTuru==='oem'));
+      } else if(tercih==='ys1'){
+        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.yansanayi===p.yansanayi&&x.parcaTuru==='muadil');
+      } else if(tercih==='ys2'){
+        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.yansanayi===p.yansanayi2&&x.parcaTuru==='muadil');
+      }
+      if(stokKaydi&&stokKaydi.stok>0){
+        stokKaydi.stok=Math.max(0,stokKaydi.stok-1);
+        stokDusulenler.push(`${stokKaydi.tip} (kalan: ${stokKaydi.stok})`);
+        addAkt('📦',`Stoktan düşüldü: ${stokKaydi.tip} — ${s.ekipmanAd} servisi`);
+      }
+    });
+  });
+  if(stokDusulenler.length) renderStok();
+
   // Ödeme kaydı oluştur
   if(!ST.odemeler)ST.odemeler=[];
   const musteriAd=servisler[0].musteriAd;
@@ -2036,7 +2067,8 @@ function tamamlaKaydet(){
   addAkt('✅',`Servis tamamlandı: ${musteriAd} — €${tutarEur}`);
   closeM('tamamla-modal');
   save();renderS();renderOdemeler();updateBadges();renderDash();
-  showToast(`Servis tamamlandı · €${tutarEur} fatura oluşturuldu ✓`,'success');
+  const stokMesaj=stokDusulenler.length?` · ${stokDusulenler.length} parça stoktan düşüldü`:'';
+  showToast(`Servis tamamlandı · €${tutarEur} fatura oluşturuldu${stokMesaj} ✓`,'success');
 }
 
 
@@ -2931,7 +2963,7 @@ function renderG(){
 
 // ===== DASHBOARD =====
 function renderDash(){
-  ST.servisler.forEach(s=>{if(s.durum!=='tamamlandi')s.durum=daysDiff(s.tarih)<0?'gecikti':'bekliyor';});
+  ST.servisler.forEach(s=>{if(s.durum!=='tamamlandi'&&s.durum!=='onaylandi')s.durum=daysDiff(s.tarih)<0?'gecikti':'bekliyor';});
   const bek=ST.servisler.filter(s=>s.durum==='bekliyor').length;
   const gec=ST.servisler.filter(s=>s.durum==='gecikti').length;
   const stokU=ST.parcalar.filter(p=>(p.stok||0)<=(p.minstok||2)).length;

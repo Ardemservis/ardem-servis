@@ -1371,11 +1371,18 @@ function openMod(id){
 }
 function closeM(id){
   document.getElementById(id).classList.remove('open');
+  if(id==='p-modal'){
+    // Düzenle modundan çıkınca butonu ve başlığı sıfırla
+    const btn=document.getElementById('p-kaydet-btn');
+    if(btn){btn.textContent='💾 Kaydet';btn.onclick=saveP;}
+    const ttl=document.querySelector('#p-modal .mtitle');
+    if(ttl)ttl.textContent='⚙️ Yedek Parça Ekle';
+  }
   if(id!=='ep-modal'){clearForm(id);editId=null;}else{epEkipmanId=null;}
 }
 document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',function(e){if(e.target===this)closeM(this.id);}));
 function clearForm(id){
-  document.querySelectorAll(`#${id} input`).forEach(el=>{if(el.type!=='checkbox')el.value='';});
+  document.querySelectorAll(`#${id} input`).forEach(el=>{if(el.type!=='checkbox'&&el.type!=='radio')el.value='';});
   document.querySelectorAll(`#${id} textarea`).forEach(el=>el.value='');
   document.querySelectorAll(`#${id} select`).forEach(el=>el.selectedIndex=0);
 }
@@ -2221,6 +2228,20 @@ function muadilAC(val, ddId, inputId, ys2Id){
   const kayitli=ST.parcalar.filter(p=>p.yansanayi&&p.yansanayi.toUpperCase().includes(q)).slice(0,4)
     .map(p=>({kaynak:'Kayıtlı',muadil:p.yansanayi,oem:p.orijinal||'',ad:p.tip||'',fiyat:p.fiyat||0}));
 
+  // Müşteri ekipmanlarındaki muadil kodlarını tara
+  const ekipmanMuadiller=[];
+  ST.musteriler.forEach(m=>(m.ekipmanlar||[]).forEach(ek=>{
+    (ek.parcalar||[]).forEach(p=>{
+      if(p.yansanayi&&p.yansanayi.toUpperCase().includes(q)){
+        ekipmanMuadiller.push({kaynak:'Ekipman',muadil:p.yansanayi,oem:p.orijinal||'',ad:p.tip||'',fiyat:p.fiyat||0});
+      }
+      if(p.yansanayi2&&p.yansanayi2.toUpperCase().includes(q)){
+        ekipmanMuadiller.push({kaynak:'Ekipman',muadil:p.yansanayi2,oem:p.orijinal||'',ad:p.tip||'',fiyat:p.fiyat||0});
+      }
+    });
+  }));
+  const ekipmanMuadilTekil=ekipmanMuadiller.filter((p,i,a)=>a.findIndex(x=>x.muadil===p.muadil)===i).slice(0,5);
+
   const ogrenilen=Object.entries(OGRENILEN).filter(([,v])=>v.muadil&&v.muadil.toUpperCase().includes(q)).slice(0,3)
     .map(([k,v])=>({kaynak:'Öğrenilmiş',muadil:v.muadil,oem:k,ad:v.ad||'',fiyat:v.fiyat||0}));
 
@@ -2236,11 +2257,11 @@ function muadilAC(val, ddId, inputId, ys2Id){
       return{kaynak:'Lupamat',muadil,oem,ad:lp?lp.ad||'':'',fiyat:lp?lp.fiyat||0:0};
     });
 
-  const sonuclar=[...kayitli,...muadilOg,...ogrenilen,...lupamatMuadil,...kaeser,...atlas].slice(0,14);
+  const sonuclar=[...kayitli,...ekipmanMuadilTekil,...muadilOg,...ogrenilen,...lupamatMuadil,...kaeser,...atlas].slice(0,16);
   if(!sonuclar.length){dd.style.display='none';return;}
 
-  const renkMap={'Kaeser':'rgba(59,130,246,0.15)','Atlas':'rgba(34,197,94,0.15)','Kayıtlı':'rgba(99,102,241,0.15)','Öğrenilmiş':'rgba(168,85,247,0.15)'};
-  const txtMap={'Kaeser':'#60a5fa','Atlas':'#4ade80','Kayıtlı':'#818cf8','Öğrenilmiş':'#c084fc'};
+  const renkMap={'Kaeser':'rgba(59,130,246,0.15)','Atlas':'rgba(34,197,94,0.15)','Kayıtlı':'rgba(99,102,241,0.15)','Öğrenilmiş':'rgba(168,85,247,0.15)','Ekipman':'rgba(16,185,129,0.15)','Lupamat':'rgba(232,93,26,0.15)'};
+  const txtMap={'Kaeser':'#60a5fa','Atlas':'#4ade80','Kayıtlı':'#818cf8','Öğrenilmiş':'#c084fc','Ekipman':'#34d399','Lupamat':'var(--accent)'};
 
   dd.innerHTML=sonuclar.map(p=>`
     <div onclick="muadilSec('${p.muadil}','${p.oem}','${inputId}','${ys2Id||''}','${ddId}',${p.fiyat})"
@@ -2310,12 +2331,25 @@ function stokOrijinalAC(val){
   const mevcutlar=ST.parcalar
     .filter(p=>p.orijinal&&p.orijinal.toUpperCase().includes(q))
     .slice(0,6)
-    .map(p=>({kaynak:'Kayıtlı',kod:p.orijinal,ad:p.ad||p.tip||'',fiyat:p.fiyat||0,yansanayi:p.yansanayi||'',yansanayi2:p.yansanayi2||'',tip:p.tip||'',kat:p.kategori||''}));
+    .map(p=>({kaynak:'Kayıtlı',kod:p.orijinal,ad:p.ad||p.tip||'',fiyat:p.fiyat||0,yansanayi:p.yansanayi||'',yansanayi2:'',tip:p.tip||'',kat:p.kategori||''}));
 
   const ogrenilen=Object.entries(OGRENILEN)
     .filter(([k])=>k.includes(q))
     .slice(0,4)
     .map(([k,v])=>({kaynak:'Öğrenilmiş',kod:k,ad:v.ad||'',fiyat:v.fiyat||0,yansanayi:v.muadil||'',yansanayi2:v.muadil2||'',tip:v.tip||'',kat:''}));
+
+  // Müşteri ekipmanlarındaki parçaları tara — OEM kodu eşleşiyorsa öner
+  const ekipmanParcalar=[];
+  ST.musteriler.forEach(m=>(m.ekipmanlar||[]).forEach(ek=>{
+    const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':ek.tip==='Azot Jeneratörü'?'azot':'filtre';
+    (ek.parcalar||[]).forEach(p=>{
+      if(p.orijinal&&p.orijinal.toUpperCase().includes(q)){
+        ekipmanParcalar.push({kaynak:'Ekipman',kod:p.orijinal,ad:p.tip||'',fiyat:p.fiyat||0,yansanayi:p.yansanayi||'',yansanayi2:p.yansanayi2||'',tip:p.tip||'',kat});
+      }
+    });
+  }));
+  // Tekrarlananları çıkar
+  const ekipmanTekil=ekipmanParcalar.filter((p,i,a)=>a.findIndex(x=>x.kod===p.kod)===i).slice(0,5);
 
   const aag=AAG_LISTE.filter(p=>p.kod.toUpperCase().includes(q)||p.ad.toUpperCase().includes(q)).slice(0,6)
     .map(p=>({kaynak:'AAG',kod:p.kod,ad:p.ad,fiyat:p.fiyat||0,yansanayi:'',yansanayi2:'',tip:'',kat:'kurutucu'}));
@@ -2327,16 +2361,16 @@ function stokOrijinalAC(val){
   const atlas=ATLAS_LISTE.filter(p=>p.oem.toUpperCase().includes(q)||p.muadil.toUpperCase().includes(q)).slice(0,5)
     .map(p=>({kaynak:'Atlas',kod:p.oem,ad:(p.aciklama||'')+(p.model?' ('+p.model+')':''),fiyat:p.fiyat||0,yansanayi:p.muadil||'',yansanayi2:'',tip:p.aciklama||'',kat:'kompressor'}));
 
-  const sonuclar=[...mevcutlar,...ogrenilen,...aag,...lupamat,...kaeser,...atlas].slice(0,14);
+  const sonuclar=[...mevcutlar,...ekipmanTekil,...ogrenilen,...aag,...lupamat,...kaeser,...atlas].slice(0,16);
   if(!sonuclar.length){dd.style.display='none';return;}
 
   const renkMap={
-    'Kayıtlı':'rgba(99,102,241,0.15)','Öğrenilmiş':'rgba(168,85,247,0.15)',
+    'Kayıtlı':'rgba(99,102,241,0.15)','Ekipman':'rgba(16,185,129,0.15)','Öğrenilmiş':'rgba(168,85,247,0.15)',
     'AAG':'rgba(234,179,8,0.15)',
     'Lupamat':'rgba(232,93,26,0.15)','Kaeser':'rgba(59,130,246,0.15)','Atlas':'rgba(34,197,94,0.15)'
   };
   const txtMap={
-    'Kayıtlı':'#818cf8','Öğrenilmiş':'#c084fc',
+    'Kayıtlı':'#818cf8','Ekipman':'#34d399','Öğrenilmiş':'#c084fc',
     'AAG':'#facc15',
     'Lupamat':'var(--accent)','Kaeser':'#60a5fa','Atlas':'#4ade80'
   };
@@ -2347,7 +2381,7 @@ function stokOrijinalAC(val){
       onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background=''">
       <div style="flex:1;min-width:0">
         <div style="font-family:monospace;font-size:13px;font-weight:600">${p.kod}</div>
-        <div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.ad||'—'}${p.fiyat?' · €'+Number(p.fiyat).toFixed(2):''}</div>
+        <div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.ad||'—'}${p.yansanayi?` · 🟡 ${p.yansanayi}`:''}${p.fiyat?' · €'+Number(p.fiyat).toFixed(2):''}</div>
       </div>
       <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${renkMap[p.kaynak]||'rgba(255,255,255,0.1)'};color:${txtMap[p.kaynak]||'#fff'};white-space:nowrap">${p.kaynak}</span>
     </div>`).join('');

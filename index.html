@@ -566,6 +566,18 @@ tr:hover td{background:rgba(255,255,255,0.015);}
     <div class="mhd"><div class="mtitle">⚙️ Yedek Parça Ekle</div><button class="mclose" onclick="closeM('p-modal')">✕</button></div>
     <div class="mbody">
       <div class="fg fg2">
+        <!-- OEM / Muadil seçici -->
+        <div class="fgrp sp2">
+          <label class="flbl">Parça Türü *</label>
+          <div style="display:flex;gap:10px;margin-top:4px">
+            <label id="p-oem-lbl" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 18px;border-radius:8px;border:2px solid var(--accent);background:rgba(232,93,26,0.1);flex:1;justify-content:center;font-weight:600">
+              <input type="radio" name="p-parca-turu" value="oem" checked onchange="pTuruDegis()" style="accent-color:var(--accent)"> 🔵 Orijinal (OEM)
+            </label>
+            <label id="p-muadil-lbl" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 18px;border-radius:8px;border:2px solid var(--border);background:transparent;flex:1;justify-content:center;font-weight:600">
+              <input type="radio" name="p-parca-turu" value="muadil" onchange="pTuruDegis()" style="accent-color:var(--accent)"> 🟡 Muadil
+            </label>
+          </div>
+        </div>
         <div class="fgrp"><label class="flbl">Ekipman Kategorisi *</label>
           <select class="fsel" id="p-kat" onchange="updatePTip(this.value)">
             <option value="kompressor">Kompresör</option><option value="kurutucu">Kurutucu</option><option value="filtre">Basınçlı Hat Filtresi</option><option value="azot">Azot Jeneratörü</option>
@@ -574,16 +586,17 @@ tr:hover td{background:rgba(255,255,255,0.015);}
         <div class="fgrp"><label class="flbl">Parça Tipi *</label><select class="fsel" id="p-tip"></select></div>
         <div class="fgrp"><label class="flbl">Uyumlu Marka / Model</label><input class="finput" id="p-marka" placeholder="Lupamat LB-30, CompAir..."></div>
         <div class="fgrp"><label class="flbl">Fiyat (€)</label><input class="finput" id="p-fiyat" type="number" min="0" step="0.01" placeholder="0.00"></div>
-        <div class="fgrp" style="position:relative"><label class="flbl">Orijinal Parça Kodu <span id="p-orijinal-match" style="font-size:10px;color:var(--green);display:none">✅ Bulundu</span></label>
+        <div class="fgrp" style="position:relative" id="p-orijinal-grp">
+          <label class="flbl">Orijinal Parça Kodu * <span id="p-orijinal-match" style="font-size:10px;color:var(--green);display:none">✅ Bulundu</span></label>
           <input class="finput" id="p-orijinal" placeholder="OEM-12345 yazın, otomatik dolar..." style="font-family:monospace" oninput="stokOrijinalAC(this.value)" autocomplete="off">
           <div id="p-orijinal-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--accent);border-radius:0 0 8px 8px;z-index:200;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4)"></div>
         </div>
-        <div class="fgrp" style="position:relative"><label class="flbl">Yan Sanayi Kodu</label>
+        <div class="fgrp" style="position:relative" id="p-yansanayi-grp">
+          <label class="flbl" id="p-ys-label">Muadil Kodu *</label>
           <input class="finput" id="p-yansanayi" placeholder="Muadil kodu yazın..." style="font-family:monospace" oninput="muadilAC(this.value,'p-ys1-dd','p-yansanayi',null)" autocomplete="off">
           <div id="p-ys1-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--accent);border-radius:0 0 8px 8px;z-index:200;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4)"></div>
         </div>
         <div class="fgrp"><label class="flbl">Stok Adedi</label><input class="finput" id="p-stok" type="number" min="0" value="0"></div>
-
         <div class="fgrp sp2"><label class="flbl">Notlar</label><textarea class="ftxt" id="p-notlar" placeholder="Notlar..."></textarea></div>
       </div>
     </div>
@@ -1726,17 +1739,16 @@ function loadServisParçalar(){
       const uid=`sp_${ekId}_${pi}`;
       const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':'filtre';
     
-      const spOem=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.orijinal&&x.orijinal===p.orijinal);
-    
-      const spYs1=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.yansanayi&&x.yansanayi===p.yansanayi);
-    
-      const spYs2=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.yansanayi2&&x.yansanayi===p.yansanayi2);
+      // OEM stok: parcaTuru==='oem' veya eski kayıtlar (parcaTuru yok)
+      const spOem=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.orijinal&&x.orijinal===p.orijinal&&(!x.parcaTuru||x.parcaTuru==='oem'));
+      // Muadil stok: parcaTuru==='muadil'
+      const spYs1=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.yansanayi&&x.yansanayi===p.yansanayi&&x.parcaTuru==='muadil');
+      const spYs2=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.yansanayi2&&x.yansanayi===p.yansanayi2&&x.parcaTuru==='muadil');
 
       const stokBadge=(sp)=>{
         if(!sp)return'<span style="font-size:10px;color:var(--text3)">stok kaydı yok</span>';
-        const s=sp.stok||0,mn=sp.minstok||2;
+        const s=sp.stok||0;
         return s===0?'<span style="font-size:10px;color:#f87171">❌ Stokta yok</span>'
-          :s<=mn?`<span style="font-size:10px;color:#fbbf24">⚠️ ${s} adet</span>`
           :`<span style="font-size:10px;color:#4ade80">✅ ${s} adet</span>`;
       };
 
@@ -2074,12 +2086,12 @@ function kontolEksikParca(servisIds,musteriAd){
 
       if(!arananKod)return; // Kod yoksa geç
 
-      // Stok kaydında bu kodu ara
+      // Stok kaydında bu kodu ara (OEM mi muadil mi olduğuna göre)
       let stokKaydi=null;
       if(tercih==='oem'){
-        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.orijinal===arananKod);
+        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.orijinal===arananKod&&(!x.parcaTuru||x.parcaTuru==='oem'));
       } else {
-        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.yansanayi===arananKod);
+        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.yansanayi===arananKod&&x.parcaTuru==='muadil');
       }
 
       // Stok kaydı yok veya stok=0 ise sipariş listesine ekle
@@ -2321,19 +2333,64 @@ function updatePTip(kat){
   const tpler=PARCA_TIPLERI[kat]||[];
   document.getElementById('p-tip').innerHTML=tpler.map(t=>`<option>${t}</option>`).join('');
 }
-function openPModal(){updatePTip('kompressor');openMod('p-modal');}
+function pTuruDegis(){
+  const secilen=document.querySelector('input[name="p-parca-turu"]:checked').value;
+  const oemLbl=document.getElementById('p-oem-lbl');
+  const muadilLbl=document.getElementById('p-muadil-lbl');
+  const orijGrp=document.getElementById('p-orijinal-grp');
+  const ysGrp=document.getElementById('p-yansanayi-grp');
+  if(secilen==='oem'){
+    oemLbl.style.borderColor='var(--accent)';oemLbl.style.background='rgba(232,93,26,0.1)';
+    muadilLbl.style.borderColor='var(--border)';muadilLbl.style.background='transparent';
+    orijGrp.style.display='';
+    ysGrp.style.display='none';
+    document.getElementById('p-yansanayi').value='';
+  } else {
+    muadilLbl.style.borderColor='var(--accent)';muadilLbl.style.background='rgba(232,93,26,0.1)';
+    oemLbl.style.borderColor='var(--border)';oemLbl.style.background='transparent';
+    orijGrp.style.display='none';
+    ysGrp.style.display='';
+    document.getElementById('p-orijinal').value='';
+  }
+}
+
+function openPModal(){
+  updatePTip('kompressor');
+  // OEM'i varsayılan yap
+  const radios=document.querySelectorAll('input[name="p-parca-turu"]');
+  radios.forEach(r=>r.value==='oem'?r.checked=true:r.checked=false);
+  pTuruDegis();
+  openMod('p-modal');
+}
 
 function saveP(){
   const tip=document.getElementById('p-tip').value;
   if(!tip){showToast('Parça tipi seçin!','error');return;}
+  const secilen=document.querySelector('input[name="p-parca-turu"]:checked').value;
   const orijinal=document.getElementById('p-orijinal').value.trim();
   const yansanayi=document.getElementById('p-yansanayi').value.trim();
   const fiyat=parseFloat(document.getElementById('p-fiyat').value)||0;
-  const p={id:String(Date.now()),kategori:document.getElementById('p-kat').value,tip,marka:document.getElementById('p-marka').value,fiyat,orijinal,yansanayi,stok:parseInt(document.getElementById('p-stok').value)||0,notlar:document.getElementById('p-notlar').value,olusturma:new Date().toISOString()};
-  // Yeni parçayı öğren
-  if(orijinal){ogren({orijinal,ad:tip,yansanayi,fiyat,tip});}
+
+  // Seçilen türe göre zorunlu alan kontrolü
+  if(secilen==='oem'&&!orijinal){showToast('OEM için orijinal parça kodu zorunludur!','error');return;}
+  if(secilen==='muadil'&&!yansanayi){showToast('Muadil için muadil kodu zorunludur!','error');return;}
+
+  const p={
+    id:String(Date.now()),
+    parcaTuru:secilen,           // 'oem' veya 'muadil'
+    kategori:document.getElementById('p-kat').value,
+    tip,
+    marka:document.getElementById('p-marka').value,
+    fiyat,
+    orijinal:secilen==='oem'?orijinal:'',
+    yansanayi:secilen==='muadil'?yansanayi:'',
+    stok:parseInt(document.getElementById('p-stok').value)||0,
+    notlar:document.getElementById('p-notlar').value,
+    olusturma:new Date().toISOString()
+  };
+  if(orijinal&&secilen==='oem'){ogren({orijinal,ad:tip,yansanayi,fiyat,tip});}
   ST.parcalar.push(p);
-  addAkt('📦',`Parça eklendi: ${p.tip} (Stok: ${p.stok})`);
+  addAkt('📦',`${secilen==='oem'?'🔵 OEM':'🟡 Muadil'} parça eklendi: ${p.tip} (Stok: ${p.stok})`);
   save();closeM('p-modal');renderStok();updateBadges();showToast('Parça kaydedildi ✓','success');
 }
 
@@ -2358,32 +2415,100 @@ function renderStok(){
   if(!list.length){
     cont.innerHTML=`<div class="card"><div class="card-bd"><div class="empty-s"><div class="empty-i">📦</div><div class="empty-t">Yedek parça yok</div><div class="empty-d">Parça eklemek için butona tıklayın.</div></div></div></div>`;return;
   }
-  // Kategoriye göre grupla
   const katlar=['kompressor','kurutucu','filtre','azot'];
   let html='';
   katlar.forEach(kat=>{
     const katList=list.filter(p=>p.kategori===kat);
     if(!katList.length)return;
-    html+=`<div class="sec-div" style="margin-top:12px">${ekIcon(kat==='kompressor'?'Kompresör':kat==='kurutucu'?'Kurutucu':kat==='filtre'?'Basınçlı Hat Filtresi':'Azot Jeneratörü')} ${KAT_LABEL[kat]||kat}</div>`;
-    html+='<div class="card" style="margin-bottom:8px"><div class="card-bd">'+katList.map(p=>{
-      const stok=p.stok||0;
-      const stokLabel=stok===0?`<span class="badge br">❌ Stok Yok</span>`:`<span class="badge bg">✅ ${stok} adet</span>`;
-      return`<div class="stok-row">
-        <div class="stok-info">
-          <div class="stok-name">${p.tip}${p.marka?` <span style="color:var(--text2);font-size:12px">— ${p.marka}</span>`:''}</div>
-          <div class="stok-codes">OEM: <strong>${p.orijinal||'—'}</strong> · YS: <strong>${p.yansanayi||'—'}</strong>${p.fiyat?' · '+fmtEur(p.fiyat):''}</div>
-        </div>
-        <div class="stok-count">
-          ${stokLabel}
-          <div class="stok-ctrl">
-            <button class="stok-btn" onclick="stokGuncelle('${p.id}',-1)">−</button>
-            <div class="stok-num" style="min-width:28px;text-align:center">${stok}</div>
-            <button class="stok-btn" onclick="stokGuncelle('${p.id}',+1)">＋</button>
+    const katAd=kat==='kompressor'?'Kompresör':kat==='kurutucu'?'Kurutucu':kat==='filtre'?'Basınçlı Hat Filtresi':'Azot Jeneratörü';
+    html+=`<div class="sec-div" style="margin-top:12px">${ekIcon(katAd)} ${KAT_LABEL[kat]||kat}</div>`;
+
+    // Parça tiplerine göre grupla, her tipte OEM+Muadil ayrı sat
+    const tipler=[...new Set(katList.map(p=>p.tip))].sort();
+    html+='<div class="card" style="margin-bottom:8px"><div class="card-bd">';
+    tipler.forEach(tip=>{
+      const tipParcalar=katList.filter(p=>p.tip===tip);
+      const oemler=tipParcalar.filter(p=>!p.parcaTuru||p.parcaTuru==='oem');
+      const muadiller=tipParcalar.filter(p=>p.parcaTuru==='muadil');
+
+      html+=`<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px">⚙️ ${tip}</div>`;
+
+      // OEM satırları
+      oemler.forEach(p=>{
+        const stok=p.stok||0;
+        const stokLabel=stok===0?`<span class="badge br">❌ Stok Yok</span>`:`<span class="badge bg">✅ ${stok} adet</span>`;
+        html+=`<div class="stok-row" style="background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.2);margin-bottom:4px">
+          <div class="stok-info">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;background:rgba(59,130,246,0.2);color:#60a5fa;padding:2px 8px;border-radius:4px;font-weight:600">🔵 OEM</span>
+              <span style="font-family:monospace;font-size:12px;font-weight:600">${p.orijinal||'—'}</span>
+              ${p.marka?`<span style="color:var(--text2);font-size:11px">${p.marka}</span>`:''}
+              ${p.fiyat?`<span style="color:var(--text2);font-size:11px">${fmtEur(p.fiyat)}</span>`:''}
+            </div>
           </div>
-          <button class="btn btn-danger btn-sm" onclick="deleteParca('${p.id}')">🗑️</button>
-        </div>
-      </div>`;
-    }).join('')+'</div></div>';
+          <div class="stok-count">
+            ${stokLabel}
+            <div class="stok-ctrl">
+              <button class="stok-btn" onclick="stokGuncelle('${p.id}',-1)">−</button>
+              <div class="stok-num" style="min-width:28px;text-align:center">${stok}</div>
+              <button class="stok-btn" onclick="stokGuncelle('${p.id}',+1)">＋</button>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="deleteParca('${p.id}')">🗑️</button>
+          </div>
+        </div>`;
+      });
+
+      // Muadil satırları
+      muadiller.forEach(p=>{
+        const stok=p.stok||0;
+        const stokLabel=stok===0?`<span class="badge br">❌ Stok Yok</span>`:`<span class="badge bg">✅ ${stok} adet</span>`;
+        html+=`<div class="stok-row" style="background:rgba(251,191,36,0.06);border-color:rgba(251,191,36,0.2);margin-bottom:4px">
+          <div class="stok-info">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;background:rgba(251,191,36,0.2);color:#fbbf24;padding:2px 8px;border-radius:4px;font-weight:600">🟡 Muadil</span>
+              <span style="font-family:monospace;font-size:12px;font-weight:600">${p.yansanayi||'—'}</span>
+              ${p.marka?`<span style="color:var(--text2);font-size:11px">${p.marka}</span>`:''}
+              ${p.fiyat?`<span style="color:var(--text2);font-size:11px">${fmtEur(p.fiyat)}</span>`:''}
+            </div>
+          </div>
+          <div class="stok-count">
+            ${stokLabel}
+            <div class="stok-ctrl">
+              <button class="stok-btn" onclick="stokGuncelle('${p.id}',-1)">−</button>
+              <div class="stok-num" style="min-width:28px;text-align:center">${stok}</div>
+              <button class="stok-btn" onclick="stokGuncelle('${p.id}',+1)">＋</button>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="deleteParca('${p.id}')">🗑️</button>
+          </div>
+        </div>`;
+      });
+
+      // İkisi de yoksa (eski format) — normal göster
+      if(!oemler.length&&!muadiller.length){
+        tipParcalar.forEach(p=>{
+          const stok=p.stok||0;
+          const stokLabel=stok===0?`<span class="badge br">❌ Stok Yok</span>`:`<span class="badge bg">✅ ${stok} adet</span>`;
+          html+=`<div class="stok-row" style="margin-bottom:4px">
+            <div class="stok-info">
+              <div style="font-size:12px;color:var(--text2)">OEM: <strong>${p.orijinal||'—'}</strong> · YS: <strong>${p.yansanayi||'—'}</strong> ${p.fiyat?'· '+fmtEur(p.fiyat):''}</div>
+            </div>
+            <div class="stok-count">
+              ${stokLabel}
+              <div class="stok-ctrl">
+                <button class="stok-btn" onclick="stokGuncelle('${p.id}',-1)">−</button>
+                <div class="stok-num" style="min-width:28px;text-align:center">${stok}</div>
+                <button class="stok-btn" onclick="stokGuncelle('${p.id}',+1)">＋</button>
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="deleteParca('${p.id}')">🗑️</button>
+            </div>
+          </div>`;
+        });
+      }
+
+      html+=`</div>`;
+    });
+    html+='</div></div>';
   });
   cont.innerHTML=html;
 }

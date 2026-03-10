@@ -1461,7 +1461,7 @@ function openEpModal(ekId){
   if(!ek)return;
   document.getElementById('ep-modal-title').textContent=`⚙️ ${ek.tip}${ek.marka?' — '+ek.marka:''} — Parçalar`;
 
-  const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':'filtre';
+  const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':ek.tip==='Azot Jeneratörü'?'azot':'filtre';
   const tpler=PARCA_TIPLERI[kat]||[];
   document.getElementById('ep-tip').innerHTML=tpler.map(t=>`<option>${t}</option>`).join('');
 
@@ -1544,7 +1544,7 @@ function saveM(){
   let yeniParcaSayisi=0;
   tempEk.forEach(ek=>{
     if(!ek.parcalar||!ek.parcalar.length)return;
-    const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':'filtre';
+    const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':ek.tip==='Azot Jeneratörü'?'azot':'filtre';
     ek.parcalar.forEach(p=>{
     
       const zatenVar=ST.parcalar.some(sp=>
@@ -1765,7 +1765,7 @@ function loadServisParçalar(){
 
     ek.parcalar.forEach((p,pi)=>{
       const uid=`sp_${ekId}_${pi}`;
-      const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':'filtre';
+      const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':ek.tip==='Azot Jeneratörü'?'azot':'filtre';
     
       // OEM stok: parcaTuru==='oem' veya eski kayıtlar (parcaTuru yok)
       const spOem=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.orijinal&&x.orijinal===p.orijinal&&(!x.parcaTuru||x.parcaTuru==='oem'));
@@ -2805,7 +2805,7 @@ function renderGParcalar(musteriId,ekipmanId){
   const m=ST.musteriler.find(x=>x.id==musteriId);
   const ek=m&&m.ekipmanlar?m.ekipmanlar.find(e=>e.id==ekipmanId):null;
   if(!ek||!ek.parcalar||!ek.parcalar.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3)">Bu ekipmana parça tanımlanmamış.</div>';return;}
-  const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':'filtre';
+  const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':ek.tip==='Azot Jeneratörü'?'azot':'filtre';
   cont.innerHTML=ek.parcalar.map((p,i)=>{
     const sp=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&((p.orijinal&&x.orijinal===p.orijinal)||(p.yansanayi&&x.yansanayi===p.yansanayi)));
     const stok=sp?(sp.stok||0):0;

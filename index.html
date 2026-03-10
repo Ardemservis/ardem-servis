@@ -2043,26 +2043,71 @@ function onaylaServisGrup(idsStr){
 }
 
 function kontolEksikParca(servisIds,musteriAd){
-  // Servislerle ilişkili parçaları bul (stok=0 olanlar)
-  const stoksuz=ST.parcalar.filter(p=>(p.stok||0)===0);
-  if(!stoksuz.length)return;
-  // Sipariş listesine ekle
   if(!ST.siparisler)ST.siparisler=[];
-  stoksuz.forEach(p=>{
-    const zatenVar=ST.siparisler.find(s=>String(s.parcaId)===String(p.id)&&s.durum==='bekliyor');
-    if(!zatenVar){
-      ST.siparisler.push({
-        id:String(Date.now()+Math.random()),
-        parcaId:String(p.id),
-        parcaAd:p.tip,
-        parcaOem:p.orijinal||'',
-        parcaYs:p.yansanayi||'',
-        kategori:p.kategori,
-        tetikleyen:musteriAd,
-        durum:'bekliyor',
-        olusturma:new Date().toISOString()
-      });
-    }
+
+  // Servis planlarından seçilen parçaları topla
+  servisIds.forEach(sid=>{
+    const servis=ST.servisler.find(x=>String(x.id)===String(sid));
+    if(!servis||!servis.parcaTercihleri||!servis.parcaTercihleri.length)return;
+
+    // Servisin bağlı olduğu müşteriyi ve ekipmanı bul
+    const m=ST.musteriler.find(x=>String(x.id)===String(servis.musteriId));
+    if(!m||!m.ekipmanlar)return;
+    const ek=m.ekipmanlar.find(e=>String(e.id)===String(servis.ekipmanId));
+    if(!ek||!ek.parcalar)return;
+
+    const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':ek.tip==='Azot Jeneratörü'?'azot':'filtre';
+
+    servis.parcaTercihleri.forEach(t=>{
+      const pi=parseInt(t.pi);
+      const p=ek.parcalar[pi];
+      if(!p)return;
+
+      const tercih=t.tercih||'oem';
+
+      // Seçilen tercihe göre hangi kodu arıyoruz?
+      let arananKod=null;
+      let kodTipi='OEM';
+      if(tercih==='oem'){arananKod=p.orijinal;kodTipi='OEM';}
+      else if(tercih==='ys1'){arananKod=p.yansanayi;kodTipi='Muadil 1';}
+      else if(tercih==='ys2'){arananKod=p.yansanayi2;kodTipi='Muadil 2';}
+
+      if(!arananKod)return; // Kod yoksa geç
+
+      // Stok kaydında bu kodu ara
+      let stokKaydi=null;
+      if(tercih==='oem'){
+        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.orijinal===arananKod);
+      } else {
+        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.yansanayi===arananKod);
+      }
+
+      // Stok kaydı yok veya stok=0 ise sipariş listesine ekle
+      const stokAdedi=stokKaydi?(stokKaydi.stok||0):0;
+      if(stokAdedi===0){
+        // Zaten listede var mı?
+        const zatenVar=ST.siparisler.find(s=>
+          s.durum==='bekliyor'&&
+          s.arananKod===arananKod&&
+          s.servisId===String(sid)
+        );
+        if(!zatenVar){
+          ST.siparisler.push({
+            id:String(Date.now()+Math.random()),
+            servisId:String(sid),
+            parcaId:stokKaydi?String(stokKaydi.id):'',
+            parcaAd:p.tip,
+            arananKod,
+            kodTipi,
+            ekipmanAd:servis.ekipmanAd||'',
+            kategori:kat,
+            tetikleyen:musteriAd,
+            durum:'bekliyor',
+            olusturma:new Date().toISOString()
+          });
+        }
+      }
+    });
   });
 }
 
@@ -2612,11 +2657,11 @@ function renderDash(){
     if(!bekSiparisler.length){sipList.innerHTML='<div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Bekleyen sipariş yok</div></div>';}
     else{sipList.innerHTML=bekSiparisler.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
       <div>
-        <div style="font-size:13px;font-weight:500">${s.parcaAd}</div>
-        <div style="font-size:11px;color:var(--text2)">${KAT_LABEL[s.kategori]||''} ${s.parcaOem?'· OEM: '+s.parcaOem:''}</div>
-        <div style="font-size:11px;color:var(--text2)">Onay: ${s.tetikleyen||'—'}</div>
+        <div style="font-size:13px;font-weight:500">${s.parcaAd} <span style="font-size:11px;background:rgba(232,93,26,0.15);color:var(--accent);padding:2px 7px;border-radius:4px">${s.kodTipi||'OEM'}</span></div>
+        <div style="font-size:11px;color:var(--text2);font-family:monospace;margin-top:2px">${s.arananKod||s.parcaOem||'—'}</div>
+        <div style="font-size:11px;color:var(--text2)">${s.ekipmanAd?'🔧 '+s.ekipmanAd+' · ':''} Onay: ${s.tetikleyen||'—'}</div>
       </div>
-      <div style="display:flex;gap:6px;align-items:center">
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
         <span class="badge by">⏳ Sipariş Gerek</span>
         <button class="btn btn-success btn-sm" onclick="siparisVer('${s.id}')" title="Sipariş Verildi">✓</button>
       </div>

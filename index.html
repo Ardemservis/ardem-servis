@@ -341,9 +341,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
     <!-- STOK -->
     <div class="page" id="page-stok">
       <div class="tab-bar" id="stok-tabs">
-        <button class="tab-btn active" onclick="stokTab='kompressor';renderStok();setTab(this)">🔵 Kompresör</button>
-        <button class="tab-btn" onclick="stokTab='kurutucu';renderStok();setTab(this)">🟢 Kurutucu</button>
-        <button class="tab-btn" onclick="stokTab='filtre';renderStok();setTab(this)">🟠 Basınçlı Hat Filtresi</button>
+
       </div>
       <div class="search-bar">
         <div class="si-wrap"><span class="si-icon">🔍</span><input type="text" placeholder="Parça ara..." oninput="pSearch=this.value;renderStok()"></div>
@@ -491,8 +489,13 @@ tr:hover td{background:rgba(255,255,255,0.015);}
         <div class="fgrp"><label class="flbl">Servis Periyodu</label>
           <select class="fsel" id="s-periyot">
             <option value="">Periyot yok</option>
-            <option value="3">3 Ay Sonra</option>
-            <option value="6">6 Ay Sonra</option>
+            <option value="3">3 Ay</option>
+            <option value="4">4 Ay</option>
+            <option value="5">5 Ay</option>
+            <option value="6">6 Ay</option>
+            <option value="7">7 Ay</option>
+            <option value="8">8 Ay</option>
+            <option value="12">12 Ay</option>
           </select>
         </div>
         <div class="fgrp sp2"><label class="flbl">Notlar</label><input class="finput" id="s-notlar" placeholder="Servis notları..."></div>
@@ -530,7 +533,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
           <div id="p-ys1-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--accent);border-radius:0 0 8px 8px;z-index:200;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4)"></div>
         </div>
         <div class="fgrp"><label class="flbl">Stok Adedi</label><input class="finput" id="p-stok" type="number" min="0" value="0"></div>
-        <div class="fgrp"><label class="flbl">Min. Stok Uyarısı</label><input class="finput" id="p-minstok" type="number" min="0" value="2" placeholder="2"><div class="fhint">Bu sayının altına düşünce uyarı verir</div></div>
+
         <div class="fgrp sp2"><label class="flbl">Notlar</label><textarea class="ftxt" id="p-notlar" placeholder="Notlar..."></textarea></div>
       </div>
     </div>
@@ -571,10 +574,16 @@ tr:hover td{background:rgba(255,255,255,0.015);}
           <select class="fsel" id="g-periyot">
             <option value="">Ayarlanmadı</option>
             <option value="3">3 Ay Sonra</option>
+            <option value="4">4 Ay Sonra</option>
+            <option value="5">5 Ay Sonra</option>
             <option value="6">6 Ay Sonra</option>
+            <option value="7">7 Ay Sonra</option>
+            <option value="8">8 Ay Sonra</option>
+            <option value="12">12 Ay Sonra</option>
           </select>
         </div>
         <div class="fgrp"><label class="flbl">&nbsp;</label><div style="font-size:12px;color:var(--text2);padding-top:10px" id="g-periyot-preview">—</div></div>
+        <div class="fgrp"><label class="flbl">Makine Çalışma Saati *</label><input class="finput" id="g-saat" type="number" min="0" placeholder="Örn: 4520" oninput="this.value=this.value.replace(/[^0-9]/g,'')"><div class="fhint">⚠️ Saat girilmeden bakım tamamlanamaz</div></div>
         <div class="fgrp sp2"><label class="flbl">Yapılan İşlemler *</label><textarea class="ftxt" id="g-islemler" placeholder="Yapılan servis işlemleri, değiştirilen parçalar..."></textarea></div>
       </div>
       <!-- Kullanılan parçalar -->
@@ -1182,7 +1191,7 @@ function updateBadges(){
   document.getElementById('bdg-m').textContent=ST.musteriler.length;
   document.getElementById('bdg-s').textContent=ST.servisler.filter(s=>s.durum!=='tamamlandi').length;
   document.getElementById('bdg-f').textContent=ST.faturalar.filter(f=>f.durum==='bekliyor').length;
-  const stokUyari=ST.parcalar.filter(p=>(p.stok||0)<=(p.minstok||2)).length;
+  const stokUyari=ST.parcalar.filter(p=>(p.stok||0)===0).length;
   document.getElementById('bdg-stok').textContent=stokUyari;
 }
 
@@ -1724,6 +1733,23 @@ function saveS(){
   showToast(`${eklenen} ekipman için servis planı kaydedildi ✓`,'success');
 }
 
+function erteleServis(id){
+  const s=ST.servisler.find(x=>String(x.id)===String(id));
+  if(!s)return;
+  const yeniTarih=prompt('Yeni servis tarihini girin (GG.AA.YYYY):',fmtDate(s.tarih));
+  if(!yeniTarih)return;
+  const p=yeniTarih.trim().split('.');
+  if(p.length!==3){showToast('Geçersiz format! GG.AA.YYYY olmalı','error');return;}
+  const iso=`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+  if(isNaN(new Date(iso).getTime())){showToast('Geçersiz tarih!','error');return;}
+  s.tarih=iso;
+  s.durum=daysDiff(iso)<0?'gecikti':'bekliyor';
+  if(s.periyot)s.sonrakiTarih=addMonths(iso,s.periyot);
+  addAkt('📅',`Servis ertelendi: ${s.musteriAd} → ${fmtDate(iso)}`);
+  save();renderS();renderDash();
+  showToast(`Servis ${fmtDate(iso)} tarihine alındı ✓`,'success');
+}
+
 function tamamlaServis(id){
   const s=ST.servisler.find(x=>String(x.id)===String(id));if(!s)return;
   s.durum='tamamlandi';
@@ -1757,7 +1783,7 @@ function renderS(){
       <td>${s.periyot?`<span class="badge bo">${s.periyot} Aylık</span>`:'<span class="badge bgr">Tek Sefer</span>'}</td>
       <td>${durumBadge(s.durum)}</td>
       <td><div style="display:flex;gap:5px">
-        ${s.durum!=='tamamlandi'?`<button class="btn btn-success btn-sm" onclick="tamamlaServis('${s.id}')">✅</button>`:''}
+        ${s.durum!=='tamamlandi'?`<button class="btn btn-success btn-sm" onclick="tamamlaServis('${s.id}')">✅ Tamamla</button><button class="btn btn-ghost btn-sm" onclick="erteleServis('${s.id}')" title="İleri tarihe al" style="margin-left:4px">📅 Ertele</button>`:''}
         <button class="btn btn-danger btn-sm" onclick="deleteServis('${s.id}')">🗑️</button>
       </div></td>
     </tr>`).join('');
@@ -1902,7 +1928,12 @@ function openPModal(){updatePTip('kompressor');openMod('p-modal');}
 function saveP(){
   const tip=document.getElementById('p-tip').value;
   if(!tip){showToast('Parça tipi seçin!','error');return;}
-  const p={id:Date.now(),kategori:document.getElementById('p-kat').value,tip,marka:document.getElementById('p-marka').value,fiyat:parseFloat(document.getElementById('p-fiyat').value)||0,orijinal:document.getElementById('p-orijinal').value.trim(),yansanayi:document.getElementById('p-yansanayi').value.trim(),stok:parseInt(document.getElementById('p-stok').value)||0,minstok:parseInt(document.getElementById('p-minstok').value)||2,notlar:document.getElementById('p-notlar').value,olusturma:new Date().toISOString()};
+  const orijinal=document.getElementById('p-orijinal').value.trim();
+  const yansanayi=document.getElementById('p-yansanayi').value.trim();
+  const fiyat=parseFloat(document.getElementById('p-fiyat').value)||0;
+  const p={id:String(Date.now()),kategori:document.getElementById('p-kat').value,tip,marka:document.getElementById('p-marka').value,fiyat,orijinal,yansanayi,stok:parseInt(document.getElementById('p-stok').value)||0,notlar:document.getElementById('p-notlar').value,olusturma:new Date().toISOString()};
+  // Yeni parçayı öğren
+  if(orijinal){ogren({orijinal,ad:tip,yansanayi,fiyat,tip});}
   ST.parcalar.push(p);
   addAkt('📦',`Parça eklendi: ${p.tip} (Stok: ${p.stok})`);
   save();closeM('p-modal');renderStok();updateBadges();showToast('Parça kaydedildi ✓','success');
@@ -1924,34 +1955,38 @@ function setTab(el){document.querySelectorAll('.tab-btn').forEach(b=>b.classList
 
 function renderStok(){
   const q=pSearch.toLowerCase();
-  const list=ST.parcalar.filter(p=>p.kategori===stokTab&&(!q||p.tip.toLowerCase().includes(q)||(p.orijinal&&p.orijinal.toLowerCase().includes(q))||(p.yansanayi&&p.yansanayi.toLowerCase().includes(q))));
+  const list=ST.parcalar.filter(p=>!q||p.tip.toLowerCase().includes(q)||(p.orijinal&&p.orijinal.toLowerCase().includes(q))||(p.yansanayi&&p.yansanayi.toLowerCase().includes(q)));
   const cont=document.getElementById('stok-listesi');
   if(!list.length){
-    cont.innerHTML=`<div class="card"><div class="card-bd"><div class="empty-s"><div class="empty-i">📦</div><div class="empty-t">${KAT_LABEL[stokTab]} yedek parçası yok</div><div class="empty-d">Parça eklemek için butona tıklayın.</div></div></div></div>`;return;
+    cont.innerHTML=`<div class="card"><div class="card-bd"><div class="empty-s"><div class="empty-i">📦</div><div class="empty-t">Yedek parça yok</div><div class="empty-d">Parça eklemek için butona tıklayın.</div></div></div></div>`;return;
   }
-  const stokUyarilar=list.filter(p=>(p.stok||0)<=(p.minstok||2));
+  // Kategoriye göre grupla
+  const katlar=['kompressor','kurutucu','filtre','azot'];
   let html='';
-  if(stokUyarilar.length)html+=`<div class="alert al-r" style="margin-bottom:14px">⚠️ <strong>${stokUyarilar.length} parça</strong> minimum stok seviyesinde veya altında!</div>`;
-  html+='<div class="card"><div class="card-bd">'+list.map(p=>{
-    const stok=p.stok||0;const min=p.minstok||2;
-    const sc=stok===0?'br':stok<=min?'by':'bg';
-    const stokLabel=stok===0?`<span class="badge br">❌ Stok Yok</span>`:stok<=min?`<span class="badge by">⚠️ Düşük (${stok})</span>`:`<span class="badge bg">✅ ${stok} adet</span>`;
-    return`<div class="stok-row">
-      <div class="stok-info">
-        <div class="stok-name">${p.tip}${p.marka?` <span style="color:var(--text2);font-size:12px">— ${p.marka}</span>`:''}</div>
-        <div class="stok-codes">OEM: <strong>${p.orijinal||'—'}</strong> · YS: <strong>${p.yansanayi||'—'}</strong>${p.fiyat?' · '+fmtEur(p.fiyat):''}</div>
-      </div>
-      <div class="stok-count">
-        ${stokLabel}
-        <div class="stok-ctrl">
-          <button class="stok-btn" onclick="stokGuncelle('${p.id}',-1)">−</button>
-          <div class="stok-num" style="min-width:28px;text-align:center">${stok}</div>
-          <button class="stok-btn" onclick="stokGuncelle('${p.id}',+1)">＋</button>
+  katlar.forEach(kat=>{
+    const katList=list.filter(p=>p.kategori===kat);
+    if(!katList.length)return;
+    html+=`<div class="sec-div" style="margin-top:12px">${ekIcon(kat==='kompressor'?'Kompresör':kat==='kurutucu'?'Kurutucu':kat==='filtre'?'Basınçlı Hat Filtresi':'Azot Jeneratörü')} ${KAT_LABEL[kat]||kat}</div>`;
+    html+='<div class="card" style="margin-bottom:8px"><div class="card-bd">'+katList.map(p=>{
+      const stok=p.stok||0;
+      const stokLabel=stok===0?`<span class="badge br">❌ Stok Yok</span>`:`<span class="badge bg">✅ ${stok} adet</span>`;
+      return`<div class="stok-row">
+        <div class="stok-info">
+          <div class="stok-name">${p.tip}${p.marka?` <span style="color:var(--text2);font-size:12px">— ${p.marka}</span>`:''}</div>
+          <div class="stok-codes">OEM: <strong>${p.orijinal||'—'}</strong> · YS: <strong>${p.yansanayi||'—'}</strong>${p.fiyat?' · '+fmtEur(p.fiyat):''}</div>
         </div>
-        <button class="btn btn-danger btn-sm" onclick="deleteParca('${p.id}')">🗑️</button>
-      </div>
-    </div>`;
-  }).join('')+'</div></div>';
+        <div class="stok-count">
+          ${stokLabel}
+          <div class="stok-ctrl">
+            <button class="stok-btn" onclick="stokGuncelle('${p.id}',-1)">−</button>
+            <div class="stok-num" style="min-width:28px;text-align:center">${stok}</div>
+            <button class="stok-btn" onclick="stokGuncelle('${p.id}',+1)">＋</button>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteParca('${p.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('')+'</div></div>';
+  });
   cont.innerHTML=html;
 }
 
@@ -2062,7 +2097,10 @@ function openGModal(){populateSels();openMod('g-modal');document.getElementById(
 function saveG(){
   const musteriId=document.getElementById('g-musteri').value;
   const islemler=document.getElementById('g-islemler').value.trim();
+  const saatEl=document.getElementById('g-saat');
+  const calismaS=saatEl?saatEl.value.trim():'';
   if(!musteriId||!islemler){showToast('Müşteri ve işlemler zorunludur!','error');return;}
+  if(!calismaS){showToast('⚠️ Makine çalışma saati girilmeden bakım tamamlanamaz!','error');return;}
   const m=ST.musteriler.find(x=>x.id==musteriId);
   const ekipmanId=document.getElementById('g-ekipman').value;
   const ek=m&&m.ekipmanlar?m.ekipmanlar.find(e=>e.id==ekipmanId):null;
@@ -2075,7 +2113,7 @@ function saveG(){
     const p=ST.parcalar.find(x=>x.id===pid);
     if(p&&p.stok>0){p.stok--;addAkt('📦',`Stok düşüldü: ${p.tip} (kalan: ${p.stok})`);}
   });
-  const g={id:String(Date.now()),musteriId:String(musteriId),musteriAd:m?m.ad:'',ekipmanId:ekipmanId?String(ekipmanId):null,ekipmanAd:ek?`${ek.tip}${ek.marka?' — '+ek.marka:''}`:'',tarih,tip:document.getElementById('g-tip').value,kullanilanParcalar:kullanilanParcaIdler,periyot,sonrakiTarih,islemler,olusturma:new Date().toISOString()};
+  const g={id:String(Date.now()),musteriId:String(musteriId),musteriAd:m?m.ad:'',ekipmanId:ekipmanId?String(ekipmanId):null,ekipmanAd:ek?`${ek.tip}${ek.marka?' — '+ek.marka:''}`:'',tarih,tip:document.getElementById('g-tip').value,kullanilanParcalar:kullanilanParcaIdler,periyot,sonrakiTarih,islemler,calismaS:calismaS||null,olusturma:new Date().toISOString()};
   ST.gecmis.unshift(g);
 
   if(sonrakiTarih){

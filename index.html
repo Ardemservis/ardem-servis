@@ -302,8 +302,8 @@ tr:hover td{background:rgba(255,255,255,0.015);}
           <div class="card-bd" id="uyari-list"><div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Her şey yolunda!</div></div></div>
         </div>
         <div class="card">
-          <div class="card-hd"><div class="card-title">📦 Kritik Stok Durumu</div></div>
-          <div class="card-bd" id="kritik-stok"><div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Stok durumu normal</div></div></div>
+          <div class="card-hd"><div class="card-title">🛒 Sipariş Edilecek Malzemeler</div><span class="badge br" id="siparis-bdg" style="display:none">0</span></div>
+          <div class="card-bd" id="siparis-list"><div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Bekleyen sipariş yok</div></div></div>
         </div>
       </div>
       <div class="card" style="cursor:pointer" onclick="goPage('odemeler',document.querySelector('[onclick*=odemeler]'))">
@@ -349,7 +349,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
       <div class="search-bar">
         <div class="si-wrap"><span class="si-icon">🔍</span><input type="text" placeholder="Servis ara..." oninput="sSearch=this.value;renderS()"></div>
         <select class="fsel" style="width:155px" onchange="sDurumF=this.value;renderS()">
-          <option value="">Tüm Durumlar</option><option value="bekliyor">Bekliyor</option><option value="gecikti">Gecikti</option><option value="tamamlandi">Tamamlandı</option>
+          <option value="">Tüm Durumlar</option><option value="bekliyor">Bekliyor</option><option value="gecikti">Gecikti</option><option value="onaylandi">Onaylandı</option><option value="tamamlandi">Tamamlandı</option>
         </select>
         <button class="btn btn-primary" onclick="openSModal()">＋ Yeni Servis</button>
       </div>
@@ -1032,7 +1032,7 @@ document.addEventListener('blur',function(e){
 },true);
 
 // ===== STATE =====
-let ST={musteriler:[],servisler:[],parcalar:[],faturalar:[],gecmis:[],aktiviteler:[],odemeler:[]};
+let ST={musteriler:[],servisler:[],parcalar:[],faturalar:[],gecmis:[],aktiviteler:[],odemeler:[],siparisler:[]};
 // Öğrenilen OEM→muadil eşleşmeleri (Firebase'e ayrıca kaydedilir)
 let OGRENILEN={}; // {orijinalKod: {muadil, muadil2, ad, fiyat, para, kayit}}
 let editId=null,curPage='dashboard',sDurumF='',sSearch='',mSearch='',pSearch='',fSearch='',stokTab='kompressor';
@@ -1115,6 +1115,7 @@ async function manualSync(){
       parcalar:ST.parcalar,faturalar:ST.faturalar,
       gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
       odemeler:ST.odemeler||[],
+      siparisler:ST.siparisler||[],
       ogrenilen:OGRENILEN,guncelleme:new Date().toISOString()
     });
     await _setDoc(_doc(db,'ardem','data'),temizVeri2);
@@ -1173,6 +1174,7 @@ async function initFirebase(){
         ST.gecmis=d.gecmis||[];
         ST.aktiviteler=d.aktiviteler||[];
         ST.odemeler=d.odemeler||[];
+        ST.siparisler=d.siparisler||[];
         OGRENILEN=d.ogrenilen||{};
         // Firebase'den gelen veriyi localStorage'a da yaz
         try{localStorage.setItem('ardem_v4',JSON.stringify(ST));localStorage.setItem('ardem_ogrenilen',JSON.stringify(OGRENILEN));}catch(e){}
@@ -1230,6 +1232,7 @@ async function manualSync(){
       parcalar:ST.parcalar,faturalar:ST.faturalar,
       gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
       odemeler:ST.odemeler||[],
+      siparisler:ST.siparisler||[],
       ogrenilen:OGRENILEN,guncelleme:new Date().toISOString()
     });
     await _setDoc(_doc(db,'ardem','data'),temizVeri2);
@@ -1277,6 +1280,7 @@ async function save(){
       parcalar:ST.parcalar,faturalar:ST.faturalar,
       gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
       odemeler:ST.odemeler||[],
+      siparisler:ST.siparisler||[],
       ogrenilen:OGRENILEN,
       guncelleme:new Date().toISOString()
     });
@@ -1300,7 +1304,8 @@ function updateBadges(){
   document.getElementById('bdg-m').textContent=ST.musteriler.length;
   document.getElementById('bdg-s').textContent=ST.servisler.filter(s=>s.durum!=='tamamlandi').length;
   document.getElementById('bdg-f').textContent=ST.faturalar.filter(f=>f.durum==='bekliyor').length;
-  const bdgOd=document.getElementById('bdg-odeme');if(bdgOd){const bugunOd=new Date();bdgOd.textContent=(ST.odemeler||[]).filter(o=>o.durum==='bekliyor').length;}
+  const bdgOd=document.getElementById('bdg-odeme');if(bdgOd){bdgOd.textContent=(ST.odemeler||[]).filter(o=>o.durum==='bekliyor').length;}
+  const bdgSip=document.getElementById('siparis-bdg');if(bdgSip){const bc=(ST.siparisler||[]).filter(s=>s.durum==='bekliyor').length;bdgSip.textContent=bc;bdgSip.style.display=bc?'':'none';}
   const stokUyari=ST.parcalar.filter(p=>(p.stok||0)===0).length;
   document.getElementById('bdg-stok').textContent=stokUyari;
 }
@@ -1318,7 +1323,7 @@ function emptyRow(cols,icon,title,desc){
 }
 
 function durumBadge(d){
-  const m={bekliyor:['bb','⏳ Bekliyor'],gecikti:['br','🔴 Gecikti'],tamamlandi:['bg','✅ Tamamlandı'],odendi:['bg','✅ Ödendi'],iptal:['bgr','✕ İptal']};
+  const m={bekliyor:['bb','⏳ Bekliyor'],gecikti:['br','🔴 Gecikti'],onaylandi:['bo','✔️ Onaylandı'],tamamlandi:['bg','✅ Tamamlandı'],odendi:['bg','✅ Ödendi'],iptal:['bgr','✕ İptal']};
   const[c,l]=m[d]||['bgr',d];return`<span class="badge ${c}">${l}</span>`;
 }
 
@@ -2009,6 +2014,58 @@ function tamamlaKaydet(){
   showToast(`Servis tamamlandı · €${tutarEur} fatura oluşturuldu ✓`,'success');
 }
 
+
+
+function siparisVer(id){
+  if(!ST.siparisler)ST.siparisler=[];
+  const s=ST.siparisler.find(x=>String(x.id)===String(id));
+  if(!s)return;
+  s.durum='siparis_verildi';
+  s.siparisT=new Date().toISOString();
+  addAkt('🛒',`Sipariş verildi: ${s.parcaAd}`);
+  save();renderDash();showToast('Sipariş verildi olarak işaretlendi ✓','success');
+}
+
+function onaylaServisGrup(idsStr){
+  const ids=idsStr.split(',');
+  const ilk=ST.servisler.find(x=>String(x.id)===String(ids[0]));
+  if(!ilk)return;
+  if(!confirm(`${ilk.musteriAd} — müşteri bakım onayı verildi olarak işaretlensin mi?`))return;
+  ids.forEach(id=>{
+    const s=ST.servisler.find(x=>String(x.id)===String(id));
+    if(s&&s.durum!=='tamamlandi')s.durum='onaylandi';
+  });
+  addAkt('👍',`Müşteri onayı: ${ilk.musteriAd} — ${fmtDate(ilk.tarih)}`);
+  // Onay sonrası eksik parça kontrolü
+  kontolEksikParca(ids,ilk.musteriAd);
+  save();renderS();renderDash();updateBadges();
+  showToast(`Bakım onaylandı ✓ — Sipariş listesi güncellendi`,'success');
+}
+
+function kontolEksikParca(servisIds,musteriAd){
+  // Servislerle ilişkili parçaları bul (stok=0 olanlar)
+  const stoksuz=ST.parcalar.filter(p=>(p.stok||0)===0);
+  if(!stoksuz.length)return;
+  // Sipariş listesine ekle
+  if(!ST.siparisler)ST.siparisler=[];
+  stoksuz.forEach(p=>{
+    const zatenVar=ST.siparisler.find(s=>String(s.parcaId)===String(p.id)&&s.durum==='bekliyor');
+    if(!zatenVar){
+      ST.siparisler.push({
+        id:String(Date.now()+Math.random()),
+        parcaId:String(p.id),
+        parcaAd:p.tip,
+        parcaOem:p.orijinal||'',
+        parcaYs:p.yansanayi||'',
+        kategori:p.kategori,
+        tetikleyen:musteriAd,
+        durum:'bekliyor',
+        olusturma:new Date().toISOString()
+      });
+    }
+  });
+}
+
 function erteleServisGrup(idsStr){
   const ids=idsStr.split(',');
   const ilk=ST.servisler.find(x=>String(x.id)===String(ids[0]));
@@ -2062,8 +2119,9 @@ function renderS(){
   let html='';
   Object.values(gruplar).forEach(g=>{
     const hepsiTamamlandi=g.servisler.every(s=>s.durum==='tamamlandi');
+    const hepsiOnaylandi=g.servisler.every(s=>s.durum==='onaylandi'||s.durum==='tamamlandi');
     const biriGecikti=g.servisler.some(s=>s.durum==='gecikti');
-    const genelDurum=hepsiTamamlandi?'tamamlandi':biriGecikti?'gecikti':'bekliyor';
+    const genelDurum=hepsiTamamlandi?'tamamlandi':hepsiOnaylandi?'onaylandi':biriGecikti?'gecikti':'bekliyor';
     const makineListesi=g.servisler.map(s=>`${ekIcon(s.ekipmanTip||'')} ${s.ekipmanAd||'—'}`).join('<br>');
     const periyotlar=[...new Set(g.servisler.map(s=>s.periyot).filter(Boolean))];
     const ids=g.servisler.map(s=>s.id).join(',');
@@ -2074,7 +2132,9 @@ function renderS(){
       <td>${periyotlar.length?`<span class="badge bo">${periyotlar.join('/')} Aylık</span>`:'<span class="badge bgr">Tek Sefer</span>'}</td>
       <td>${durumBadge(genelDurum)}</td>
       <td><div style="display:flex;gap:5px;flex-wrap:wrap">
-        ${!hepsiTamamlandi?`<button class="btn btn-success btn-sm" onclick="tamamlaServisGrup('${ids}')">✅ Tamamla</button><button class="btn btn-ghost btn-sm" onclick="erteleServisGrup('${ids}')">📅 Ertele</button>`:''}
+        ${!hepsiTamamlandi&&hepsiOnaylandi?`<button class="btn btn-success btn-sm" onclick="tamamlaServisGrup('${ids}')">✅ Tamamla</button>`:''}
+        ${!hepsiTamamlandi&&!hepsiOnaylandi?`<button class="btn btn-primary btn-sm" onclick="onaylaServisGrup('${ids}')" style="background:rgba(251,191,36,0.2);border:1px solid #fbbf24;color:#fbbf24">👍 Müşteri Onayı</button>`:''}
+        ${!hepsiTamamlandi?`<button class="btn btn-ghost btn-sm" onclick="erteleServisGrup('${ids}')">📅 Ertele</button>`:''}
         <button class="btn btn-danger btn-sm" onclick="deleteServisGrup('${ids}')">🗑️</button>
       </div></td>
     </tr>`;
@@ -2542,9 +2602,26 @@ function renderDash(){
   document.getElementById('uyari-list').innerHTML=!uyar.length?'<div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Her şey yolunda!</div></div>':
     uyar.map(s=>{const d=daysDiff(s.tarih);return`<div class="alert ${d<0?'al-r':'al-w'}"><span>${d<0?'🔴':'⚠️'}</span><div><strong>${s.musteriAd}</strong>${s.ekipmanAd?' — '+s.ekipmanAd:''}<br><small>${fmtDate(s.tarih)} · ${d<0?Math.abs(d)+' gün gecikti!':d+' gün kaldı'}</small></div></div>`;}).join('');
 
-  const krit=ST.parcalar.filter(p=>(p.stok||0)<=(p.minstok||2)).slice(0,5);
-  document.getElementById('kritik-stok').innerHTML=!krit.length?'<div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Stok durumu normal</div></div>':
-    krit.map(p=>{const s=p.stok||0;return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:500">${p.tip}</div><div style="font-size:11px;color:var(--text2)">${KAT_LABEL[p.kategori]||''}</div></div><span class="badge ${s===0?'br':'by'}">${s===0?'❌ Stok Yok':'⚠️ '+s+' adet'}</span></div>`;}).join('');
+  // Sipariş listesi
+  if(!ST.siparisler)ST.siparisler=[];
+  const bekSiparisler=ST.siparisler.filter(s=>s.durum==='bekliyor');
+  const sipBdg=document.getElementById('siparis-bdg');
+  if(sipBdg){sipBdg.textContent=bekSiparisler.length;sipBdg.style.display=bekSiparisler.length?'':'none';}
+  const sipList=document.getElementById('siparis-list');
+  if(sipList){
+    if(!bekSiparisler.length){sipList.innerHTML='<div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Bekleyen sipariş yok</div></div>';}
+    else{sipList.innerHTML=bekSiparisler.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:500">${s.parcaAd}</div>
+        <div style="font-size:11px;color:var(--text2)">${KAT_LABEL[s.kategori]||''} ${s.parcaOem?'· OEM: '+s.parcaOem:''}</div>
+        <div style="font-size:11px;color:var(--text2)">Onay: ${s.tetikleyen||'—'}</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="badge by">⏳ Sipariş Gerek</span>
+        <button class="btn btn-success btn-sm" onclick="siparisVer('${s.id}')" title="Sipariş Verildi">✓</button>
+      </div>
+    </div>`).join('');}
+  }
 
   document.getElementById('son-aktiv').innerHTML=!ST.aktiviteler.length?'<div class="empty-s"><div class="empty-i">📝</div><div class="empty-t">Henüz aktivite yok</div></div>':
     '<div class="tl">'+ST.aktiviteler.slice(0,10).map(a=>`<div class="tl-item"><div class="tl-dot">${a.icon}</div><div class="tl-cont"><div class="tl-title">${a.text}</div><div class="tl-date">${a.zaman}</div></div></div>`).join('')+'</div>';

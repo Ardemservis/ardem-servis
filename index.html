@@ -260,6 +260,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
     <div class="nav-item" onclick="goPage('faturalar',this)"><span class="nav-icon">🧾</span>Teklifler / Faturalar <span class="nav-badge nb-green" id="bdg-f">0</span></div>
     <div class="nav-sec">Kayıtlar</div>
     <div class="nav-item" onclick="goPage('gecmis',this)"><span class="nav-icon">📋</span>Servis Geçmişi</div>
+    <div class="nav-item" onclick="goPage('odemeler',this)"><span class="nav-icon">💰</span>Ödemeler <span class="nav-badge nb-red" id="bdg-odeme">0</span></div>
   </nav>
   <div class="sidebar-footer">
     <div id="admin-menu-item" class="nav-item" style="margin-bottom:8px;display:none" onclick="openMod('pw-modal')"><span class="nav-icon">🔐</span>Şifre Değiştir</div>
@@ -303,6 +304,26 @@ tr:hover td{background:rgba(255,255,255,0.015);}
         <div class="card">
           <div class="card-hd"><div class="card-title">📦 Kritik Stok Durumu</div></div>
           <div class="card-bd" id="kritik-stok"><div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Stok durumu normal</div></div></div>
+        </div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="goPage('odemeler',document.querySelector('[onclick*=odemeler]'))">
+        <div class="card-hd"><div class="card-title">💰 Ödeme Durumu</div><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();goPage('odemeler',document.querySelector('[onclick*=odemeler]'))">Tümünü Gör →</button></div>
+        <div class="card-bd" id="dash-odeme-ozet">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;padding:4px 0">
+            <div style="text-align:center;padding:10px;background:rgba(239,68,68,0.08);border-radius:8px;border:1px solid rgba(239,68,68,0.2)">
+              <div style="font-size:10px;color:var(--text2);margin-bottom:4px">Bekleyen Ödeme</div>
+              <div style="font-size:16px;font-weight:700;color:#f87171" id="dash-od-bekleyen">€0</div>
+            </div>
+            <div style="text-align:center;padding:10px;background:rgba(232,93,26,0.08);border-radius:8px;border:1px solid rgba(232,93,26,0.2)">
+              <div style="font-size:10px;color:var(--text2);margin-bottom:4px">Vadesi Geçen</div>
+              <div style="font-size:16px;font-weight:700;color:var(--accent)" id="dash-od-vade">€0</div>
+            </div>
+            <div style="text-align:center;padding:10px;background:rgba(34,197,94,0.08);border-radius:8px;border:1px solid rgba(34,197,94,0.2)">
+              <div style="font-size:10px;color:var(--text2);margin-bottom:4px">Tahsil Edilen</div>
+              <div style="font-size:16px;font-weight:700;color:#4ade80" id="dash-od-tahsil">€0</div>
+            </div>
+          </div>
+          <div id="dash-od-liste" style="margin-top:12px"></div>
         </div>
       </div>
       <div class="card">
@@ -366,6 +387,35 @@ tr:hover td{background:rgba(255,255,255,0.015);}
     </div>
 
     <!-- GEÇMİŞ -->
+    <div class="page" id="page-odemeler">
+      <div class="page-hd"><div class="page-title">💰 Ödemeler</div></div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-bd" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;padding:16px">
+          <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Toplam Tahsil Edilecek</div>
+            <div style="font-size:18px;font-weight:700;color:#4ade80" id="od-toplam-eur">€0</div>
+            <div style="font-size:12px;color:var(--text2)" id="od-toplam-tl">₺0</div>
+          </div>
+          <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Bekleyen Ödeme</div>
+            <div style="font-size:18px;font-weight:700;color:#f87171" id="od-bekleyen-eur">€0</div>
+            <div style="font-size:12px;color:var(--text2)" id="od-bekleyen-tl">₺0</div>
+          </div>
+          <div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Tahsil Edilen</div>
+            <div style="font-size:18px;font-weight:700;color:#60a5fa" id="od-tahsil-eur">€0</div>
+            <div style="font-size:12px;color:var(--text2)" id="od-tahsil-tl">₺0</div>
+          </div>
+          <div style="background:rgba(232,93,26,0.1);border:1px solid rgba(232,93,26,0.3);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Vadesi Geçen</div>
+            <div style="font-size:18px;font-weight:700;color:var(--accent)" id="od-vadegecen-eur">€0</div>
+            <div style="font-size:12px;color:var(--text2)" id="od-vadegecen-tl">₺0</div>
+          </div>
+        </div>
+      </div>
+      <div id="odeme-listesi"></div>
+    </div>
+
     <div class="page" id="page-gecmis">
       <div class="search-bar">
         <div class="si-wrap"><span class="si-icon">🔍</span><input type="text" placeholder="Geçmiş ara..."></div>
@@ -591,6 +641,61 @@ tr:hover td{background:rgba(255,255,255,0.015);}
       <div id="g-parca-listesi"></div>
     </div>
     <div class="mfoot"><button class="btn btn-ghost" onclick="closeM('g-modal')">İptal</button><button class="btn btn-primary" onclick="saveG()">💾 Kaydet</button></div>
+  </div>
+</div>
+
+<!-- MODAL: SERVİS TAMAMLA -->
+<div class="mo" id="tamamla-modal" style="z-index:230">
+  <div class="modal">
+    <div class="mhd"><div class="mtitle">✅ Servis Tamamla</div><button class="mclose" onclick="closeM('tamamla-modal')">✕</button></div>
+    <div class="mbody">
+      <div id="tamamla-makine-saatler" style="margin-bottom:16px"></div>
+      <div class="sec-div">Fatura Bilgileri</div>
+      <div class="fg fg2" style="margin-top:12px">
+        <div class="fgrp sp2">
+          <label class="flbl">Fatura Para Birimi *</label>
+          <div style="display:flex;gap:10px;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 18px;border-radius:8px;border:2px solid var(--accent);background:rgba(232,93,26,0.1);flex:1;justify-content:center;font-weight:600">
+              <input type="radio" name="t-para" value="eur" checked onchange="paraBirimiDegis()" style="accent-color:var(--accent)"> € Euro
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 18px;border-radius:8px;border:2px solid var(--border);background:transparent;flex:1;justify-content:center;font-weight:600" id="tl-radio-label">
+              <input type="radio" name="t-para" value="tl" onchange="paraBirimiDegis()" style="accent-color:var(--accent)"> ₺ Türk Lirası
+            </label>
+          </div>
+        </div>
+        <div class="fgrp" id="t-eur-grp">
+          <label class="flbl">Fatura Tutarı (€) *</label>
+          <input class="finput" id="t-tutar-eur" type="number" min="0" step="0.01" placeholder="0.00" oninput="hesaplaKur()">
+        </div>
+        <div class="fgrp" id="t-kur-grp">
+          <label class="flbl">Döviz Kuru (₺/€)</label>
+          <input class="finput" id="t-kur" type="number" min="0" step="0.01" placeholder="38.50" oninput="hesaplaKur()" value="38.50">
+        </div>
+        <div class="fgrp" id="t-tl-grp">
+          <label class="flbl" id="t-tl-label">Fatura Tutarı (₺)</label>
+          <input class="finput" id="t-tutar-tl" type="number" min="0" step="0.01" placeholder="Otomatik hesaplanır" style="background:rgba(255,255,255,0.03);color:var(--text2)" id="t-tutar-tl">
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Fatura Vadesi *</label>
+          <select class="fsel" id="t-vade" onchange="hesaplaKur()">
+            <option value="">Seçin...</option>
+            <option value="15">15 Gün</option>
+            <option value="30">30 Gün</option>
+            <option value="45">45 Gün</option>
+            <option value="60">60 Gün</option>
+            <option value="90">90 Gün</option>
+          </select>
+        </div>
+        <div class="fgrp sp2">
+          <label class="flbl">Vade Tarihi</label>
+          <div style="font-size:13px;color:var(--accent);padding:8px 0;font-weight:600" id="t-vade-preview">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeM('tamamla-modal')">İptal</button>
+      <button class="btn btn-primary" onclick="tamamlaKaydet()">✅ Tamamla ve Kaydet</button>
+    </div>
   </div>
 </div>
 
@@ -927,7 +1032,7 @@ document.addEventListener('blur',function(e){
 },true);
 
 // ===== STATE =====
-let ST={musteriler:[],servisler:[],parcalar:[],faturalar:[],gecmis:[],aktiviteler:[]};
+let ST={musteriler:[],servisler:[],parcalar:[],faturalar:[],gecmis:[],aktiviteler:[],odemeler:[]};
 // Öğrenilen OEM→muadil eşleşmeleri (Firebase'e ayrıca kaydedilir)
 let OGRENILEN={}; // {orijinalKod: {muadil, muadil2, ad, fiyat, para, kayit}}
 let editId=null,curPage='dashboard',sDurumF='',sSearch='',mSearch='',pSearch='',fSearch='',stokTab='kompressor';
@@ -1009,6 +1114,7 @@ async function manualSync(){
       musteriler:ST.musteriler,servisler:ST.servisler,
       parcalar:ST.parcalar,faturalar:ST.faturalar,
       gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
+      odemeler:ST.odemeler||[],
       ogrenilen:OGRENILEN,guncelleme:new Date().toISOString()
     });
     await _setDoc(_doc(db,'ardem','data'),temizVeri2);
@@ -1066,6 +1172,7 @@ async function initFirebase(){
         ST.faturalar=d.faturalar||[];
         ST.gecmis=d.gecmis||[];
         ST.aktiviteler=d.aktiviteler||[];
+        ST.odemeler=d.odemeler||[];
         OGRENILEN=d.ogrenilen||{};
         // Firebase'den gelen veriyi localStorage'a da yaz
         try{localStorage.setItem('ardem_v4',JSON.stringify(ST));localStorage.setItem('ardem_ogrenilen',JSON.stringify(OGRENILEN));}catch(e){}
@@ -1122,6 +1229,7 @@ async function manualSync(){
       musteriler:ST.musteriler,servisler:ST.servisler,
       parcalar:ST.parcalar,faturalar:ST.faturalar,
       gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
+      odemeler:ST.odemeler||[],
       ogrenilen:OGRENILEN,guncelleme:new Date().toISOString()
     });
     await _setDoc(_doc(db,'ardem','data'),temizVeri2);
@@ -1168,6 +1276,7 @@ async function save(){
       musteriler:ST.musteriler,servisler:ST.servisler,
       parcalar:ST.parcalar,faturalar:ST.faturalar,
       gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
+      odemeler:ST.odemeler||[],
       ogrenilen:OGRENILEN,
       guncelleme:new Date().toISOString()
     });
@@ -1191,6 +1300,7 @@ function updateBadges(){
   document.getElementById('bdg-m').textContent=ST.musteriler.length;
   document.getElementById('bdg-s').textContent=ST.servisler.filter(s=>s.durum!=='tamamlandi').length;
   document.getElementById('bdg-f').textContent=ST.faturalar.filter(f=>f.durum==='bekliyor').length;
+  const bdgOd=document.getElementById('bdg-odeme');if(bdgOd){const bugunOd=new Date();bdgOd.textContent=(ST.odemeler||[]).filter(o=>o.durum==='bekliyor').length;}
   const stokUyari=ST.parcalar.filter(p=>(p.stok||0)===0).length;
   document.getElementById('bdg-stok').textContent=stokUyari;
 }
@@ -1750,16 +1860,182 @@ function erteleServis(id){
   showToast(`Servis ${fmtDate(iso)} tarihine alındı ✓`,'success');
 }
 
-function tamamlaServis(id){
-  const s=ST.servisler.find(x=>String(x.id)===String(id));if(!s)return;
-  s.durum='tamamlandi';
-  addAkt('✅',`Servis tamamlandı: ${s.musteriAd}${s.ekipmanAd?' — '+s.ekipmanAd:''}`);
+// Aktif tamamlama için geçici servis ID'leri
+let _tamamlaIds=[];
 
-  if(s.sonrakiTarih){
-    ST.servisler.push({id:Date.now(),musteriId:s.musteriId,musteriAd:s.musteriAd,ekipmanId:s.ekipmanId,ekipmanAd:s.ekipmanAd,ekipmanTip:s.ekipmanTip,tip:s.tip,tarih:s.sonrakiTarih,periyot:s.periyot,sonrakiTarih:s.periyot?addMonths(s.sonrakiTarih,s.periyot):null,notlar:'Otomatik oluşturuldu',durum:'bekliyor',olusturma:new Date().toISOString()});
-    showToast(`Sonraki servis ${s.periyot} ay sonraya otomatik planlandı!`,'info');
+function tamamlaServisGrup(idsStr){
+  _tamamlaIds=idsStr.split(',');
+  const servisler=_tamamlaIds.map(id=>ST.servisler.find(x=>String(x.id)===String(id))).filter(Boolean);
+  if(!servisler.length)return;
+
+  // Makine saat alanlarını oluştur
+  const cont=document.getElementById('tamamla-makine-saatler');
+  cont.innerHTML=`<div class="sec-div">Makine Çalışma Saatleri</div>`+servisler.map(s=>`
+    <div class="fgrp" style="margin-top:8px">
+      <label class="flbl">${ekIcon(s.ekipmanTip||'')} ${s.ekipmanAd||'Ekipman'} *</label>
+      <input class="finput" type="number" min="0" placeholder="Çalışma saati girin..." id="saat_${s.id}" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+    </div>`).join('');
+
+  document.getElementById('t-tutar-eur').value='';
+  document.getElementById('t-tutar-tl').value='';
+  document.getElementById('t-vade').value='';
+  document.getElementById('t-vade-preview').textContent='—';
+  // Para birimini sıfırla
+  const radios=document.querySelectorAll('input[name="t-para"]');
+  radios.forEach(r=>r.value==='eur'?r.checked=true:r.checked=false);
+  paraBirimiDegis();
+  openMod('tamamla-modal');
+}
+
+function paraBirimiDegis(){
+  const secilen=document.querySelector('input[name="t-para"]:checked').value;
+  const eurGrp=document.getElementById('t-eur-grp');
+  const kurGrp=document.getElementById('t-kur-grp');
+  const tlGrp=document.getElementById('t-tl-grp');
+  const tlLabel=document.getElementById('t-tl-label');
+  const tlInput=document.getElementById('t-tutar-tl');
+  const eurLabel=document.querySelector('#t-eur-grp .flbl');
+  const tlRadioLabel=document.getElementById('tl-radio-label');
+  const eurRadioLabel=document.querySelector('label:has(input[value="eur"])');
+
+  if(secilen==='eur'){
+    // Euro seçili: EUR gir, TL otomatik
+    eurGrp.style.display='';
+    kurGrp.style.display='';
+    tlGrp.style.display='';
+    tlLabel.textContent='Fatura Tutarı (₺)';
+    tlInput.readOnly=true;
+    tlInput.placeholder='Otomatik hesaplanır';
+    tlInput.style.background='rgba(255,255,255,0.03)';
+    tlInput.style.color='var(--text2)';
+    eurRadioLabel&&(eurRadioLabel.style.borderColor='var(--accent)',eurRadioLabel.style.background='rgba(232,93,26,0.1)');
+    tlRadioLabel&&(tlRadioLabel.style.borderColor='var(--border)',tlRadioLabel.style.background='transparent');
+    hesaplaKur();
+  } else {
+    // TL seçili: sadece TL gir
+    eurGrp.style.display='none';
+    kurGrp.style.display='none';
+    tlGrp.style.display='';
+    tlLabel.textContent='Fatura Tutarı (₺) *';
+    tlInput.readOnly=false;
+    tlInput.placeholder='0.00';
+    tlInput.style.background='';
+    tlInput.style.color='';
+    document.getElementById('t-tutar-eur').value='';
+    eurRadioLabel&&(eurRadioLabel.style.borderColor='var(--border)',eurRadioLabel.style.background='transparent');
+    tlRadioLabel&&(tlRadioLabel.style.borderColor='var(--accent)',tlRadioLabel.style.background='rgba(232,93,26,0.1)');
   }
-  save();renderS();updateBadges();renderDash();showToast('Servis tamamlandı ✓','success');
+  // Vade preview güncelle
+  const vadeSec=parseInt(document.getElementById('t-vade').value)||0;
+  if(vadeSec){
+    const vadeDate=new Date();vadeDate.setDate(vadeDate.getDate()+vadeSec);
+    document.getElementById('t-vade-preview').textContent=fmtDate(vadeDate.toISOString().split('T')[0])+' ('+vadeSec+' gün)';
+  }
+}
+
+function hesaplaKur(){
+  const secilen=document.querySelector('input[name="t-para"]:checked');
+  if(!secilen||secilen.value!=='eur')return;
+  const eur=parseFloat(document.getElementById('t-tutar-eur').value)||0;
+  const kur=parseFloat(document.getElementById('t-kur').value)||38.5;
+  document.getElementById('t-tutar-tl').value=eur>0?(eur*kur).toFixed(2):'';
+  const vadeSec=parseInt(document.getElementById('t-vade').value)||0;
+  if(vadeSec){
+    const vadeDate=new Date();vadeDate.setDate(vadeDate.getDate()+vadeSec);
+    document.getElementById('t-vade-preview').textContent=fmtDate(vadeDate.toISOString().split('T')[0])+' ('+vadeSec+' gün)';
+  } else {
+    document.getElementById('t-vade-preview').textContent='—';
+  }
+}
+
+function tamamlaKaydet(){
+  const servisler=_tamamlaIds.map(id=>ST.servisler.find(x=>String(x.id)===String(id))).filter(Boolean);
+  if(!servisler.length)return;
+
+  // Saat kontrolü
+  for(const s of servisler){
+    const saatEl=document.getElementById('saat_'+s.id);
+    if(!saatEl||!saatEl.value.trim()){
+      showToast(`⚠️ ${s.ekipmanAd||'Ekipman'} için çalışma saati girilmedi!`,'error');return;
+    }
+  }
+
+  const secilen=document.querySelector('input[name="t-para"]:checked').value;
+  const tutarEur=secilen==='eur'?parseFloat(document.getElementById('t-tutar-eur').value)||0:0;
+  const kur=parseFloat(document.getElementById('t-kur').value)||38.5;
+  const tutarTl=parseFloat(document.getElementById('t-tutar-tl').value)||(tutarEur*kur);
+  const vadeGun=parseInt(document.getElementById('t-vade').value)||0;
+
+  if(secilen==='eur'&&!tutarEur){showToast('⚠️ Fatura tutarı (€) girilmeden tamamlanamaz!','error');return;}
+  if(secilen==='tl'&&!tutarTl){showToast('⚠️ Fatura tutarı (₺) girilmeden tamamlanamaz!','error');return;}
+  if(!vadeGun){showToast('⚠️ Fatura vadesi seçilmeden tamamlanamaz!','error');return;}
+
+  // Vade tarihi hesapla
+  const bugun=new Date();
+  bugun.setDate(bugun.getDate()+vadeGun);
+  const vadeTarih=bugun.toISOString().split('T')[0];
+
+  // Servisleri tamamla, saatleri kaydet
+  servisler.forEach(s=>{
+    s.durum='tamamlandi';
+    s.calismaS=document.getElementById('saat_'+s.id).value.trim();
+    s.tamamlanmaTarih=today();
+    if(s.sonrakiTarih){
+      ST.servisler.push({id:String(Date.now()+Math.random()),musteriId:s.musteriId,musteriAd:s.musteriAd,ekipmanId:s.ekipmanId,ekipmanAd:s.ekipmanAd,ekipmanTip:s.ekipmanTip,tip:s.tip,tarih:s.sonrakiTarih,periyot:s.periyot,sonrakiTarih:s.periyot?addMonths(s.sonrakiTarih,s.periyot):null,notlar:'Otomatik oluşturuldu',durum:'bekliyor',olusturma:new Date().toISOString()});
+    }
+  });
+
+  // Ödeme kaydı oluştur
+  if(!ST.odemeler)ST.odemeler=[];
+  const musteriAd=servisler[0].musteriAd;
+  const musteriId=servisler[0].musteriId;
+  const odeme={
+    id:String(Date.now()),
+    musteriId:String(musteriId),
+    musteriAd,
+    servisIds:_tamamlaIds,
+    makineler:servisler.map(s=>({ekipmanAd:s.ekipmanAd,calismaS:s.calismaS})),
+    tutarEur,tutarTl,kur,paraBirimi:secilen,
+    vadeTarih,vadeGun,
+    tarih:today(),
+    durum:'bekliyor',
+    olusturma:new Date().toISOString()
+  };
+  ST.odemeler.push(odeme);
+
+  addAkt('✅',`Servis tamamlandı: ${musteriAd} — €${tutarEur}`);
+  closeM('tamamla-modal');
+  save();renderS();renderOdemeler();updateBadges();renderDash();
+  showToast(`Servis tamamlandı · €${tutarEur} fatura oluşturuldu ✓`,'success');
+}
+
+function erteleServisGrup(idsStr){
+  const ids=idsStr.split(',');
+  const ilk=ST.servisler.find(x=>String(x.id)===String(ids[0]));
+  if(!ilk)return;
+  const yeniTarih=prompt('Yeni servis tarihini girin (GG.AA.YYYY):',fmtDate(ilk.tarih));
+  if(!yeniTarih)return;
+  const p=yeniTarih.trim().split('.');
+  if(p.length!==3){showToast('Geçersiz format! GG.AA.YYYY olmalı','error');return;}
+  const iso=`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+  if(isNaN(new Date(iso).getTime())){showToast('Geçersiz tarih!','error');return;}
+  ids.forEach(id=>{
+    const s=ST.servisler.find(x=>String(x.id)===String(id));
+    if(!s)return;
+    s.tarih=iso;
+    s.durum=daysDiff(iso)<0?'gecikti':'bekliyor';
+    if(s.periyot)s.sonrakiTarih=addMonths(iso,s.periyot);
+  });
+  addAkt('📅',`Servis ertelendi: ${ilk.musteriAd} → ${fmtDate(iso)}`);
+  save();renderS();renderDash();
+  showToast(`Servisler ${fmtDate(iso)} tarihine alındı ✓`,'success');
+}
+
+function deleteServisGrup(idsStr){
+  if(!confirm('Bu servis grubunu silmek istediğinizden emin misiniz?'))return;
+  const ids=idsStr.split(',');
+  ST.servisler=ST.servisler.filter(s=>!ids.includes(String(s.id)));
+  save();renderS();updateBadges();renderDash();showToast('Servis silindi','info');
 }
 
 function deleteServis(id){
@@ -1771,22 +2047,39 @@ function deleteServis(id){
 function renderS(){
   let list=ST.servisler.filter(s=>!sSearch||s.musteriAd.toLowerCase().includes(sSearch.toLowerCase())||(s.ekipmanAd&&s.ekipmanAd.toLowerCase().includes(sSearch.toLowerCase())));
   if(sDurumF)list=list.filter(s=>s.durum===sDurumF);
-  list.sort((a,b)=>new Date(a.tarih)-new Date(b.tarih));
+  list.sort((a,b)=>new Date(a.tarih)-new Date(b.tarih)||a.musteriAd.localeCompare(b.musteriAd));
   const tbody=document.getElementById('s-tbody');
-  if(!list.length){tbody.innerHTML=emptyRow(7,'🔧','Servis planı yok','Yeni servis planı eklemek için butona tıklayın.');return;}
-  tbody.innerHTML=list.map(s=>`
-    <tr>
-      <td style="font-weight:500;font-size:13px">${s.musteriAd||'—'}</td>
-      <td style="font-size:12px">${s.ekipmanAd?`${ekIcon(s.ekipmanTip||'')} ${s.ekipmanAd}`:'—'}</td>
-      <td style="font-size:12px">${s.tip||'—'}</td>
-      <td style="font-size:13px">${fmtDate(s.tarih)}</td>
-      <td>${s.periyot?`<span class="badge bo">${s.periyot} Aylık</span>`:'<span class="badge bgr">Tek Sefer</span>'}</td>
-      <td>${durumBadge(s.durum)}</td>
-      <td><div style="display:flex;gap:5px">
-        ${s.durum!=='tamamlandi'?`<button class="btn btn-success btn-sm" onclick="tamamlaServis('${s.id}')">✅ Tamamla</button><button class="btn btn-ghost btn-sm" onclick="erteleServis('${s.id}')" title="İleri tarihe al" style="margin-left:4px">📅 Ertele</button>`:''}
-        <button class="btn btn-danger btn-sm" onclick="deleteServis('${s.id}')">🗑️</button>
+  if(!list.length){tbody.innerHTML=emptyRow(5,'🔧','Servis planı yok','Yeni servis planı eklemek için butona tıklayın.');return;}
+
+  // Müşteri + tarih bazında grupla
+  const gruplar={};
+  list.forEach(s=>{
+    const key=`${s.musteriId}__${s.tarih}`;
+    if(!gruplar[key])gruplar[key]={musteriAd:s.musteriAd,musteriId:s.musteriId,tarih:s.tarih,servisler:[]};
+    gruplar[key].servisler.push(s);
+  });
+
+  let html='';
+  Object.values(gruplar).forEach(g=>{
+    const hepsiTamamlandi=g.servisler.every(s=>s.durum==='tamamlandi');
+    const biriGecikti=g.servisler.some(s=>s.durum==='gecikti');
+    const genelDurum=hepsiTamamlandi?'tamamlandi':biriGecikti?'gecikti':'bekliyor';
+    const makineListesi=g.servisler.map(s=>`${ekIcon(s.ekipmanTip||'')} ${s.ekipmanAd||'—'}`).join('<br>');
+    const periyotlar=[...new Set(g.servisler.map(s=>s.periyot).filter(Boolean))];
+    const ids=g.servisler.map(s=>s.id).join(',');
+    html+=`<tr>
+      <td style="font-weight:600;font-size:13px">${g.musteriAd||'—'}<br><span style="font-size:11px;color:var(--text2);font-weight:400">${g.servisler.length} makine</span></td>
+      <td style="font-size:12px;line-height:1.8">${makineListesi}</td>
+      <td style="font-size:13px">${fmtDate(g.tarih)}</td>
+      <td>${periyotlar.length?`<span class="badge bo">${periyotlar.join('/')} Aylık</span>`:'<span class="badge bgr">Tek Sefer</span>'}</td>
+      <td>${durumBadge(genelDurum)}</td>
+      <td><div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${!hepsiTamamlandi?`<button class="btn btn-success btn-sm" onclick="tamamlaServisGrup('${ids}')">✅ Tamamla</button><button class="btn btn-ghost btn-sm" onclick="erteleServisGrup('${ids}')">📅 Ertele</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="deleteServisGrup('${ids}')">🗑️</button>
       </div></td>
-    </tr>`).join('');
+    </tr>`;
+  });
+  tbody.innerHTML=html;
 }
 
 // ===== STOK / PARÇA =====
@@ -2130,6 +2423,83 @@ function deleteGecmis(id){
   save();renderG();showToast('Not silindi','info');
 }
 
+
+function renderOdemeler(){
+  if(!ST.odemeler)ST.odemeler=[];
+  const bugun=new Date();
+  const bekleyenler=ST.odemeler.filter(o=>o.durum==='bekliyor');
+  const tahsiledilen=ST.odemeler.filter(o=>o.durum==='odendi');
+  const vadegecen=bekleyenler.filter(o=>new Date(o.vadeTarih)<bugun);
+
+  const toplamEur=ST.odemeler.reduce((a,o)=>a+(o.tutarEur||0),0);
+  const toplamTl=ST.odemeler.reduce((a,o)=>a+(o.tutarTl||0),0);
+  const bekleyenEur=bekleyenler.reduce((a,o)=>a+(o.tutarEur||0),0);
+  const bekleyenTl=bekleyenler.reduce((a,o)=>a+(o.tutarTl||0),0);
+  const tahsilEur=tahsiledilen.reduce((a,o)=>a+(o.tutarEur||0),0);
+  const tahsilTl=tahsiledilen.reduce((a,o)=>a+(o.tutarTl||0),0);
+  const vadeEur=vadegecen.reduce((a,o)=>a+(o.tutarEur||0),0);
+  const vadeTl=vadegecen.reduce((a,o)=>a+(o.tutarTl||0),0);
+
+  const s=id=>document.getElementById(id);
+  if(s('od-toplam-eur'))s('od-toplam-eur').textContent=fmtEur(toplamEur);
+  if(s('od-toplam-tl'))s('od-toplam-tl').textContent='₺'+toplamTl.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(s('od-bekleyen-eur'))s('od-bekleyen-eur').textContent=fmtEur(bekleyenEur);
+  if(s('od-bekleyen-tl'))s('od-bekleyen-tl').textContent='₺'+bekleyenTl.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(s('od-tahsil-eur'))s('od-tahsil-eur').textContent=fmtEur(tahsilEur);
+  if(s('od-tahsil-tl'))s('od-tahsil-tl').textContent='₺'+tahsilTl.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(s('od-vadegecen-eur'))s('od-vadegecen-eur').textContent=fmtEur(vadeEur);
+  if(s('od-vadegecen-tl'))s('od-vadegecen-tl').textContent='₺'+vadeTl.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  // Badge güncelle
+  const bdg=document.getElementById('bdg-odeme');
+  if(bdg)bdg.textContent=bekleyenler.length;
+
+  const cont=document.getElementById('odeme-listesi');
+  if(!cont)return;
+  if(!ST.odemeler.length){cont.innerHTML='<div class="card"><div class="card-bd"><div class="empty-s"><div class="empty-i">💰</div><div class="empty-t">Ödeme kaydı yok</div><div class="empty-d">Servisler tamamlandıkça burada görünür.</div></div></div></div>';return;}
+
+  const sorted=[...ST.odemeler].sort((a,b)=>new Date(b.olusturma)-new Date(a.olusturma));
+  cont.innerHTML='<div class="card"><div class="card-bd">'+sorted.map(o=>{
+    const vadeGecti=o.durum==='bekliyor'&&new Date(o.vadeTarih)<bugun;
+    const badge=o.durum==='odendi'?'<span class="badge bg">✅ Ödendi</span>':vadeGecti?'<span class="badge br">🔴 Vadesi Geçti</span>':'<span class="badge by">⏳ Bekliyor</span>';
+    const makineler=(o.makineler||[]).map(m=>`${m.ekipmanAd||'—'} <span style="color:var(--text2);font-size:11px">(${m.calismaS||'?'} saat)</span>`).join(' · ');
+    return`<div style="padding:14px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:600;font-size:14px">${o.musteriAd}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:3px">${makineler}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">📅 Servis: ${fmtDate(o.tarih)} · Vade: ${fmtDate(o.vadeTarih)} (${o.vadeGun} gün)</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:18px;font-weight:700;color:var(--accent)">${o.paraBirimi==='tl'?'₺'+(o.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):fmtEur(o.tutarEur)}</div>
+          <div style="font-size:12px;color:var(--text2)">${o.paraBirimi==='tl'?'—':('₺'+(o.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2}))}</div>
+          <div style="margin-top:6px">${badge}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        ${o.durum==='bekliyor'?`<button class="btn btn-primary btn-sm" onclick="odemeAl('${o.id}')">💳 Ödeme Al</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="odemeKaydiniSil('${o.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('')+'</div></div>';
+}
+
+function odemeAl(id){
+  const o=ST.odemeler.find(x=>String(x.id)===String(id));
+  if(!o)return;
+  if(!confirm(`${o.musteriAd} — ${fmtEur(o.tutarEur)} ödeme alındı olarak işaretlensin mi?`))return;
+  o.durum='odendi';
+  o.odemeTarih=today();
+  addAkt('💰',`Ödeme alındı: ${o.musteriAd} — ${fmtEur(o.tutarEur)}`);
+  save();renderOdemeler();renderDash();showToast('Ödeme alındı olarak işaretlendi ✓','success');
+}
+
+function odemeKaydiniSil(id){
+  if(!confirm('Bu ödeme kaydını silmek istediğinizden emin misiniz?'))return;
+  ST.odemeler=ST.odemeler.filter(x=>String(x.id)!==String(id));
+  save();renderOdemeler();showToast('Kayıt silindi','info');
+}
+
 function renderG(){
   const cont=document.getElementById('gecmis-tl');
   if(!ST.gecmis.length){cont.innerHTML='<div class="empty-s"><div class="empty-i">📋</div><div class="empty-t">Servis geçmişi yok</div><div class="empty-d">Servis notu eklemek için butona tıklayın.</div></div>';return;}
@@ -2178,6 +2548,30 @@ function renderDash(){
 
   document.getElementById('son-aktiv').innerHTML=!ST.aktiviteler.length?'<div class="empty-s"><div class="empty-i">📝</div><div class="empty-t">Henüz aktivite yok</div></div>':
     '<div class="tl">'+ST.aktiviteler.slice(0,10).map(a=>`<div class="tl-item"><div class="tl-dot">${a.icon}</div><div class="tl-cont"><div class="tl-title">${a.text}</div><div class="tl-date">${a.zaman}</div></div></div>`).join('')+'</div>';
+
+  // Ödeme özeti
+  if(!ST.odemeler)ST.odemeler=[];
+  const bugunD=new Date();
+  const bekleyenOd=ST.odemeler.filter(o=>o.durum==='bekliyor');
+  const vadeGecenOd=bekleyenOd.filter(o=>new Date(o.vadeTarih)<bugunD);
+  const tahsilOd=ST.odemeler.filter(o=>o.durum==='odendi');
+  const elBek=document.getElementById('dash-od-bekleyen');
+  const elVade=document.getElementById('dash-od-vade');
+  const elTah=document.getElementById('dash-od-tahsil');
+  if(elBek)elBek.textContent=fmtEur(bekleyenOd.reduce((a,o)=>a+(o.tutarEur||0),0));
+  if(elVade)elVade.textContent=fmtEur(vadeGecenOd.reduce((a,o)=>a+(o.tutarEur||0),0));
+  if(elTah)elTah.textContent=fmtEur(tahsilOd.reduce((a,o)=>a+(o.tutarEur||0),0));
+  const dashListe=document.getElementById('dash-od-liste');
+  if(dashListe){
+    const son=bekleyenOd.slice(0,5);
+    if(!son.length){dashListe.innerHTML='<div style="text-align:center;color:var(--text2);font-size:12px;padding:8px">Bekleyen ödeme yok ✅</div>';}
+    else{dashListe.innerHTML=son.map(o=>{
+      const vGecti=new Date(o.vadeTarih)<bugunD;
+      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <div><span style="font-weight:500">${o.musteriAd}</span><span style="color:var(--text2);font-size:11px;margin-left:6px">· Vade: ${fmtDate(o.vadeTarih)}</span></div>
+        <div style="font-weight:600;color:${vGecti?'#f87171':'var(--text)'}">${fmtEur(o.tutarEur)}</div>
+      </div>`;}).join('');}
+  }
   updateBadges();
 }
 

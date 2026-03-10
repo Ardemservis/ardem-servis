@@ -600,7 +600,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
         <div class="fgrp sp2"><label class="flbl">Notlar</label><textarea class="ftxt" id="p-notlar" placeholder="Notlar..."></textarea></div>
       </div>
     </div>
-    <div class="mfoot"><button class="btn btn-ghost" onclick="closeM('p-modal')">İptal</button><button class="btn btn-primary" onclick="saveP()">💾 Kaydet</button></div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="closeM('p-modal')">İptal</button><button class="btn btn-primary" id="p-kaydet-btn">💾 Kaydet</button></div>
   </div>
 </div>
 
@@ -2486,10 +2486,11 @@ function duzenleParca(id){
   document.getElementById('p-notlar').value=p.notlar||'';
 
   // Modal başlığını değiştir
-  document.querySelector('#p-modal .mtitle').textContent='✏️ Parça Düzenle';
+  const mtitle=document.querySelector('#p-modal .mtitle');
+  if(mtitle)mtitle.textContent='✏️ Parça Düzenle';
 
   // Kaydet butonunu düzenleme moduna al
-  const kaydetBtn=document.querySelector('#p-modal .btn-primary');
+  const kaydetBtn=document.getElementById('p-kaydet-btn');
   kaydetBtn.textContent='💾 Güncelle';
   kaydetBtn.onclick=()=>savePDuzenle(id);
 
@@ -2524,7 +2525,7 @@ function savePDuzenle(id){
 
   // Butonu ve başlığı sıfırla
   document.querySelector('#p-modal .mtitle').textContent='⚙️ Yedek Parça Ekle';
-  const kaydetBtn=document.querySelector('#p-modal .btn-primary');
+  const kaydetBtn=document.getElementById('p-kaydet-btn');
   kaydetBtn.textContent='💾 Kaydet';
   kaydetBtn.onclick=saveP;
 
@@ -2965,6 +2966,7 @@ function renderDash(){
 
 // ===== INIT =====
 updatePTip('kompressor');
+document.getElementById('p-kaydet-btn').onclick=saveP;
 // Giriş bekliyor — initFirebase doLogin'den çağrılacak
 </script>
 </div><!-- /app-wrap -->

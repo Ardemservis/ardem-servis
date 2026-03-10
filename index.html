@@ -1048,6 +1048,7 @@ document.addEventListener('blur',function(e){
 let ST={musteriler:[],servisler:[],parcalar:[],faturalar:[],gecmis:[],aktiviteler:[],odemeler:[],siparisler:[]};
 // Öğrenilen OEM→muadil eşleşmeleri (Firebase'e ayrıca kaydedilir)
 let OGRENILEN={}; // {orijinalKod: {muadil, muadil2, ad, fiyat, para, kayit}}
+let MUADIL_OGRENILEN={}; // {muadilKod: {ad, fiyat, tip, kayit}}
 let editId=null,curPage='dashboard',sDurumF='',sSearch='',mSearch='',pSearch='',fSearch='',stokTab='kompressor';
 let tempEk=[]; // geçici ekipman listesi
 let epEkipmanId=null; // şu an düzenlenen ekipman id
@@ -1129,7 +1130,7 @@ async function manualSync(){
       gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
       odemeler:ST.odemeler||[],
       siparisler:ST.siparisler||[],
-      ogrenilen:OGRENILEN,guncelleme:new Date().toISOString()
+      ogrenilen:OGRENILEN,muadilOgrenilen:MUADIL_OGRENILEN,guncelleme:new Date().toISOString()
     });
     await _setDoc(_doc(db,'ardem','data'),temizVeri2);
     _unsavedChanges=false;
@@ -1157,6 +1158,8 @@ async function initFirebase(){
     if(d){const p=JSON.parse(d);Object.assign(ST,p);}
     const og=localStorage.getItem('ardem_ogrenilen');
     if(og){OGRENILEN=JSON.parse(og);}
+    const mog=localStorage.getItem('ardem_muadil_ogrenilen');
+    if(mog){MUADIL_OGRENILEN=JSON.parse(mog);}
   }catch(e2){console.warn('localStorage yüklenemedi:',e2);}
 
   // Sonra Firebase'den güncelle (internet varsa)
@@ -1189,8 +1192,10 @@ async function initFirebase(){
         ST.odemeler=d.odemeler||[];
         ST.siparisler=d.siparisler||[];
         OGRENILEN=d.ogrenilen||{};
+      MUADIL_OGRENILEN=d.muadilOgrenilen||{};
+        MUADIL_OGRENILEN=d.muadilOgrenilen||{};
         // Firebase'den gelen veriyi localStorage'a da yaz
-        try{localStorage.setItem('ardem_v4',JSON.stringify(ST));localStorage.setItem('ardem_ogrenilen',JSON.stringify(OGRENILEN));}catch(e){}
+        try{localStorage.setItem('ardem_v4',JSON.stringify(ST));localStorage.setItem('ardem_ogrenilen',JSON.stringify(OGRENILEN));localStorage.setItem('ardem_muadil_ogrenilen',JSON.stringify(MUADIL_OGRENILEN));}catch(e){}
       }
     }catch(e){
       console.error('Firebase hatasi:',e);
@@ -1246,10 +1251,10 @@ async function manualSync(){
       gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
       odemeler:ST.odemeler||[],
       siparisler:ST.siparisler||[],
-      ogrenilen:OGRENILEN,guncelleme:new Date().toISOString()
+      ogrenilen:OGRENILEN,muadilOgrenilen:MUADIL_OGRENILEN,guncelleme:new Date().toISOString()
     });
     await _setDoc(_doc(db,'ardem','data'),temizVeri2);
-    try{localStorage.setItem('ardem_v4',JSON.stringify(ST));localStorage.setItem('ardem_ogrenilen',JSON.stringify(OGRENILEN));}catch(e){}
+    try{localStorage.setItem('ardem_v4',JSON.stringify(ST));localStorage.setItem('ardem_ogrenilen',JSON.stringify(OGRENILEN));localStorage.setItem('ardem_muadil_ogrenilen',JSON.stringify(MUADIL_OGRENILEN));}catch(e){}
     _unsavedChanges=false;
     _onlineBarShown=false;
     const ob=document.getElementById('online-bar');if(ob)ob.style.display='none';
@@ -1270,7 +1275,7 @@ async function manualSync(){
 async function save(){
   _unsavedChanges=true;
   // Önce localStorage'a yaz
-  try{localStorage.setItem('ardem_v4',JSON.stringify(ST));localStorage.setItem('ardem_ogrenilen',JSON.stringify(OGRENILEN));}catch(e){}
+  try{localStorage.setItem('ardem_v4',JSON.stringify(ST));localStorage.setItem('ardem_ogrenilen',JSON.stringify(OGRENILEN));localStorage.setItem('ardem_muadil_ogrenilen',JSON.stringify(MUADIL_OGRENILEN));}catch(e){}
   
   if(!navigator.onLine){showToast('⚠️ İnternet yok — veri cihazda saklandı','warning');return;}
   
@@ -1295,6 +1300,7 @@ async function save(){
       odemeler:ST.odemeler||[],
       siparisler:ST.siparisler||[],
       ogrenilen:OGRENILEN,
+      muadilOgrenilen:MUADIL_OGRENILEN,
       guncelleme:new Date().toISOString()
     });
     await _setDoc(_doc(db,'ardem','data'),temizVeri);
@@ -2218,7 +2224,19 @@ function muadilAC(val, ddId, inputId, ys2Id){
   const ogrenilen=Object.entries(OGRENILEN).filter(([,v])=>v.muadil&&v.muadil.toUpperCase().includes(q)).slice(0,3)
     .map(([k,v])=>({kaynak:'Öğrenilmiş',muadil:v.muadil,oem:k,ad:v.ad||'',fiyat:v.fiyat||0}));
 
-  const sonuclar=[...kayitli,...ogrenilen,...kaeser,...atlas].slice(0,14);
+  const muadilOg=Object.entries(MUADIL_OGRENILEN)
+    .filter(([k])=>k.includes(q)).slice(0,4)
+    .map(([k,v])=>({kaynak:'Öğrenilmiş',muadil:k,oem:'',ad:v.ad||v.tip||'',fiyat:v.fiyat||0}));
+
+  // Lupamat MUADIL_MAP'ten de ara (muadil değeri q içeriyorsa)
+  const lupamatMuadil=Object.entries(MUADIL_MAP)
+    .filter(([,v])=>v&&v.toUpperCase().includes(q)).slice(0,4)
+    .map(([oem,muadil])=>{
+      const lp=LUPAMAT_LISTE.find(x=>x.kod===oem);
+      return{kaynak:'Lupamat',muadil,oem,ad:lp?lp.ad||'':'',fiyat:lp?lp.fiyat||0:0};
+    });
+
+  const sonuclar=[...kayitli,...muadilOg,...ogrenilen,...lupamatMuadil,...kaeser,...atlas].slice(0,14);
   if(!sonuclar.length){dd.style.display='none';return;}
 
   const renkMap={'Kaeser':'rgba(59,130,246,0.15)','Atlas':'rgba(34,197,94,0.15)','Kayıtlı':'rgba(99,102,241,0.15)','Öğrenilmiş':'rgba(168,85,247,0.15)'};
@@ -2241,12 +2259,47 @@ function muadilSec(muadil, oem, inputId, ys2Id, ddId, fiyat){
   document.getElementById(inputId).value=muadil;
   document.getElementById(ddId).style.display='none';
 
-  const oemEl=document.getElementById(inputId.includes('ep')?'ep-orijinal':'p-orijinal');
-  if(oemEl&&!oemEl.value&&oem)oemEl.value=oem;
+  // Fiyatı önce parametreden, yoksa MUADIL_OGRENILEN'den getir
+  const mk=muadil.trim().toUpperCase();
+  const ogKayit=MUADIL_OGRENILEN[mk]||null;
+  const ogFiyat=(ogKayit&&ogKayit.fiyat)||0;
+  const gercekFiyat=fiyat||ogFiyat||0;
 
   const fiyatEl=document.getElementById(inputId.includes('ep')?'ep-fiyat':'p-fiyat');
-  if(fiyatEl&&(!fiyatEl.value||Number(fiyatEl.value)===0)&&fiyat)fiyatEl.value=fiyat;
-  showToast(`${muadil} seçildi${oem?' · OEM: '+oem:''}${fiyat?' · €'+Number(fiyat).toFixed(2):''}`, 'success');
+  if(fiyatEl&&(!fiyatEl.value||Number(fiyatEl.value)===0)&&gercekFiyat)fiyatEl.value=gercekFiyat;
+
+  // p-modal için ek doldurma
+  if(inputId==='p-yansanayi'){
+    // Marka/model alanına parça adını doldur
+    const markaEl=document.getElementById('p-marka');
+    if(markaEl&&!markaEl.value&&(ogKayit&&ogKayit.ad))markaEl.value=ogKayit.ad;
+
+    // Kaeser veya Atlas listesinden bu muadili bul — tip ve kat çıkar
+    const kaynakK=KAESER_LISTE.find(p=>p.muadil.toUpperCase()===mk);
+    const kaynakA=ATLAS_LISTE.find(p=>p.muadil.toUpperCase()===mk);
+    const kaynak=kaynakK||kaynakA;
+    if(kaynak){
+      const kat='kompressor';
+      const katSel=document.getElementById('p-kat');
+      if(katSel&&katSel.value!==kat){katSel.value=kat;updatePTip(kat);}
+      // Parça tipini eşleştir
+      setTimeout(()=>{
+        const tipSel=document.getElementById('p-tip');
+        const aciklama=kaynak.aciklama||'';
+        if(tipSel&&aciklama){
+          const opt=[...tipSel.options].find(o=>aciklama.toLowerCase().includes(o.text.toLowerCase())||o.text.toLowerCase().includes(aciklama.toLowerCase().split(' ')[0]));
+          if(opt)tipSel.value=opt.value;
+        }
+      },60);
+    }
+    // OEM alanına karşı kodu doldur (boşsa)
+    if(oem){
+      const oemEl=document.getElementById('p-orijinal');
+      if(oemEl&&!oemEl.value)oemEl.value=oem;
+    }
+  }
+
+  showToast(`${muadil} seçildi${oem?' · OEM: '+oem:''}${gercekFiyat?' · €'+Number(gercekFiyat).toFixed(2):''}`, 'success');
 }
 
 function stokOrijinalAC(val){
@@ -2389,9 +2442,94 @@ function saveP(){
     olusturma:new Date().toISOString()
   };
   if(orijinal&&secilen==='oem'){ogren({orijinal,ad:tip,yansanayi,fiyat,tip});}
+  if(yansanayi&&secilen==='muadil'){
+    const mk=yansanayi.trim().toUpperCase();
+    MUADIL_OGRENILEN[mk]={ad:document.getElementById('p-marka').value||tip,fiyat,tip,kayit:new Date().toISOString()};
+  }
   ST.parcalar.push(p);
   addAkt('📦',`${secilen==='oem'?'🔵 OEM':'🟡 Muadil'} parça eklendi: ${p.tip} (Stok: ${p.stok})`);
   save();closeM('p-modal');renderStok();updateBadges();showToast('Parça kaydedildi ✓','success');
+}
+
+
+function duzenleParca(id){
+  const p=ST.parcalar.find(x=>String(x.id)===String(id));
+  if(!p)return;
+
+  // Kategoriyi seç
+  const katEl=document.getElementById('p-kat');
+  katEl.value=p.kategori||'kompressor';
+  updatePTip(p.kategori||'kompressor');
+
+  // Parça tipini seç (setTimeout ile seçenekler dolsun)
+  setTimeout(()=>{
+    const tipEl=document.getElementById('p-tip');
+    // Eğer tip listede yoksa option olarak ekle
+    if(![...tipEl.options].some(o=>o.value===p.tip)){
+      const opt=document.createElement('option');opt.value=p.tip;opt.textContent=p.tip;
+      tipEl.appendChild(opt);
+    }
+    tipEl.value=p.tip;
+  },50);
+
+  // OEM / Muadil seçici
+  const turu=p.parcaTuru||'oem';
+  document.querySelectorAll('input[name="p-parca-turu"]').forEach(r=>r.value===turu?r.checked=true:r.checked=false);
+  pTuruDegis();
+
+  // Alanları doldur
+  document.getElementById('p-marka').value=p.marka||'';
+  document.getElementById('p-fiyat').value=p.fiyat||'';
+  document.getElementById('p-orijinal').value=p.orijinal||'';
+  document.getElementById('p-yansanayi').value=p.yansanayi||'';
+  document.getElementById('p-stok').value=p.stok||0;
+  document.getElementById('p-notlar').value=p.notlar||'';
+
+  // Modal başlığını değiştir
+  document.querySelector('#p-modal .mtitle').textContent='✏️ Parça Düzenle';
+
+  // Kaydet butonunu düzenleme moduna al
+  const kaydetBtn=document.querySelector('#p-modal .btn-primary');
+  kaydetBtn.textContent='💾 Güncelle';
+  kaydetBtn.onclick=()=>savePDuzenle(id);
+
+  openMod('p-modal');
+}
+
+function savePDuzenle(id){
+  const p=ST.parcalar.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  const tip=document.getElementById('p-tip').value;
+  if(!tip){showToast('Parça tipi seçin!','error');return;}
+  const secilen=document.querySelector('input[name="p-parca-turu"]:checked').value;
+  const orijinal=document.getElementById('p-orijinal').value.trim();
+  const yansanayi=document.getElementById('p-yansanayi').value.trim();
+  if(secilen==='oem'&&!orijinal){showToast('OEM için orijinal parça kodu zorunludur!','error');return;}
+  if(secilen==='muadil'&&!yansanayi){showToast('Muadil için muadil kodu zorunludur!','error');return;}
+
+  // Muadil güncelleme — hafızaya al
+  if(secilen==='muadil'&&yansanayi){
+    const mk=yansanayi.trim().toUpperCase();
+    MUADIL_OGRENILEN[mk]={ad:document.getElementById('p-marka').value||p.tip,fiyat:parseFloat(document.getElementById('p-fiyat').value)||0,tip:document.getElementById('p-tip').value,kayit:new Date().toISOString()};
+  }
+  p.parcaTuru=secilen;
+  p.kategori=document.getElementById('p-kat').value;
+  p.tip=tip;
+  p.marka=document.getElementById('p-marka').value;
+  p.fiyat=parseFloat(document.getElementById('p-fiyat').value)||0;
+  p.orijinal=secilen==='oem'?orijinal:'';
+  p.yansanayi=secilen==='muadil'?yansanayi:'';
+  p.stok=parseInt(document.getElementById('p-stok').value)||0;
+  p.notlar=document.getElementById('p-notlar').value;
+
+  // Butonu ve başlığı sıfırla
+  document.querySelector('#p-modal .mtitle').textContent='⚙️ Yedek Parça Ekle';
+  const kaydetBtn=document.querySelector('#p-modal .btn-primary');
+  kaydetBtn.textContent='💾 Kaydet';
+  kaydetBtn.onclick=saveP;
+
+  addAkt('✏️',`Parça güncellendi: ${p.tip}`);
+  save();closeM('p-modal');renderStok();updateBadges();showToast('Parça güncellendi ✓','success');
 }
 
 function stokGuncelle(id, delta){
@@ -2454,6 +2592,7 @@ function renderStok(){
               <div class="stok-num" style="min-width:28px;text-align:center">${stok}</div>
               <button class="stok-btn" onclick="stokGuncelle('${p.id}',+1)">＋</button>
             </div>
+            <button class="btn btn-ghost btn-sm" onclick="duzenleParca('${p.id}')" title="Düzenle">✏️</button>
             <button class="btn btn-danger btn-sm" onclick="deleteParca('${p.id}')">🗑️</button>
           </div>
         </div>`;
@@ -2479,6 +2618,7 @@ function renderStok(){
               <div class="stok-num" style="min-width:28px;text-align:center">${stok}</div>
               <button class="stok-btn" onclick="stokGuncelle('${p.id}',+1)">＋</button>
             </div>
+            <button class="btn btn-ghost btn-sm" onclick="duzenleParca('${p.id}')" title="Düzenle">✏️</button>
             <button class="btn btn-danger btn-sm" onclick="deleteParca('${p.id}')">🗑️</button>
           </div>
         </div>`;
@@ -2500,6 +2640,7 @@ function renderStok(){
                 <div class="stok-num" style="min-width:28px;text-align:center">${stok}</div>
                 <button class="stok-btn" onclick="stokGuncelle('${p.id}',+1)">＋</button>
               </div>
+              <button class="btn btn-ghost btn-sm" onclick="duzenleParca('${p.id}')" title="Düzenle">✏️</button>
               <button class="btn btn-danger btn-sm" onclick="deleteParca('${p.id}')">🗑️</button>
             </div>
           </div>`;

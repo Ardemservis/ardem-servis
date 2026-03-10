@@ -1800,16 +1800,22 @@ function loadServisParçalar(){
       );
 
       tumParcalar.push(`<div class="servis-parca-item" style="flex-direction:column;align-items:flex-start;gap:6px" 
-        data-uid="${uid}" data-ekid="${ekId}" data-pi="${pi}" data-tercih="oem">
+        data-uid="${uid}" data-ekid="${ekId}" data-pi="${pi}" data-tercih="oem" data-kullanilacak="1">
         <div style="display:flex;align-items:center;gap:8px;width:100%">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none" title="Bu serviste kullanılacak mı?">
+            <input type="checkbox" id="${uid}_kull" checked onchange="kullAnimDegis('${uid}',this.checked)"
+              style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+          </label>
           <span class="sp-icon" style="font-size:14px">⚙️</span>
-          <div class="sp-info" style="flex:1">
+          <div class="sp-info" style="flex:1" id="${uid}_icerik">
             <div class="sp-name">${p.tip}${p.adet&&p.adet>1?' <strong>('+p.adet+' adet)</strong>':''}</div>
             ${p.fiyat?`<div style="font-size:11px;color:var(--text2)">Birim: €${Number(p.fiyat).toFixed(2)}</div>`:''}
           </div>
         </div>
-        ${(hasYs1||hasYs2)?`<div style="display:flex;flex-wrap:wrap;gap:5px;padding-left:30px">${opsiyonlar.join('')}</div>`
-          :`<div style="padding-left:30px;font-size:11px;color:var(--text2)">OEM: <strong>${p.orijinal||'—'}</strong> ${stokBadge(spOem)}</div>`}
+        <div id="${uid}_secimler" style="padding-left:46px">
+        ${(hasYs1||hasYs2)?`<div style="display:flex;flex-wrap:wrap;gap:5px">${opsiyonlar.join('')}</div>`
+          :`<div style="font-size:11px;color:var(--text2)">OEM: <strong>${p.orijinal||'—'}</strong> ${stokBadge(spOem)}</div>`}
+        </div>
       </div>`);
     });
   });
@@ -1817,6 +1823,22 @@ function loadServisParçalar(){
   if(!tumParcalar.length){blok.style.display='none';return;}
   blok.style.display='block';
   list.innerHTML=tumParcalar.join('');
+}
+
+function kullAnimDegis(uid, kullanilacak){
+  const item=document.querySelector(`[data-uid="${uid}"]`);
+  if(!item)return;
+  item.dataset.kullanilacak=kullanilacak?'1':'0';
+  const icerik=document.getElementById(`${uid}_icerik`);
+  const secimler=document.getElementById(`${uid}_secimler`);
+  const opasite=kullanilacak?'1':'0.35';
+  if(icerik)icerik.style.opacity=opasite;
+  if(secimler)secimler.style.opacity=opasite;
+  // Seçim butonlarını da disable et
+  ['oem','ys1','ys2'].forEach(t=>{
+    const btn=document.getElementById(`${uid}_${t}`);
+    if(btn){btn.disabled=!kullanilacak;btn.style.pointerEvents=kullanilacak?'':'none';}
+  });
 }
 
 function parcaTercihi(uid,tercih){
@@ -1856,6 +1878,8 @@ function saveS(){
 
   const tercihler={};
   document.querySelectorAll('[data-uid]').forEach(el=>{
+    // Sadece "kullanılacak" işaretli olanları al
+    if(el.dataset.kullanilacak==='0')return;
     tercihler[el.dataset.uid]={ekId:el.dataset.ekid,pi:el.dataset.pi,tercih:el.dataset.tercih||'oem'};
   });
 

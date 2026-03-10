@@ -776,10 +776,11 @@ function lupamatAra(val){
 }
 const PARCA_TIPLERI={
   kompressor:['Hava Filtresi','Yağ Filtresi','Seperatör Filtresi','Yağ'],
-  kurutucu:['Giriş Filtresi','Çıkış Filtresi'],
-  filtre:['Filtre Elemanı','Otomatik Tahliye','Manometre']
+  kurutucu:['Giriş Filtresi','Çıkış Filtresi','Ekipman'],
+  filtre:['Filtre Elemanı','Otomatik Tahliye','Manometre'],
+  azot:['Ekipman']
 };
-const KAT_LABEL={kompressor:'Kompresör',kurutucu:'Kurutucu',filtre:'Basınçlı Hat Filtresi'};
+const KAT_LABEL={kompressor:'Kompresör',kurutucu:'Kurutucu',filtre:'Basınçlı Hat Filtresi',azot:'Azot Jeneratörü'};
 
 // ===== KULLANICI & GİRİŞ =====
 // Şifreler sadece burada — localStorage kullanılmıyor
@@ -831,6 +832,17 @@ const MUADIL_MAP2={"VK-1570.00": "W 11 102", "VK-1580.00": "W 3145/1"};
 let MUADIL_MAP={};
 let KAESER_LISTE=[];
 let ATLAS_LISTE=[];
+// K-MT6 Kurutucu Servis Parça Listesi
+const KMT6_LISTE=[
+  {kod:'SKK6-K7/D3/12', ad:'Reset-module, muffler and filter elements', fiyat:683.24, model:'K-MT6'},
+  {kod:'SKK6-K7/D3/24', ad:'Reset-module, valve membranes muffler and filter elements', fiyat:1860.00, model:'K-MT6'},
+  {kod:'SKK6-K7/D3/48', ad:'Solenoid coils, check valves, demisters, perforated plates, muffler and filter', fiyat:2187.36, model:'K-MT6'},
+  {kod:'P015AO',         ad:'Filter', fiyat:141.36, model:'K-MT6'},
+  {kod:'P015ACS',        ad:'Filter', fiyat:158.72, model:'K-MT6'},
+  {kod:'M12.FD.0001',   ad:'Autodrain Kit', fiyat:147.56, model:'K-MT6'},
+  {kod:'DESPAC15MS',    ad:'Desiccant packs', fiyat:474.92, model:'K-MT6'},
+];
+
 let AAG_LISTE=[];
 
 // ===== LİSTELERİ FİREBASE'E YÜKLE (admin) =====
@@ -937,16 +949,19 @@ function orijinalAutoComplete(val){
     .map(p=>({kaynak:'Atlas',kod:p.oem,ad:`${p.aciklama}${p.model?' ('+p.model+')':''}`,muadil:p.muadil,fiyat:p.fiyat,para:p.para}));
 
   const ekTip=document.getElementById('ep-tip')?.value||'';
-  const isKurutucu=ekTip==='Giriş Filtresi'||ekTip==='Çıkış Filtresi';
+  const isKurutucu=ekTip==='Giriş Filtresi'||ekTip==='Çıkış Filtresi'||ekTip==='Ekipman';
   const aag=isKurutucu?AAG_LISTE.filter(p=>p.kod.toUpperCase().includes(q)||p.ad.toUpperCase().includes(q)).slice(0,8)
     .map(p=>({kaynak:'AAG',kod:p.kod,ad:p.ad+' ('+p.kapasite+' Nm³/dk)',muadil:'',fiyat:p.fiyat,para:'EUR'})):[];
+
+  const kmt6=isKurutucu?KMT6_LISTE.filter(p=>p.kod.toUpperCase().includes(q)||p.ad.toUpperCase().includes(q)).slice(0,8)
+    .map(p=>({kaynak:'K-MT6',kod:p.kod,ad:p.ad+' ('+p.model+')',muadil:'',fiyat:p.fiyat,para:'EUR'})):[];
 
   const ogrenilen=Object.entries(OGRENILEN)
     .filter(([k,v])=>k.includes(q)&&(v.muadil||v.fiyat))
     .slice(0,6)
     .map(([k,v])=>({kaynak:'Öğrenilmiş',kod:k,ad:v.ad||v.tip||'Manuel giriş',muadil:v.muadil||'',fiyat:v.fiyat||0,para:'EUR'}));
 
-  const sonuclar=[...aag,...lupamat,...kaeser,...atlas,...ogrenilen].slice(0,18);
+  const sonuclar=[...aag,...kmt6,...lupamat,...kaeser,...atlas,...ogrenilen].slice(0,18);
   if(!sonuclar.length){dd.style.display='none';match.style.display='none';return;}
   dd.style.display='block';
   dd.innerHTML=sonuclar.map(p=>`
@@ -954,7 +969,7 @@ function orijinalAutoComplete(val){
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:6px">
           <span style="font-family:monospace;font-weight:700;color:var(--accent)">${p.kod}</span>
-          <span style="font-size:10px;padding:1px 5px;border-radius:4px;background:${p.kaynak==='Kaeser'?'rgba(59,130,246,0.15)':p.kaynak==='Atlas'?'rgba(34,197,94,0.15)':p.kaynak==='Öğrenilmiş'?'rgba(168,85,247,0.15)':p.kaynak==='AAG'?'rgba(234,179,8,0.15)':'rgba(232,93,26,0.15)'};color:${p.kaynak==='Kaeser'?'#60a5fa':p.kaynak==='Atlas'?'#4ade80':p.kaynak==='Öğrenilmiş'?'#c084fc':p.kaynak==='AAG'?'#facc15':'var(--accent)'}">${p.kaynak==='Atlas'?'Atlas Copco':p.kaynak}</span>
+          <span style="font-size:10px;padding:1px 5px;border-radius:4px;background:${p.kaynak==='Kaeser'?'rgba(59,130,246,0.15)':p.kaynak==='Atlas'?'rgba(34,197,94,0.15)':p.kaynak==='Öğrenilmiş'?'rgba(168,85,247,0.15)':p.kaynak==='AAG'?'rgba(234,179,8,0.15)':p.kaynak==='K-MT6'?'rgba(6,182,212,0.15)':'rgba(232,93,26,0.15)'};color:${p.kaynak==='Kaeser'?'#60a5fa':p.kaynak==='Atlas'?'#4ade80':p.kaynak==='Öğrenilmiş'?'#c084fc':p.kaynak==='AAG'?'#facc15':p.kaynak==='K-MT6'?'#22d3ee':'var(--accent)'}">${p.kaynak==='Atlas'?'Atlas Copco':p.kaynak}</span>
           ${p.muadil?`<span style="font-size:10px;color:var(--text3)">→ ${p.muadil}</span>`:''}
         </div>
         <div style="color:var(--text2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.ad}</div>
@@ -2386,6 +2401,9 @@ function stokOrijinalAC(val){
   const aag=AAG_LISTE.filter(p=>p.kod.toUpperCase().includes(q)||p.ad.toUpperCase().includes(q)).slice(0,6)
     .map(p=>({kaynak:'AAG',kod:p.kod,ad:p.ad,fiyat:p.fiyat||0,yansanayi:'',yansanayi2:'',tip:'',kat:'kurutucu'}));
 
+  const kmt6=KMT6_LISTE.filter(p=>p.kod.toUpperCase().includes(q)||p.ad.toUpperCase().includes(q)).slice(0,6)
+    .map(p=>({kaynak:'K-MT6',kod:p.kod,ad:p.ad+' ('+p.model+')',fiyat:p.fiyat||0,yansanayi:'',yansanayi2:'',tip:'Ekipman',kat:'kurutucu'}));
+
   const lupamat=LUPAMAT_LISTE.filter(p=>p.kod.toUpperCase().includes(q)||p.ad.toUpperCase().includes(q)).slice(0,5)
     .map(p=>({kaynak:'Lupamat',kod:p.kod,ad:p.ad||'',fiyat:p.fiyat||0,yansanayi:MUADIL_MAP[p.kod]||'',yansanayi2:'',tip:p.ad||'',kat:'kompressor'}));
   const kaeser=KAESER_LISTE.filter(p=>p.oem.toUpperCase().includes(q)||p.muadil.toUpperCase().includes(q)).slice(0,5)
@@ -2393,17 +2411,17 @@ function stokOrijinalAC(val){
   const atlas=ATLAS_LISTE.filter(p=>p.oem.toUpperCase().includes(q)||p.muadil.toUpperCase().includes(q)).slice(0,5)
     .map(p=>({kaynak:'Atlas',kod:p.oem,ad:(p.aciklama||'')+(p.model?' ('+p.model+')':''),fiyat:p.fiyat||0,yansanayi:p.muadil||'',yansanayi2:'',tip:p.aciklama||'',kat:'kompressor'}));
 
-  const sonuclar=[...mevcutlar,...ekipmanTekil,...ogrenilen,...aag,...lupamat,...kaeser,...atlas].slice(0,16);
+  const sonuclar=[...mevcutlar,...ekipmanTekil,...ogrenilen,...aag,...kmt6,...lupamat,...kaeser,...atlas].slice(0,18);
   if(!sonuclar.length){dd.style.display='none';return;}
 
   const renkMap={
     'Kayıtlı':'rgba(99,102,241,0.15)','Ekipman':'rgba(16,185,129,0.15)','Öğrenilmiş':'rgba(168,85,247,0.15)',
-    'AAG':'rgba(234,179,8,0.15)',
+    'AAG':'rgba(234,179,8,0.15)','K-MT6':'rgba(6,182,212,0.15)',
     'Lupamat':'rgba(232,93,26,0.15)','Kaeser':'rgba(59,130,246,0.15)','Atlas':'rgba(34,197,94,0.15)'
   };
   const txtMap={
     'Kayıtlı':'#818cf8','Ekipman':'#34d399','Öğrenilmiş':'#c084fc',
-    'AAG':'#facc15',
+    'AAG':'#facc15','K-MT6':'#22d3ee',
     'Lupamat':'var(--accent)','Kaeser':'#60a5fa','Atlas':'#4ade80'
   };
 

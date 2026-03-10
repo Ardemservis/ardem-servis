@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Ardem Endüstri — ServisTakip</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1117;--bg2:#161a24;--bg3:#1e2333;--border:#2a3045;
+  --accent:#e85d1a;--accent2:#f97316;--blue:#3b82f6;--green:#22c55e;
+  --red:#ef4444;--yellow:#eab308;--purple:#a855f7;
+  --text:#e8eaf0;--text2:#8892a4;--text3:#4a5568;
+  --card:#1a1f2e;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,0.4);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.app{display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:260px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;transition:transform 0.3s;}
+.sidebar-logo{padding:18px 18px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:11px;}
+.logo-icon{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#b03d0d);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.logo-texts .logo-main{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--text);}
+.logo-texts .logo-sub{font-size:10px;color:var(--text2);margin-top:1px;}
+.sidebar-nav{padding:10px 9px;flex:1;overflow-y:auto;}
+.nav-sec{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:7px 10px 4px;margin-top:5px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:all 0.15s;color:var(--text2);font-size:13px;margin-bottom:1px;position:relative;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:rgba(232,93,26,0.13);color:var(--accent);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:16px;background:var(--accent);border-radius:0 3px 3px 0;}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+.nav-badge{margin-left:auto;color:white;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;min-width:18px;text-align:center;background:var(--accent);}
+.nb-blue{background:var(--blue);}.nb-green{background:var(--green);}.nb-red{background:var(--red);}
+.sidebar-footer{padding:11px;border-top:1px solid var(--border);}
+.user-card{display:flex;align-items:center;gap:9px;padding:9px;border-radius:8px;background:var(--bg3);}
+.u-avatar{width:31px;height:31px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#b03d0d);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:11px;color:white;flex-shrink:0;}
+.u-name{font-size:12px;font-weight:500;}.u-role{font-size:10px;color:var(--text2);}
+
+/* MAIN */
+.main{margin-left:260px;flex:1;display:flex;flex-direction:column;}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 22px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.page-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all 0.15s;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.btn-primary{background:var(--accent);color:white;}.btn-primary:hover{background:var(--accent2);}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}.btn-ghost:hover{background:var(--bg3);color:var(--text);}
+.btn-success{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);}.btn-success:hover{background:rgba(34,197,94,0.25);}
+.btn-danger{background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3);}.btn-danger:hover{background:rgba(239,68,68,0.25);}
+.btn-blue{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.3);}.btn-blue:hover{background:rgba(59,130,246,0.25);}
+.btn-sm{padding:4px 9px;font-size:11px;}
+.content{padding:22px;flex:1;}
+.page{display:none;}.page.active{display:block;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:20px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:17px;position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;top:0;right:0;width:52px;height:52px;border-radius:0 12px 0 52px;opacity:0.09;}
+.sc-o::after{background:var(--accent);}.sc-b::after{background:var(--blue);}.sc-g::after{background:var(--green);}.sc-y::after{background:var(--yellow);}
+.stat-icon{font-size:20px;margin-bottom:9px;}
+.stat-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1;margin-bottom:3px;}
+.stat-lbl{font-size:11px;color:var(--text2);}
+.stat-tr{font-size:11px;margin-top:5px;}
+.tr-up{color:var(--green);}.tr-warn{color:var(--yellow);}.tr-danger{color:var(--red);}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:18px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-hd{padding:13px 17px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;}
+.card-bd{padding:17px;}
+.mb18{margin-bottom:18px;}
+
+/* TABLE */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:8px 13px;font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;background:var(--bg3);border-bottom:1px solid var(--border);}
+td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.015);}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.bg{background:rgba(34,197,94,0.15);color:var(--green);}
+.by{background:rgba(234,179,8,0.15);color:var(--yellow);}
+.br{background:rgba(239,68,68,0.15);color:var(--red);}
+.bb{background:rgba(59,130,246,0.15);color:var(--blue);}
+.bo{background:rgba(232,93,26,0.15);color:var(--accent);}
+.bgr{background:rgba(148,163,184,0.1);color:var(--text2);}
+.bp{background:rgba(168,85,247,0.15);color:var(--purple);}
+
+/* SEARCH */
+.search-bar{display:flex;align-items:center;gap:9px;margin-bottom:16px;flex-wrap:wrap;}
+.si-wrap{position:relative;flex:1;min-width:160px;}
+.si-wrap input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px 8px 34px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;}
+.si-wrap input:focus{border-color:var(--accent);}
+.si-wrap input::placeholder{color:var(--text3);}
+.si-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;}
+
+/* FORM */
+.fg{display:grid;gap:13px;}
+.fg2{grid-template-columns:1fr 1fr;}
+.fg3{grid-template-columns:1fr 1fr 1fr;}
+.fgrp{display:flex;flex-direction:column;gap:5px;}
+.flbl{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;}
+.finput,.fsel,.ftxt{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
+.finput:focus,.fsel:focus,.ftxt:focus{border-color:var(--accent);}
+.ftxt{resize:vertical;min-height:68px;}
+.fsel option{background:var(--bg2);}
+.sp2{grid-column:span 2;}.sp3{grid-column:span 3;}
+.fhint{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.mo.open{opacity:1;pointer-events:all;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:660px;max-height:92vh;overflow-y:auto;transform:scale(0.96);transition:transform 0.2s;}
+.mo.open .modal{transform:scale(1);}
+.modal-lg{max-width:780px;}
+.mhd{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:2;}
+.mtitle{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.mclose{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;width:27px;height:27px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all 0.15s;}
+.mclose:hover{background:var(--bg3);color:var(--text);}
+.mbody{padding:20px;}
+.mfoot{padding:13px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--bg2);}
+
+/* SECTION */
+.sec-div{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;padding:13px 0 7px;border-bottom:1px solid var(--border);margin-bottom:13px;}
+
+/* EKİPMAN */
+.ek-list{display:flex;flex-direction:column;gap:7px;margin-top:4px;}
+.ek-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0;overflow:hidden;}
+.ek-item-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;cursor:pointer;user-select:none;}
+.ek-item-hd:hover{background:rgba(255,255,255,0.02);}
+.ek-item-name{font-size:13px;font-weight:500;}
+.ek-item-detail{font-size:11px;color:var(--text2);margin-top:2px;}
+.ek-item-body{padding:13px;border-top:1px solid var(--border);background:rgba(0,0,0,0.2);}
+.ek-add-grid{display:grid;grid-template-columns:1fr 1fr 80px auto;gap:8px;align-items:end;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px;margin-bottom:10px;}
+
+/* PARÇA STOK */
+.stok-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;}
+.stok-info{flex:1;}
+.stok-name{font-size:13px;font-weight:500;}
+.stok-codes{font-size:11px;color:var(--text2);font-family:monospace;margin-top:2px;}
+.stok-count{display:flex;align-items:center;gap:8px;}
+.stok-num{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
+.stok-ctrl{display:flex;gap:4px;}
+.stok-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.stok-btn:hover{background:var(--bg3);}
+
+/* PARCA TAB */
+.tab-bar{display:flex;gap:3px;padding:4px;background:var(--bg3);border-radius:10px;margin-bottom:14px;}
+.tab-btn{flex:1;padding:6px 8px;border-radius:7px;border:none;background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;}
+.tab-btn.active{background:var(--bg2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+
+/* SERVİS PARÇA LİSTESİ */
+.servis-parca-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:7px;}
+.sp-icon{font-size:18px;flex-shrink:0;}
+.sp-info{flex:1;}
+.sp-name{font-size:13px;font-weight:500;}
+.sp-code{font-size:11px;color:var(--text2);font-family:monospace;margin-top:1px;}
+.sp-stok{font-size:12px;font-weight:600;margin-left:auto;white-space:nowrap;}
+.sp-stok.ok{color:var(--green);}.sp-stok.warn{color:var(--yellow);}.sp-stok.empty{color:var(--red);}
+
+/* TIMELINE */
+.tl{display:flex;flex-direction:column;}
+.tl-item{display:flex;gap:11px;position:relative;padding-bottom:16px;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:14px;top:30px;width:2px;height:calc(100% - 12px);background:var(--border);}
+.tl-dot{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--bg3);}
+.tl-cont{flex:1;padding-top:3px;}
+.tl-title{font-size:13px;font-weight:500;margin-bottom:2px;}
+.tl-date{font-size:11px;color:var(--text2);}
+.tl-desc{font-size:12px;color:var(--text2);margin-top:3px;line-height:1.5;}
+
+/* ALERT */
+.alert{padding:10px 13px;border-radius:8px;font-size:13px;display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
+.al-w{background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.25);color:var(--yellow);}
+.al-r{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:var(--red);}
+.al-g{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:var(--green);}
+
+/* TOAST */
+.toast-c{position:fixed;top:16px;right:16px;z-index:999;display:flex;flex-direction:column;gap:6px;}
+.toast{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);animation:sIn 0.25s ease;min-width:230px;}
+@keyframes sIn{from{transform:translateX(110%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.toast.success{border-left:3px solid var(--green);}.toast.error{border-left:3px solid var(--red);}.toast.info{border-left:3px solid var(--blue);}
+
+.empty-s{text-align:center;padding:32px 18px;color:var(--text2);}
+.empty-i{font-size:30px;margin-bottom:8px;}
+.empty-t{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.empty-d{font-size:12px;}
+
+.menu-btn{display:none;background:none;border:none;color:var(--text);font-size:21px;cursor:pointer;}
+.overlay-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;}
+.overlay-bg.open{display:block;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+@media(max-width:900px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.main{margin-left:0;}.menu-btn{display:flex;}.stats-row{grid-template-columns:1fr 1fr;}.grid2,.grid3{grid-template-columns:1fr;}.fg2,.fg3,.ek-add-grid{grid-template-columns:1fr;}}
+@media(max-width:560px){.stats-row{grid-template-columns:1fr;}.content{padding:14px;}.topbar{padding:0 14px;}}
+</style>
+</head>
+<body>
+<!-- GİRİŞ EKRANI -->
+<div id="login-screen" style="position:fixed;inset:0;background:#0f1117;display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;">
+  <div style="background:#161a24;border:1px solid #2a3045;border-radius:16px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#e85d1a,#b03d0d);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px;">🔧</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#e8eaf0;">ARDEM ENDÜSTRİ</div>
+      <div style="font-size:12px;color:#8892a4;margin-top:4px;">Servis Takip Sistemi</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:13px;">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#8892a4;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:5px;">Kullanıcı Adı</label>
+        <input id="login-user" class="finput" placeholder="Kullanıcı adı" autocomplete="username" style="width:100%" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#8892a4;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:5px;">Şifre</label>
+        <input id="login-pass" class="finput" type="password" placeholder="Şifre" autocomplete="current-password" style="width:100%" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div id="login-err" style="font-size:12px;color:#ef4444;display:none;text-align:center;">❌ Kullanıcı adı veya şifre hatalı!</div>
+      <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px;font-size:14px;" onclick="doLogin()">Giriş Yap →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SPLASH / YÜKLENİYOR -->
+<div id="splash" style="position:fixed;inset:0;background:#0f1117;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9998;display:none">
+  <div style="font-size:40px;margin-bottom:16px">🔧</div>
+  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#e8eaf0;margin-bottom:8px">ARDEM ENDÜSTRİ</div>
+  <div style="font-size:13px;color:#8892a4;margin-bottom:24px">Servis Takip Sistemi</div>
+  <div style="width:40px;height:40px;border:3px solid #2a3045;border-top-color:#e85d1a;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  <div style="font-size:12px;color:#4a5568;margin-top:16px">Veriler yükleniyor...</div>
+</div>
+<!-- UYGULAMA -->
+<div id="app-wrap" style="display:none;min-height:100vh">
+<div class="toast-c" id="toastC"></div>
+<div class="overlay-bg" id="overlayBg" onclick="closeSidebar()"></div>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🔧</div>
+    <div class="logo-texts">
+      <div class="logo-main">ARDEM ENDÜSTRİ</div>
+      <div class="logo-sub">Servis Takip Sistemi</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-sec">Ana Menü</div>
+    <div class="nav-item active" onclick="goPage('dashboard',this)"><span class="nav-icon">📊</span>Gösterge Paneli</div>
+    <div class="nav-item" onclick="goPage('musteriler',this)"><span class="nav-icon">🏭</span>Müşteriler <span class="nav-badge nb-blue" id="bdg-m">0</span></div>
+    <div class="nav-item" onclick="goPage('servisler',this)"><span class="nav-icon">🔧</span>Servis Planları <span class="nav-badge" id="bdg-s">0</span></div>
+    <div class="nav-sec">Stok & Parça</div>
+    <div class="nav-item" onclick="goPage('stok',this)"><span class="nav-icon">📦</span>Yedek Parça Stok <span class="nav-badge nb-red" id="bdg-stok">0</span></div>
+    <div class="nav-sec">Finans</div>
+    <div class="nav-item" onclick="goPage('faturalar',this)"><span class="nav-icon">🧾</span>Teklifler / Faturalar <span class="nav-badge nb-green" id="bdg-f">0</span></div>
+    <div class="nav-sec">Kayıtlar</div>
+    <div class="nav-item" onclick="goPage('gecmis',this)"><span class="nav-icon">📋</span>Servis Geçmişi</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div id="admin-menu-item" class="nav-item" style="margin-bottom:8px;display:none" onclick="openMod('pw-modal')"><span class="nav-icon">🔐</span>Şifre Değiştir</div>
+    <div class="user-card">
+      <div class="u-avatar">AE</div>
+      <div><div class="u-name">Ardem Endüstri</div><div class="u-role">Servis Yönetimi</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <div class="page-title" id="pageTitle">Gösterge Paneli</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="sync-btn" onclick="manualSync()" title="Firebase ile senkronize et" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text1);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px">
+        <span id="sync-icon">🔄</span><span id="sync-text">Senkronize Et</span>
+      </button>
+      <button class="btn btn-primary" onclick="handleQuickAdd()">＋ Yeni Ekle</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-row">
+        <div class="stat-card sc-o"><div class="stat-icon">🏭</div><div class="stat-val" id="s-m">0</div><div class="stat-lbl">Toplam Müşteri</div><div class="stat-tr tr-up" id="tr-m">—</div></div>
+        <div class="stat-card sc-b"><div class="stat-icon">🔧</div><div class="stat-val" id="s-b">0</div><div class="stat-lbl">Bekleyen Servis</div><div class="stat-tr tr-warn" id="tr-b">—</div></div>
+        <div class="stat-card sc-g"><div class="stat-icon">✅</div><div class="stat-val" id="s-t">0</div><div class="stat-lbl">Tamamlanan Servis</div><div class="stat-tr tr-up">Toplam</div></div>
+        <div class="stat-card sc-y"><div class="stat-icon">📦</div><div class="stat-val" id="s-stok">0</div><div class="stat-lbl">Stok Uyarısı</div><div class="stat-tr tr-danger" id="tr-stok">Kontrol et</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">⚠️ Yaklaşan & Geciken Servisler</div><span class="badge br" id="uyari-bdg">0</span></div>
+          <div class="card-bd" id="uyari-list"><div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Her şey yolunda!</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">📦 Kritik Stok Durumu</div></div>
+          <div class="card-bd" id="kritik-stok"><div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Stok durumu normal</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">🕒 Son Aktiviteler</div></div>
+        <div class="card-bd" id="son-aktiv"><div class="empty-s"><div class="empty-i">📝</div><div class="empty-t">Henüz aktivite yok</div></div></div>
+      </div>
+    </div>
+
+    <!-- MÜŞTERİLER -->
+    <div class="page" id="page-musteriler">
+      <div class="search-bar">
+        <div class="si-wrap"><span class="si-icon">🔍</span><input type="text" placeholder="Müşteri ara..." oninput="mSearch=this.value;renderM()"></div>
+        <button class="btn btn-primary" onclick="openMModal()">＋ Yeni Müşteri</button>
+      </div>
+      <div class="card"><div class="tw"><table>
+        <thead><tr><th>Müşteri</th><th>İletişim</th><th>Adres</th><th>Ekipmanlar</th><th>Toplam</th><th></th></tr></thead>
+        <tbody id="m-tbody"></tbody>
+      </table></div></div>
+    </div>
+
+    <!-- SERVİSLER -->
+    <div class="page" id="page-servisler">
+      <div class="search-bar">
+        <div class="si-wrap"><span class="si-icon">🔍</span><input type="text" placeholder="Servis ara..." oninput="sSearch=this.value;renderS()"></div>
+        <select class="fsel" style="width:155px" onchange="sDurumF=this.value;renderS()">
+          <option value="">Tüm Durumlar</option><option value="bekliyor">Bekliyor</option><option value="gecikti">Gecikti</option><option value="tamamlandi">Tamamlandı</option>
+        </select>
+        <button class="btn btn-primary" onclick="openSModal()">＋ Yeni Servis</button>
+      </div>
+      <div class="card"><div class="tw"><table>
+        <thead><tr><th>Müşteri</th><th>Ekipman</th><th>Servis Tipi</th><th>Tarih</th><th>Periyot</th><th>Durum</th><th></th></tr></thead>
+        <tbody id="s-tbody"></tbody>
+      </table></div></div>
+    </div>
+
+    <!-- STOK -->
+    <div class="page" id="page-stok">
+      <div class="tab-bar" id="stok-tabs">
+        <button class="tab-btn active" onclick="stokTab='kompressor';renderStok();setTab(this)">🔵 Kompresör</button>
+        <button class="tab-btn" onclick="stokTab='kurutucu';renderStok();setTab(this)">🟢 Kurutucu</button>
+        <button class="tab-btn" onclick="stokTab='filtre';renderStok();setTab(this)">🟠 Basınçlı Hat Filtresi</button>
+      </div>
+      <div class="search-bar">
+        <div class="si-wrap"><span class="si-icon">🔍</span><input type="text" placeholder="Parça ara..." oninput="pSearch=this.value;renderStok()"></div>
+        <button class="btn btn-primary" onclick="openPModal()">＋ Yeni Parça</button>
+      </div>
+      <div id="stok-listesi"></div>
+    </div>
+
+    <!-- FATURALAR -->
+    <div class="page" id="page-faturalar">
+      <div class="search-bar">
+        <div class="si-wrap"><span class="si-icon">🔍</span><input type="text" placeholder="Teklif/Fatura ara..." oninput="fSearch=this.value;renderF()"></div>
+        <button class="btn btn-primary" onclick="openFModal()">＋ Yeni Teklif/Fatura</button>
+      </div>
+      <div class="card mb18">
+        <div class="card-hd"><div class="card-title">💶 Finansal Özet</div><div id="f-ozet" style="font-size:12px;color:var(--text2)"></div></div>
+      </div>
+      <div class="card"><div class="tw"><table>
+        <thead><tr><th>No</th><th>Müşteri</th><th>Açıklama</th><th>Tutar</th><th>Tarih</th><th>Tip</th><th>Durum</th><th></th></tr></thead>
+        <tbody id="f-tbody"></tbody>
+      </table></div></div>
+    </div>
+
+    <!-- GEÇMİŞ -->
+    <div class="page" id="page-gecmis">
+      <div class="search-bar">
+        <div class="si-wrap"><span class="si-icon">🔍</span><input type="text" placeholder="Geçmiş ara..."></div>
+        <button class="btn btn-primary" onclick="openGModal()">＋ Servis Notu Ekle</button>
+      </div>
+      <div class="card"><div class="card-bd" id="gecmis-tl"></div></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- MODAL: MÜŞTERİ -->
+<div class="mo" id="m-modal">
+  <div class="modal modal-lg">
+    <div class="mhd"><div class="mtitle" id="m-modal-title">🏭 Yeni Müşteri Ekle</div><button class="mclose" onclick="closeM('m-modal')">✕</button></div>
+    <div class="mbody">
+      <div class="sec-div">Firma Bilgileri</div>
+      <div class="fg fg2" style="margin-bottom:14px">
+        <div class="fgrp"><label class="flbl">Firma Adı *</label><input class="finput" id="m-ad" placeholder="ABC Sanayi A.Ş."></div>
+        <div class="fgrp"><label class="flbl">Yetkili Kişi</label><input class="finput" id="m-yetkili" placeholder="Ahmet Yılmaz"></div>
+        <div class="fgrp"><label class="flbl">Telefon</label><input class="finput" id="m-tel" placeholder="0532 000 00 00"></div>
+        <div class="fgrp"><label class="flbl">E-posta</label><input class="finput" id="m-email" type="email" placeholder="info@firma.com"></div>
+        <div class="fgrp sp2"><label class="flbl">Adres</label><input class="finput" id="m-adres" placeholder="İstanbul, Türkiye"></div>
+        <div class="fgrp sp2"><label class="flbl">Notlar</label><textarea class="ftxt" id="m-notlar" placeholder="Müşteri notları..."></textarea></div>
+      </div>
+      <div class="sec-div">Kurulu Ekipmanlar</div>
+      <!-- Ekipman ekleme alanı -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 80px auto;gap:8px;align-items:end;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px;margin-bottom:10px">
+        <div class="fgrp"><label class="flbl">Ekipman Tipi</label>
+          <select class="fsel" id="ek-tip">
+            <option value="Kompresör">🔵 Kompresör</option>
+            <option value="Kurutucu">🟢 Kurutucu</option>
+            <option value="Basınçlı Hat Filtresi">🟠 Basınçlı Hat Filtresi</option>
+            <option value="Azot Jeneratörü">🟣 Azot Jeneratörü</option>
+          </select>
+        </div>
+        <div class="fgrp"><label class="flbl">Marka / Model</label><input class="finput" id="ek-marka" placeholder="Lupamat LB-30"></div>
+        <div class="fgrp"><label class="flbl">Seri Numarası</label><input class="finput" id="ek-seri" placeholder="SN-123456"></div>
+        <div class="fgrp"><label class="flbl">Adet</label><input class="finput" id="ek-adet" type="number" min="1" value="1"></div>
+        <div class="fgrp"><label class="flbl">&nbsp;</label><button class="btn btn-primary" style="width:100%" onclick="addEkipman()">＋ Ekle</button></div>
+      </div>
+      <div id="ek-list" class="ek-list"></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="closeM('m-modal')">İptal</button><button class="btn btn-primary" onclick="saveM()">💾 Kaydet</button></div>
+  </div>
+</div>
+
+<!-- MODAL: EKİPMAN PARÇALARI (iç modal) -->
+<div class="mo" id="ep-modal" style="z-index:210">
+  <div class="modal modal-lg">
+    <div class="mhd"><div class="mtitle" id="ep-modal-title">⚙️ Ekipman Parçaları</div><button class="mclose" onclick="closeM('ep-modal')">✕</button></div>
+    <div class="mbody">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:14px;padding:10px 12px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;">
+        💡 Bu ekipmanda kullanılan parçaları aşağıya girin. Kaydettiğinizde parçalar otomatik olarak yedek parça listesine eklenir, stok <strong>0</strong> olarak görünür — sonradan kendiniz güncellersiniz.
+      </div>
+      <!-- Mevcut parça listesi -->
+      <div id="ep-parca-listesi"></div>
+      <!-- Yeni parça ekleme formu -->
+      <div class="sec-div" style="margin-top:14px">Parça Ekle</div>
+      <div class="fg fg2" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:0">
+        <div class="fgrp"><label class="flbl">Parça Tipi *</label><select class="fsel" id="ep-tip" onchange="epTipDegisti(this.value)"></select></div>
+        <div class="fgrp" id="ep-adet-grp" style="display:none"><label class="flbl">Adet</label><input class="finput" id="ep-adet" type="number" min="1" value="1" placeholder="1"></div>
+
+        <div class="fgrp sp2" style="position:relative">
+          <label class="flbl">Orijinal Parça Kodu <span id="ep-orijinal-match" style="font-size:10px;color:var(--green);display:none">✅ Listede bulundu</span></label>
+          <input class="finput" id="ep-orijinal" placeholder="VK-1316.00 yazın, otomatik dolar..." style="font-family:monospace" oninput="orijinalAutoComplete(this.value)" autocomplete="off">
+          <div id="ep-orijinal-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--accent);border-radius:0 0 8px 8px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4)"></div>
+        </div>
+        <div class="fgrp"><label class="flbl">Parça Adı / Açıklama</label><input class="finput" id="ep-parca-adi" placeholder="Otomatik dolar veya kendiniz yazın"></div>
+        <div class="fgrp"><label class="flbl">Birim Fiyat (€)</label><input class="finput" id="ep-fiyat" type="number" min="0" step="0.01" placeholder="Otomatik dolar veya girin"></div>
+        <div class="fgrp" style="position:relative"><label class="flbl">Yan Sanayi Kodu 1</label>
+          <input class="finput" id="ep-yansanayi" placeholder="Muadil kodu yazın..." style="font-family:monospace" oninput="muadilAC(this.value,'ep-ys1-dd','ep-yansanayi','ep-yansanayi2')" autocomplete="off">
+          <div id="ep-ys1-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--accent);border-radius:0 0 8px 8px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4)"></div>
+        </div>
+        <div class="fgrp" style="position:relative"><label class="flbl">Yan Sanayi Kodu 2</label>
+          <input class="finput" id="ep-yansanayi2" placeholder="2. muadil kodu..." style="font-family:monospace" oninput="muadilAC(this.value,'ep-ys2-dd','ep-yansanayi2',null)" autocomplete="off">
+          <div id="ep-ys2-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--accent);border-radius:0 0 8px 8px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4)"></div>
+        </div>
+        <div class="fgrp sp2"><label class="flbl">&nbsp;</label><button class="btn btn-primary" style="width:100%" onclick="addEpParca()">＋ Parçayı Ekle</button></div>
+      </div>
+    </div>
+    <div class="mfoot"><button class="btn btn-primary" onclick="closeM('ep-modal')">✓ Tamam</button></div>
+  </div>
+</div>
+
+<!-- MODAL: MUSTERİ DETAY -->
+<div class="mo" id="md-modal" style="z-index:1100">
+  <div class="mc" style="max-width:780px;max-height:88vh;overflow-y:auto">
+    <div class="mhd" style="position:sticky;top:0;z-index:2;background:var(--bg2)">
+      <div class="mtitle" id="md-baslik">Musteri Detay</div>
+      <button class="mclose" onclick="closeM('md-modal')">x</button>
+    </div>
+    <div class="mbody" id="md-content" style="padding:18px 20px 22px"></div>
+    <div class="mfoot" style="position:sticky;bottom:0;background:var(--bg2)">
+      <button class="btn btn-ghost" onclick="closeM('md-modal')">Kapat</button>
+      <button class="btn btn-primary" id="md-duzenle-btn">Duzenle</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SERVİS -->
+<div class="mo" id="s-modal">
+  <div class="modal">
+    <div class="mhd"><div class="mtitle">🔧 Servis Planı</div><button class="mclose" onclick="closeM('s-modal')">✕</button></div>
+    <div class="mbody">
+      <div class="fg fg2" style="margin-bottom:14px">
+        <div class="fgrp sp2"><label class="flbl">Müşteri *</label><select class="fsel" id="s-musteri" onchange="loadSEkipman(this.value)"><option value="">Seçin...</option></select></div>
+        <div class="fgrp sp2" id="s-ekipman-grp" style="display:none">
+          <label class="flbl">Ekipmanlar * <span style="font-size:10px;color:var(--text2);font-weight:400">— birden fazla seçebilirsiniz</span></label>
+          <div id="s-ekipman-list" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:4px"></div>
+          <div style="margin-top:6px;display:flex;gap:8px">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="sEkipmanTumu(true)">Tümünü Seç</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="sEkipmanTumu(false)">Temizle</button>
+          </div>
+        </div>
+        <div class="fgrp"><label class="flbl">Servis Tipi</label>
+          <select class="fsel" id="s-tip"><option>Periyodik Bakım</option><option>Garanti Servisi</option><option>Arıza Servisi</option><option>Kurulum / Montaj</option></select>
+        </div>
+        <div class="fgrp"><label class="flbl">Planlanan Tarih *</label><input class="finput" id="s-tarih" type="date"></div>
+        <div class="fgrp"><label class="flbl">Servis Periyodu</label>
+          <select class="fsel" id="s-periyot">
+            <option value="">Periyot yok</option>
+            <option value="3">3 Ay Sonra</option>
+            <option value="6">6 Ay Sonra</option>
+          </select>
+        </div>
+        <div class="fgrp sp2"><label class="flbl">Notlar</label><input class="finput" id="s-notlar" placeholder="Servis notları..."></div>
+      </div>
+      <!-- Servis parça listesi -->
+      <div id="servis-parca-blok" style="display:none">
+        <div class="sec-div">Seçili Ekipmanlara Ait Parçalar</div>
+        <div id="servis-parca-list"></div>
+      </div>
+    </div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="closeM('s-modal')">İptal</button><button class="btn btn-primary" onclick="saveS()">💾 Kaydet</button></div>
+  </div>
+</div>
+
+<!-- MODAL: PARÇA/STOK -->
+<div class="mo" id="p-modal">
+  <div class="modal">
+    <div class="mhd"><div class="mtitle">⚙️ Yedek Parça Ekle</div><button class="mclose" onclick="closeM('p-modal')">✕</button></div>
+    <div class="mbody">
+      <div class="fg fg2">
+        <div class="fgrp"><label class="flbl">Ekipman Kategorisi *</label>
+          <select class="fsel" id="p-kat" onchange="updatePTip(this.value)">
+            <option value="kompressor">Kompresör</option><option value="kurutucu">Kurutucu</option><option value="filtre">Basınçlı Hat Filtresi</option><option value="azot">Azot Jeneratörü</option>
+          </select>
+        </div>
+        <div class="fgrp"><label class="flbl">Parça Tipi *</label><select class="fsel" id="p-tip"></select></div>
+        <div class="fgrp"><label class="flbl">Uyumlu Marka / Model</label><input class="finput" id="p-marka" placeholder="Lupamat LB-30, CompAir..."></div>
+        <div class="fgrp"><label class="flbl">Fiyat (€)</label><input class="finput" id="p-fiyat" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="fgrp" style="position:relative"><label class="flbl">Orijinal Parça Kodu <span id="p-orijinal-match" style="font-size:10px;color:var(--green);display:none">✅ Bulundu</span></label>
+          <input class="finput" id="p-orijinal" placeholder="OEM-12345 yazın, otomatik dolar..." style="font-family:monospace" oninput="stokOrijinalAC(this.value)" autocomplete="off">
+          <div id="p-orijinal-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--accent);border-radius:0 0 8px 8px;z-index:200;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4)"></div>
+        </div>
+        <div class="fgrp" style="position:relative"><label class="flbl">Yan Sanayi Kodu</label>
+          <input class="finput" id="p-yansanayi" placeholder="Muadil kodu yazın..." style="font-family:monospace" oninput="muadilAC(this.value,'p-ys1-dd','p-yansanayi',null)" autocomplete="off">
+          <div id="p-ys1-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--accent);border-radius:0 0 8px 8px;z-index:200;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4)"></div>
+        </div>
+        <div class="fgrp"><label class="flbl">Stok Adedi</label><input class="finput" id="p-stok" type="number" min="0" value="0"></div>
+        <div class="fgrp"><label class="flbl">Min. Stok Uyarısı</label><input class="finput" id="p-minstok" type="number" min="0" value="2" placeholder="2"><div class="fhint">Bu sayının altına düşünce uyarı verir</div></div>
+        <div class="fgrp sp2"><label class="flbl">Notlar</label><textarea class="ftxt" id="p-notlar" placeholder="Notlar..."></textarea></div>
+      </div>
+    </div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="closeM('p-modal')">İptal</button><button class="btn btn-primary" onclick="saveP()">💾 Kaydet</button></div>
+  </div>
+</div>
+
+<!-- MODAL: FATURA -->
+<div class="mo" id="f-modal">
+  <div class="modal">
+    <div class="mhd"><div class="mtitle">🧾 Teklif / Fatura</div><button class="mclose" onclick="closeM('f-modal')">✕</button></div>
+    <div class="mbody">
+      <div class="fg fg2">
+        <div class="fgrp"><label class="flbl">Müşteri *</label><select class="fsel" id="f-musteri"><option value="">Seçin...</option></select></div>
+        <div class="fgrp"><label class="flbl">Tip</label><select class="fsel" id="f-tip"><option>Teklif</option><option>Fatura</option><option>İş Emri</option></select></div>
+        <div class="fgrp sp2"><label class="flbl">Açıklama</label><input class="finput" id="f-aciklama" placeholder="Periyodik bakım hizmeti..."></div>
+        <div class="fgrp"><label class="flbl">Tutar (€) *</label><input class="finput" id="f-tutar" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="fgrp"><label class="flbl">Tarih</label><input class="finput" id="f-tarih" type="date"></div>
+        <div class="fgrp"><label class="flbl">Durum</label><select class="fsel" id="f-durum"><option value="bekliyor">Bekliyor</option><option value="odendi">Ödendi</option><option value="iptal">İptal</option></select></div>
+        <div class="fgrp"><label class="flbl">Notlar</label><textarea class="ftxt" id="f-notlar"></textarea></div>
+      </div>
+    </div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="closeM('f-modal')">İptal</button><button class="btn btn-primary" onclick="saveF()">💾 Kaydet</button></div>
+  </div>
+</div>
+
+<!-- MODAL: GEÇMİŞ -->
+<div class="mo" id="g-modal">
+  <div class="modal">
+    <div class="mhd"><div class="mtitle">📋 Servis Notu</div><button class="mclose" onclick="closeM('g-modal')">✕</button></div>
+    <div class="mbody">
+      <div class="fg fg2" style="margin-bottom:14px">
+        <div class="fgrp"><label class="flbl">Müşteri *</label><select class="fsel" id="g-musteri" onchange="loadGEkipman(this.value)"><option value="">Seçin...</option></select></div>
+        <div class="fgrp"><label class="flbl">Ekipman</label><select class="fsel" id="g-ekipman"><option value="">Seçin...</option></select></div>
+        <div class="fgrp"><label class="flbl">Tarih *</label><input class="finput" id="g-tarih" type="date"></div>
+        <div class="fgrp"><label class="flbl">Servis Tipi</label><select class="fsel" id="g-tip"><option>Periyodik Bakım</option><option>Arıza Servisi</option><option>Garanti Servisi</option><option>Kurulum</option></select></div>
+        <div class="fgrp"><label class="flbl">Sonraki Servis</label>
+          <select class="fsel" id="g-periyot">
+            <option value="">Ayarlanmadı</option>
+            <option value="3">3 Ay Sonra</option>
+            <option value="6">6 Ay Sonra</option>
+          </select>
+        </div>
+        <div class="fgrp"><label class="flbl">&nbsp;</label><div style="font-size:12px;color:var(--text2);padding-top:10px" id="g-periyot-preview">—</div></div>
+        <div class="fgrp sp2"><label class="flbl">Yapılan İşlemler *</label><textarea class="ftxt" id="g-islemler" placeholder="Yapılan servis işlemleri, değiştirilen parçalar..."></textarea></div>
+      </div>
+      <!-- Kullanılan parçalar -->
+      <div class="sec-div">Kullanılan Parçalar (Stoktan Düş)</div>
+      <div id="g-parca-listesi"></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="closeM('g-modal')">İptal</button><button class="btn btn-primary" onclick="saveG()">💾 Kaydet</button></div>
+  </div>
+</div>
+
+<!-- MODAL: LUPAMAT FİYAT LİSTESİ -->
+<div class="mo" id="lupamat-modal" style="z-index:220">
+  <div class="modal modal-lg">
+    <div class="mhd"><div class="mtitle">📋 Lupamat Fiyat Listesi</div><button class="mclose" onclick="closeM('lupamat-modal')">✕</button></div>
+    <div class="mbody">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Parça kodunu veya adını aratın, seçince fiyat ve kod otomatik dolar.</div>
+      <div class="si-wrap" style="margin-bottom:14px"><span class="si-icon">🔍</span><input type="text" class="finput" placeholder="Kod veya parça adı ara... (örn: VK-1316 veya SEPARATÖR)" oninput="lupamatAra(this.value)" style="padding-left:34px;width:100%"></div>
+      <div id="lupamat-sonuclar" style="max-height:360px;overflow-y:auto;"></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="closeM('lupamat-modal')">Kapat</button></div>
+  </div>
+</div>
+
+<!-- MODAL: ADMIN - ŞİFRE DEĞİŞTİR -->
+<div class="mo" id="pw-modal">
+  <div class="modal">
+    <div class="mhd"><div class="mtitle">🔐 Şifre Değiştir</div><button class="mclose" onclick="closeM('pw-modal')">✕</button></div>
+    <div class="mbody">
+      <div class="fg" style="gap:13px">
+        <div class="fgrp"><label class="flbl">Hangi Kullanıcı</label>
+          <select class="fsel" id="pw-user"><option value="ardem">ardem (Normal Kullanıcı)</option></select>
+        </div>
+        <div class="fgrp"><label class="flbl">Yeni Şifre</label><input class="finput" id="pw-yeni" type="password" placeholder="Yeni şifre"></div>
+        <div class="fgrp"><label class="flbl">Şifre Tekrar</label><input class="finput" id="pw-tekrar" type="password" placeholder="Şifre tekrar"></div>
+        <div id="pw-err" style="font-size:12px;color:#ef4444;display:none"></div>
+      </div>
+    </div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="closeM('pw-modal')">İptal</button><button class="btn btn-primary" onclick="savePw()">💾 Kaydet</button></div>
+  </div>
+</div>
+
+<script>
+// ===== SABITLER =====
+const COLORS=['#e85d1a','#3b82f6','#22c55e','#a855f7','#ec4899','#14b8a6','#eab308','#ef4444','#06b6d4','#84cc16'];
+// ===== HELPERS =====
+const initials=n=>n.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+const colorFor=i=>COLORS[i%COLORS.length];
+const fmtDate=d=>{if(!d)return'—';const[y,m,g]=d.split('-');return`${g}.${m}.${y}`;};
+const fmtEur=n=>'€'+Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const today=()=>new Date().toISOString().split('T')[0];
+function cleanForFirebase(obj){return JSON.parse(JSON.stringify(obj,(key,val)=>val===undefined?null:val));}
+const daysDiff=d=>Math.ceil((new Date(d)-new Date(today()))/(864e5));
+const addAkt=(icon,text)=>{ST.aktiviteler.unshift({icon,text,zaman:new Date().toLocaleString('tr-TR')});if(ST.aktiviteler.length>40)ST.aktiviteler=ST.aktiviteler.slice(0,40);};
+const ekIcon=t=>t==='Kompresör'?'🔵':t==='Kurutucu'?'🟢':'🟠';
+function lupamatAra(val){
+  const q=val.trim().toUpperCase();
+  const dd=document.getElementById('lupamat-sonuclar');
+  if(!dd)return;
+  if(!q){dd.innerHTML='';return;}
+  const sonuclar=[
+    ...LUPAMAT_LISTE.filter(p=>p.kod.toUpperCase().includes(q)||p.ad.toUpperCase().includes(q)).slice(0,8)
+      .map(p=>({kaynak:'Lupamat',kod:p.kod,ad:p.ad,fiyat:p.fiyat})),
+    ...AAG_LISTE.filter(p=>p.kod.toUpperCase().includes(q)||p.ad.toUpperCase().includes(q)).slice(0,4)
+      .map(p=>({kaynak:'AAG',kod:p.kod,ad:p.ad+' ('+p.kapasite+' Nm³/dk)',fiyat:p.fiyat}))
+  ];
+  if(!sonuclar.length){dd.innerHTML='<div style="padding:8px;color:var(--muted);font-size:12px;">Sonuç bulunamadı</div>';return;}
+  dd.innerHTML=sonuclar.map(p=>`
+    <div onclick="seçLupamat('${p.kod}','${p.ad}',${p.fiyat})" style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px" onmouseover="this.style.background='rgba(232,93,26,0.12)'" onmouseout="this.style.background='transparent'">
+      <div><span style="font-family:monospace;color:var(--accent)">${p.kod}</span> <span style="color:var(--muted)">${p.ad}</span></div>
+      <div style="color:var(--accent);font-weight:600">€${p.fiyat} <span style="color:var(--muted);font-size:10px">${p.kaynak}</span></div>
+    </div>`).join('');
+}
+const PARCA_TIPLERI={
+  kompressor:['Hava Filtresi','Yağ Filtresi','Seperatör Filtresi','Yağ'],
+  kurutucu:['Giriş Filtresi','Çıkış Filtresi'],
+  filtre:['Filtre Elemanı','Otomatik Tahliye','Manometre']
+};
+const KAT_LABEL={kompressor:'Kompresör',kurutucu:'Kurutucu',filtre:'Basınçlı Hat Filtresi'};
+
+// ===== KULLANICI & GİRİŞ =====
+// Şifreler sadece burada — localStorage kullanılmıyor
+const USERS_DEFAULT={
+  admin:{sifre:'Thomisus1',rol:'admin'},
+  ardem:{sifre:'112233',rol:'kullanici'}
+};
+let currentUser=null;
+
+function getPass(user){
+  return USERS_DEFAULT[user]?.sifre||'';
+}
+
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim().toLowerCase();
+  const p=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-err');
+  if(!USERS_DEFAULT[u]){err.style.display='block';return;}
+  if(getPass(u)!==p){err.style.display='block';return;}
+  err.style.display='none';
+  currentUser={ad:u,rol:USERS_DEFAULT[u].rol};
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('splash').style.display='flex';
+
+  const adminMenu=document.getElementById('admin-menu-item');
+  if(adminMenu)adminMenu.style.display=currentUser.rol==='admin'?'flex':'none';
+
+  document.querySelector('.u-name').textContent=u==='admin'?'Admin':'Ardem Kullanıcı';
+  initFirebase();
+}
+
+function savePw(){
+  const u=document.getElementById('pw-user').value;
+  const y=document.getElementById('pw-yeni').value;
+  const t=document.getElementById('pw-tekrar').value;
+  const err=document.getElementById('pw-err');
+  if(!y||y.length<4){err.textContent='Şifre en az 4 karakter olmalı!';err.style.display='block';return;}
+  if(y!==t){err.textContent='Şifreler eşleşmiyor!';err.style.display='block';return;}
+  // Şifreyi sadece bellekte tut, localStorage'a yazma
+  USERS_DEFAULT[u].sifre=y;
+  err.style.display='none';
+  closeM('pw-modal');
+  showToast(`${u} şifresi güncellendi ✓`,'success');
+}
+
+// ===== FİYAT LİSTELERİ (Firebase'den yüklenir) =====
+let LUPAMAT_LISTE=[];
+const MUADIL_MAP2={"VK-1570.00": "W 11 102", "VK-1580.00": "W 3145/1"};
+let MUADIL_MAP={};
+let KAESER_LISTE=[];
+let ATLAS_LISTE=[];
+let AAG_LISTE=[];
+
+// ===== LİSTELERİ FİREBASE'E YÜKLE (admin) =====
+
+
+
+async function loadListeler(){
+  if(!db||!_doc)return;
+  try{
+    const {getDoc,doc:fbDoc}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const snap=await getDoc(fbDoc(db,'ardem','listeler'));
+    if(snap.exists()){
+      const d=snap.data();
+      LUPAMAT_LISTE=d.lupamat||[];
+      MUADIL_MAP=d.muadil||{};
+      // Mann muadil eşleşmelerini ekle (Firebase üzerine)
+      const MANN_ESLESMELER={"VK-1200.05": "W 718", "VK-1510.00": "LB 962/12", "VK-1520.00": "LB 1374/6", "VK-1530.00": "LB 13 145/13", "VK-1550.00": "W 940", "VK-1560.00": "W 962/2", "VK-1570.00": "W/1102", "VK-1580.00": "W 3145/0", "VS-0315.10": "C 11 110", "VS-0317.10": "C 14 200", "VS-0319.10": "C 15 300", "VS-0321.10": "C 16 400", "VS-0323.10": "C 20 500", "VS-0325.10": "C23610", "VS-0327.10": "C 25 710/3", "VS-0336.01": "C 1140", "VS-0337.01": "C 1250"};
+      Object.assign(MUADIL_MAP, MANN_ESLESMELER);
+      KAESER_LISTE=d.kaeser||[];
+      ATLAS_LISTE=d.atlas||[];
+      AAG_LISTE=d.aag||[];
+      // Mann eşleşmelerini Firebase muadil map'ine de yaz (otomatik, sessizce)
+      const MANN_MAP={"VK-1200.05":"W 718","VK-1510.00":"LB 962/12","VK-1520.00":"LB 1374/6","VK-1530.00":"LB 13 145/13","VK-1550.00":"W 940","VK-1560.00":"W 962/2","VK-1570.00":"W/1102","VK-1580.00":"W 3145/0","VS-0315.10":"C 11 110","VS-0317.10":"C 14 200","VS-0319.10":"C 15 300","VS-0321.10":"C 16 400","VS-0323.10":"C 20 500","VS-0325.10":"C23610","VS-0327.10":"C 25 710/3","VS-0336.01":"C 1140","VS-0337.01":"C 1250"};
+      const eksikVar=Object.keys(MANN_MAP).some(k=>!MUADIL_MAP[k]);
+      if(eksikVar){
+        Object.assign(MUADIL_MAP,MANN_MAP);
+        try{
+          const {setDoc,doc:fbDoc2}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+          await setDoc(fbDoc2(db,'ardem','listeler'),{muadil:MUADIL_MAP},{merge:true});
+          console.log('✅ Mann muadilleri Firebase\'e eklendi');
+        }catch(e){console.warn('Mann güncelleme hatası:',e);}
+      }
+      console.log('✅ Listeler Firebase\'den yüklendi',
+        LUPAMAT_LISTE.length,'Lupamat,',
+        KAESER_LISTE.length,'Kaeser,',
+        ATLAS_LISTE.length,'Atlas,',
+        AAG_LISTE.length,'AAG');
+    } else {
+      console.warn('⚠️ Listeler dökümanı bulunamadı — Firebase\'e yüklenmeli');
+    }
+  }catch(e){
+    console.error('Listeler yüklenemedi:',e);
+  }
+}
+
+// ===== ÖĞRENİLEN PARÇA EŞLEŞMELERİ =====
+function ogren(p){
+  if(!p.orijinal)return;
+  const kod=p.orijinal.trim().toUpperCase();
+
+  const listede=LUPAMAT_LISTE.some(x=>x.kod.toUpperCase()===kod)
+    ||KAESER_LISTE.some(x=>x.oem.toUpperCase()===kod)
+    ||ATLAS_LISTE.some(x=>x.oem.toUpperCase()===kod);
+
+  if(p.yansanayi||p.yansanayi2||p.fiyat){
+    const eskiKayit=OGRENILEN[kod]||{};
+    OGRENILEN[kod]={
+      ad:p.ad||eskiKayit.ad||'',
+      muadil:p.yansanayi||eskiKayit.muadil||'',
+      muadil2:p.yansanayi2||eskiKayit.muadil2||'',
+      fiyat:p.fiyat||eskiKayit.fiyat||0,
+      tip:p.tip||eskiKayit.tip||'',
+      kayit:new Date().toISOString(),
+      listede
+    };
+    if(!listede) console.log('📚 Öğrenildi:', kod, '→', OGRENILEN[kod].muadil);
+  }
+}
+
+function ogrenilmisGetir(orijinalKod){
+  if(!orijinalKod)return null;
+  return OGRENILEN[orijinalKod.trim().toUpperCase()]||null;
+}
+
+function epTipDegisti(tip){
+  const adetGrp=document.getElementById('ep-adet-grp');
+
+  if(tip){
+    adetGrp.style.display='block';
+  } else {
+    adetGrp.style.display='none';
+    document.getElementById('ep-adet').value='1';
+  }
+
+  const dd=document.getElementById('ep-orijinal-dropdown');
+  if(dd)dd.style.display='none';
+
+  const orijinalEl=document.getElementById('ep-orijinal');
+  if(orijinalEl&&orijinalEl.value)orijinalAutoComplete(orijinalEl.value);
+}
+function orijinalAutoComplete(val){
+  const dd=document.getElementById('ep-orijinal-dropdown');
+  const match=document.getElementById('ep-orijinal-match');
+  if(!val||val.length<2){dd.style.display='none';match.style.display='none';return;}
+  const q=val.toUpperCase();
+
+  const lupamat=LUPAMAT_LISTE.filter(p=>p.kod.toUpperCase().startsWith(q)||p.kod.toUpperCase().includes(q)).slice(0,6)
+    .map(p=>({kaynak:'Lupamat',kod:p.kod,ad:p.ad,muadil:'',fiyat:p.fiyat,para:'EUR'}));
+
+  const kaeser=KAESER_LISTE.filter(p=>p.oem.toUpperCase().includes(q)||p.muadil.toUpperCase().includes(q)).slice(0,6)
+    .map(p=>({kaynak:'Kaeser',kod:p.oem,ad:`${p.aciklama}${p.model?' ('+p.model+')':''}`,muadil:p.muadil,fiyat:p.fiyat,para:p.para}));
+
+  const atlas=ATLAS_LISTE.filter(p=>p.oem.toUpperCase().includes(q)||p.muadil.toUpperCase().includes(q)).slice(0,6)
+    .map(p=>({kaynak:'Atlas',kod:p.oem,ad:`${p.aciklama}${p.model?' ('+p.model+')':''}`,muadil:p.muadil,fiyat:p.fiyat,para:p.para}));
+
+  const ekTip=document.getElementById('ep-tip')?.value||'';
+  const isKurutucu=ekTip==='Giriş Filtresi'||ekTip==='Çıkış Filtresi';
+  const aag=isKurutucu?AAG_LISTE.filter(p=>p.kod.toUpperCase().includes(q)||p.ad.toUpperCase().includes(q)).slice(0,8)
+    .map(p=>({kaynak:'AAG',kod:p.kod,ad:p.ad+' ('+p.kapasite+' Nm³/dk)',muadil:'',fiyat:p.fiyat,para:'EUR'})):[];
+
+  const ogrenilen=Object.entries(OGRENILEN)
+    .filter(([k,v])=>k.includes(q)&&(v.muadil||v.fiyat))
+    .slice(0,6)
+    .map(([k,v])=>({kaynak:'Öğrenilmiş',kod:k,ad:v.ad||v.tip||'Manuel giriş',muadil:v.muadil||'',fiyat:v.fiyat||0,para:'EUR'}));
+
+  const sonuclar=[...aag,...lupamat,...kaeser,...atlas,...ogrenilen].slice(0,18);
+  if(!sonuclar.length){dd.style.display='none';match.style.display='none';return;}
+  dd.style.display='block';
+  dd.innerHTML=sonuclar.map(p=>`
+    <div onclick="seçOrijinal('${p.kod}','${p.ad}',${p.fiyat},'${p.muadil}','${p.para}')" style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px" onmouseover="this.style.background='rgba(232,93,26,0.12)'" onmouseout="this.style.background='transparent'">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-family:monospace;font-weight:700;color:var(--accent)">${p.kod}</span>
+          <span style="font-size:10px;padding:1px 5px;border-radius:4px;background:${p.kaynak==='Kaeser'?'rgba(59,130,246,0.15)':p.kaynak==='Atlas'?'rgba(34,197,94,0.15)':p.kaynak==='Öğrenilmiş'?'rgba(168,85,247,0.15)':p.kaynak==='AAG'?'rgba(234,179,8,0.15)':'rgba(232,93,26,0.15)'};color:${p.kaynak==='Kaeser'?'#60a5fa':p.kaynak==='Atlas'?'#4ade80':p.kaynak==='Öğrenilmiş'?'#c084fc':p.kaynak==='AAG'?'#facc15':'var(--accent)'}">${p.kaynak==='Atlas'?'Atlas Copco':p.kaynak}</span>
+          ${p.muadil?`<span style="font-size:10px;color:var(--text3)">→ ${p.muadil}</span>`:''}
+        </div>
+        <div style="color:var(--text2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.ad}</div>
+      </div>
+      <span style="font-family:'Syne',sans-serif;font-weight:800;color:var(--green);flex-shrink:0;margin-left:8px">${p.fiyat} ${p.para}</span>
+    </div>`).join('');
+}
+
+function seçOrijinal(kod,ad,fiyat,muadil,para){
+  document.getElementById('ep-orijinal').value=kod;
+  document.getElementById('ep-parca-adi').value=ad;
+  document.getElementById('ep-fiyat').value=fiyat||'';
+  document.getElementById('ep-orijinal-dropdown').style.display='none';
+  document.getElementById('ep-orijinal-match').style.display='inline';
+
+  const kodUpper=kod.toUpperCase().replace(/-00$/,'.00');
+  const ogr=ogrenilmisGetir(kod);
+  const muadilDeger=muadil||MUADIL_MAP[kodUpper]||MUADIL_MAP[kod]||(ogr&&ogr.muadil)||'';
+  const ys1=document.getElementById('ep-yansanayi');
+  const ys2=document.getElementById('ep-yansanayi2');
+  // Sadece ys1 boşsa doldur, ys2'ye otomatik dokunma
+  if(ys1&&!ys1.value&&muadilDeger)ys1.value=muadilDeger;
+
+  if((!fiyat||fiyat==0)&&ogr&&ogr.fiyat){document.getElementById('ep-fiyat').value=ogr.fiyat;}
+  const paraBirimi=para||'EUR';
+  const ogr_not=ogr&&!muadil?' 🟣':'';
+  showToast(`${kod} seçildi — ${fiyat||ogr?.fiyat||0} ${paraBirimi}${muadilDeger?' · '+muadilDeger:''}${ogr_not}`,'success');
+}
+
+// Dropdown dışına tıklayınca kapat
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#ep-orijinal')&&!e.target.closest('#ep-orijinal-dropdown')){
+    const dd=document.getElementById('ep-orijinal-dropdown');
+    if(dd)dd.style.display='none';
+  }
+  if(!e.target.closest('#p-orijinal')&&!e.target.closest('#p-orijinal-dropdown')){
+    const dd2=document.getElementById('p-orijinal-dropdown');
+    if(dd2)dd2.style.display='none';
+  }
+
+  ['ep-ys1-dd','ep-ys2-dd','p-ys1-dd'].forEach(ddId=>{
+    const dd=document.getElementById(ddId);
+    if(dd&&!e.target.closest('#'+ddId)&&!e.target.closest('[oninput*="'+ddId+'"]'))dd.style.display='none';
+  });
+});
+
+function seçLupamat(kod,ad,fiyat){seçOrijinal(kod,ad,fiyat);}
+function openLupamatArama(){document.getElementById('ep-orijinal')?.focus();}
+
+// Orijinal kod alanı blur olduğunda muadil + ad + fiyat doldur
+document.addEventListener('blur',function(e){
+  if(e.target.id==='ep-orijinal'){
+    const kod=e.target.value.trim().toUpperCase();
+    if(!kod)return;
+    const kodNorm=kod.replace(/-00$/,'.00');
+    const muadil=MUADIL_MAP[kodNorm]||MUADIL_MAP[kod];
+    const ogr=ogrenilmisGetir(kod);
+    const ys1=document.getElementById('ep-yansanayi');
+    const ys2=document.getElementById('ep-yansanayi2');
+    const fEl=document.getElementById('ep-fiyat');
+    const adEl=document.getElementById('ep-parca-adi');
+    let bildiri=[];
+    if(muadil&&ys1&&!ys1.value){ys1.value=muadil;bildiri.push('Muadil: '+muadil);}
+
+    if(ogr){
+      if(ys1&&!ys1.value&&ogr.muadil){ys1.value=ogr.muadil;bildiri.push('Muadil: '+ogr.muadil);}
+      // ys2 otomatik doldurulmaz — kullanıcı elle girer
+      if(fEl&&(!fEl.value||Number(fEl.value)===0)&&ogr.fiyat){fEl.value=ogr.fiyat;bildiri.push('€'+ogr.fiyat);}
+      if(adEl&&!adEl.value&&ogr.ad){adEl.value=ogr.ad;}
+      if(bildiri.length)showToast('🟣 Öğrenilmiş: '+bildiri.join(' · '),'info');
+    }
+  }
+
+  if(e.target.id==='ep-fiyat'||e.target.id==='ep-yansanayi'||e.target.id==='ep-yansanayi2'){
+    const kodEl=document.getElementById('ep-orijinal');
+    if(kodEl&&kodEl.value.trim()){
+      const anlıkP={
+        orijinal:kodEl.value.trim(),
+        ad:document.getElementById('ep-parca-adi')?.value.trim()||'',
+        tip:document.getElementById('ep-tip')?.value||'',
+        yansanayi:document.getElementById('ep-yansanayi')?.value.trim()||'',
+        yansanayi2:document.getElementById('ep-yansanayi2')?.value.trim()||'',
+        fiyat:parseFloat(document.getElementById('ep-fiyat')?.value)||0
+      };
+      if(anlıkP.fiyat||anlıkP.yansanayi)ogren(anlıkP);
+    }
+  }
+},true);
+
+// ===== STATE =====
+let ST={musteriler:[],servisler:[],parcalar:[],faturalar:[],gecmis:[],aktiviteler:[]};
+// Öğrenilen OEM→muadil eşleşmeleri (Firebase'e ayrıca kaydedilir)
+let OGRENILEN={}; // {orijinalKod: {muadil, muadil2, ad, fiyat, para, kayit}}
+let editId=null,curPage='dashboard',sDurumF='',sSearch='',mSearch='',pSearch='',fSearch='',stokTab='kompressor';
+let tempEk=[]; // geçici ekipman listesi
+let epEkipmanId=null; // şu an düzenlenen ekipman id
+
+// ===== FİREBASE =====
+let db=null,_setDoc=null,_doc=null;
+
+// Bağlantı durumu göstergesi
+let _onlineBarShown=false;
+function updateOnlineBar(){
+  let bar=document.getElementById('online-bar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='online-bar';
+    bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;padding:10px 20px;text-align:center;font-size:13px;font-weight:600;display:none;transition:all 0.3s';
+    document.body.appendChild(bar);
+  }
+  if(!navigator.onLine){
+    bar.textContent='⚠️ İnternet bağlantısı yok — değişiklikler yerel olarak kaydediliyor, bağlantı gelince Firebase\'e aktarılacak';
+    bar.style.background='#92400e';bar.style.color='#fef3c7';bar.style.display='block';
+    _onlineBarShown=true;
+  } else {
+    if(_onlineBarShown){
+      bar.textContent='✅ Bağlantı yeniden kuruldu — veriler Firebase\'e yükleniyor...';
+      bar.style.background='#14532d';bar.style.color='#dcfce7';bar.style.display='block';
+      // Bekleyen değişiklikleri Firebase'e gönder
+      save().then(()=>{
+        bar.textContent='✅ Tüm veriler başarıyla senkronize edildi';
+        setTimeout(()=>{bar.style.display='none';_onlineBarShown=false;},3000);
+      });
+    } else {
+      bar.style.display='none';
+    }
+  }
+}
+window.addEventListener('online', updateOnlineBar);
+window.addEventListener('offline', updateOnlineBar);
+
+// Sync butonunu güncelle
+function updateSyncBtn(durum){
+  const btn=document.getElementById('sync-btn');
+  const icon=document.getElementById('sync-icon');
+  const text=document.getElementById('sync-text');
+  if(!btn)return;
+  if(durum==='syncing'){
+    icon.textContent='⏳';text.textContent='Senkronize...';
+    btn.style.opacity='0.7';btn.disabled=true;
+  }else if(durum==='ok'){
+    icon.textContent='✅';text.textContent='Senkronize';
+    btn.style.background='rgba(74,222,128,0.15)';btn.style.borderColor='rgba(74,222,128,0.4)';
+    btn.disabled=false;btn.style.opacity='1';
+    setTimeout(()=>{icon.textContent='🔄';text.textContent='Senkronize Et';btn.style.background='rgba(255,255,255,0.07)';btn.style.borderColor='var(--border)';},3000);
+  }else if(durum==='offline'){
+    icon.textContent='📵';text.textContent='Çevrimdışı';
+    btn.style.background='rgba(239,68,68,0.15)';btn.style.borderColor='rgba(239,68,68,0.4)';
+    btn.disabled=false;btn.style.opacity='1';
+  }else if(durum==='hata'){
+    icon.textContent='❌';text.textContent='Hata';
+    btn.style.background='rgba(239,68,68,0.15)';btn.style.borderColor='rgba(239,68,68,0.4)';
+    btn.disabled=false;btn.style.opacity='1';
+    setTimeout(()=>{icon.textContent='🔄';text.textContent='Senkronize Et';btn.style.background='rgba(255,255,255,0.07)';btn.style.borderColor='var(--border)';},3000);
+  }
+}
+
+async function manualSync(){
+  if(!navigator.onLine){updateSyncBtn('offline');showToast('Internet baglantisi yok!','error');return;}
+  updateSyncBtn('syncing');
+  try{
+    if(!db||!_setDoc||!_doc){
+      const m1=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+      const m2=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      let _app2;try{_app2=m1.getApp();}catch(e){_app2=m1.initializeApp({apiKey:'AIzaSyAwkBB0nIKsOemalVGtHZWfsNjvUZTLLcs',authDomain:'ardem-servis.firebaseapp.com',projectId:'ardem-servis',storageBucket:'ardem-servis.firebasestorage.app',messagingSenderId:'50518080446',appId:'1:50518080446:web:edf217397d205b8d6c17ef'});}
+      db=m2.getFirestore(_app2);_doc=m2.doc;_setDoc=m2.setDoc;
+    }
+    // Mevcut veriyi Firebase'e yaz (üzerine yazma değil, gönderme)
+    const temizVeri2=cleanForFirebase({
+      musteriler:ST.musteriler,servisler:ST.servisler,
+      parcalar:ST.parcalar,faturalar:ST.faturalar,
+      gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
+      ogrenilen:OGRENILEN,guncelleme:new Date().toISOString()
+    });
+    await _setDoc(_doc(db,'ardem','data'),temizVeri2);
+    _unsavedChanges=false;
+    updateSyncBtn('ok');
+    const bar=document.getElementById('online-bar');if(bar)bar.style.display='none';
+    renderDash();updateBadges();
+    showToast('Senkronizasyon tamamlandi!','success');
+  }catch(e){
+    console.error('Sync hatasi:',e);
+    updateSyncBtn('hata');
+    showToast('Senkronizasyon hatasi: '+e.message,'error');
+  }
+}
+
+// Kaydedilmemiş değişiklik varsa refresh'e karşı uyar
+let _unsavedChanges=false;
+window.addEventListener('beforeunload',e=>{
+  if(_unsavedChanges){e.preventDefault();e.returnValue='Kaydedilmemiş değişiklikler var. Sayfayı kapatmak istediğinizden emin misiniz?';return e.returnValue;}
+});
+
+async function initFirebase(){
+  // Önce localStorage'dan yükle — internet olmasa bile uygulama açılsın
+  try{
+    const d=localStorage.getItem('ardem_v4');
+    if(d){const p=JSON.parse(d);Object.assign(ST,p);}
+    const og=localStorage.getItem('ardem_ogrenilen');
+    if(og){OGRENILEN=JSON.parse(og);}
+  }catch(e2){console.warn('localStorage yüklenemedi:',e2);}
+
+  // Sonra Firebase'den güncelle (internet varsa)
+  if(navigator.onLine){
+    try{
+      const m1=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+      const m2=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      let app;
+      try{app=m1.getApp();}catch(e){
+        app=m1.initializeApp({
+          apiKey:'AIzaSyAwkBB0nIKsOemalVGtHZWfsNjvUZTLLcs',
+          authDomain:'ardem-servis.firebaseapp.com',
+          projectId:'ardem-servis',
+          storageBucket:'ardem-servis.firebasestorage.app',
+          messagingSenderId:'50518080446',
+          appId:'1:50518080446:web:edf217397d205b8d6c17ef'
+        });
+      }
+      db=m2.getFirestore(app);
+      _doc=m2.doc; _setDoc=m2.setDoc;
+      const snap=await m2.getDoc(m2.doc(db,'ardem','data'));
+      if(snap.exists()){
+        const d=snap.data();
+        ST.musteriler=d.musteriler||[];
+        ST.servisler=d.servisler||[];
+        ST.parcalar=d.parcalar||[];
+        ST.faturalar=d.faturalar||[];
+        ST.gecmis=d.gecmis||[];
+        ST.aktiviteler=d.aktiviteler||[];
+        OGRENILEN=d.ogrenilen||{};
+        // Firebase'den gelen veriyi localStorage'a da yaz
+        try{localStorage.setItem('ardem_v4',JSON.stringify(ST));localStorage.setItem('ardem_ogrenilen',JSON.stringify(OGRENILEN));}catch(e){}
+      }
+    }catch(e){
+      console.error('Firebase hatasi:',e);
+      showToast('Firebase bağlantısı kurulamadı — yerel veriler kullanılıyor','error');
+    }
+  } else {
+    updateOnlineBar();
+    showToast('İnternet yok — yerel verilerle çalışılıyor','error');
+  }
+
+  document.getElementById('splash').style.display='none';
+  document.getElementById('app-wrap').style.display='flex';
+
+  const dedupArr=(arr)=>{const seen=new Set();return arr.filter(x=>{const k=String(x.id);if(seen.has(k))return false;seen.add(k);return true;});};
+  ST.musteriler=dedupArr(ST.musteriler);
+  ST.servisler=dedupArr(ST.servisler);
+  ST.parcalar=dedupArr(ST.parcalar);
+  ST.faturalar=dedupArr(ST.faturalar);
+  renderDash();updateBadges();updatePTip('kompressor');
+  await loadListeler();
+}
+
+async function manualSync(){
+  const icon=document.getElementById('sync-icon');
+  const text=document.getElementById('sync-text');
+  const btn=document.getElementById('sync-btn');
+  btn.disabled=true;
+  icon.textContent='⏳';text.textContent='Bağlanıyor...';
+
+  // Önce Firebase bağlantısını kur (yoksa)
+  if(!db||!_setDoc||!_doc){
+    try{
+      const m1=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+      const m2=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      let app;
+      try{app=m1.getApp();}catch(e){app=m1.initializeApp({apiKey:'AIzaSyAwkBB0nIKsOemalVGtHZWfsNjvUZTLLcs',authDomain:'ardem-servis.firebaseapp.com',projectId:'ardem-servis',storageBucket:'ardem-servis.firebasestorage.app',messagingSenderId:'50518080446',appId:'1:50518080446:web:edf217397d205b8d6c17ef'});}
+      db=m2.getFirestore(app);
+      _doc=m2.doc;_setDoc=m2.setDoc;
+    }catch(e){
+      icon.textContent='❌';text.textContent='Bağlantı Hatası';
+      showToast('Firebase bağlantısı kurulamadı: '+e.message,'error');
+      setTimeout(()=>{icon.textContent='🔄';text.textContent='Senkronize Et';btn.disabled=false;},3000);
+      return;
+    }
+  }
+
+  // Mevcut veriyi Firebase'e gönder
+  try{
+    icon.textContent='⬆️';text.textContent='Gönderiliyor...';
+    const temizVeri2=cleanForFirebase({
+      musteriler:ST.musteriler,servisler:ST.servisler,
+      parcalar:ST.parcalar,faturalar:ST.faturalar,
+      gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
+      ogrenilen:OGRENILEN,guncelleme:new Date().toISOString()
+    });
+    await _setDoc(_doc(db,'ardem','data'),temizVeri2);
+    try{localStorage.setItem('ardem_v4',JSON.stringify(ST));localStorage.setItem('ardem_ogrenilen',JSON.stringify(OGRENILEN));}catch(e){}
+    _unsavedChanges=false;
+    _onlineBarShown=false;
+    const ob=document.getElementById('online-bar');if(ob)ob.style.display='none';
+    renderDash();updateBadges();
+    const aktifSayfa=document.querySelector('.page.active');
+    if(aktifSayfa&&aktifSayfa.id==='page-musteriler')renderM();
+    icon.textContent='✅';text.textContent='Senkronize Edildi';
+    showToast('Veriler başarıyla senkronize edildi!','success');
+    setTimeout(()=>{icon.textContent='🔄';text.textContent='Senkronize Et';btn.disabled=false;},3000);
+  }catch(e){
+    icon.textContent='❌';text.textContent='Hata!';
+    showToast('Senkronizasyon hatası: '+e.message,'error');
+    setTimeout(()=>{icon.textContent='🔄';text.textContent='Senkronize Et';btn.disabled=false;},3000);
+  }
+}
+
+
+async function save(){
+  _unsavedChanges=true;
+  // Önce localStorage'a yaz
+  try{localStorage.setItem('ardem_v4',JSON.stringify(ST));localStorage.setItem('ardem_ogrenilen',JSON.stringify(OGRENILEN));}catch(e){}
+  
+  if(!navigator.onLine){showToast('⚠️ İnternet yok — veri cihazda saklandı','warning');return;}
+  
+  // db yoksa bağlanmayı dene
+  if(!db||!_setDoc||!_doc){
+    try{
+      const m1=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+      const m2=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      let app;try{app=m1.getApp();}catch(e){app=m1.initializeApp({apiKey:'AIzaSyAwkBB0nIKsOemalVGtHZWfsNjvUZTLLcs',authDomain:'ardem-servis.firebaseapp.com',projectId:'ardem-servis',storageBucket:'ardem-servis.firebasestorage.app',messagingSenderId:'50518080446',appId:'1:50518080446:web:edf217397d205b8d6c17ef'});}
+      db=m2.getFirestore(app);_doc=m2.doc;_setDoc=m2.setDoc;
+    }catch(e){
+      showToast('⚠️ Veri cihazda saklandı — 🔄 Senkronize Et ile gönderin','warning');
+      return;
+    }
+  }
+  
+  try{
+    const temizVeri=cleanForFirebase({
+      musteriler:ST.musteriler,servisler:ST.servisler,
+      parcalar:ST.parcalar,faturalar:ST.faturalar,
+      gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
+      ogrenilen:OGRENILEN,
+      guncelleme:new Date().toISOString()
+    });
+    await _setDoc(_doc(db,'ardem','data'),temizVeri);
+    _unsavedChanges=false;
+  }catch(e){
+    console.error('Kayit hatasi:',e);
+    showToast('⚠️ Veri cihazda saklandı — 🔄 Senkronize Et ile gönderin','warning');
+  }
+}
+
+
+// Tarihe ay ekle
+function addMonths(dateStr, months) {
+  const d = new Date(dateStr);
+  d.setMonth(d.getMonth() + parseInt(months));
+  return d.toISOString().split('T')[0];
+}
+
+function updateBadges(){
+  document.getElementById('bdg-m').textContent=ST.musteriler.length;
+  document.getElementById('bdg-s').textContent=ST.servisler.filter(s=>s.durum!=='tamamlandi').length;
+  document.getElementById('bdg-f').textContent=ST.faturalar.filter(f=>f.durum==='bekliyor').length;
+  const stokUyari=ST.parcalar.filter(p=>(p.stok||0)<=(p.minstok||2)).length;
+  document.getElementById('bdg-stok').textContent=stokUyari;
+}
+
+function showToast(msg,type='info'){
+  const icons={success:'✅',error:'❌',info:'ℹ️'};
+  const t=document.createElement('div');t.className=`toast ${type}`;
+  t.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toastC').appendChild(t);
+  setTimeout(()=>t.remove(),3400);
+}
+
+function emptyRow(cols,icon,title,desc){
+  return`<tr><td colspan="${cols}"><div class="empty-s"><div class="empty-i">${icon}</div><div class="empty-t">${title}</div><div class="empty-d">${desc||''}</div></div></td></tr>`;
+}
+
+function durumBadge(d){
+  const m={bekliyor:['bb','⏳ Bekliyor'],gecikti:['br','🔴 Gecikti'],tamamlandi:['bg','✅ Tamamlandı'],odendi:['bg','✅ Ödendi'],iptal:['bgr','✕ İptal']};
+  const[c,l]=m[d]||['bgr',d];return`<span class="badge ${c}">${l}</span>`;
+}
+
+// ===== NAV =====
+function goPage(p,el){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  if(el)el.classList.add('active');
+  curPage=p;
+  const T={dashboard:'Gösterge Paneli',musteriler:'Müşteriler',servisler:'Servis Planları',stok:'Yedek Parça Stok',faturalar:'Teklifler / Faturalar',gecmis:'Servis Geçmişi'};
+  document.getElementById('pageTitle').textContent=T[p]||p;
+  closeSidebar();
+  ({dashboard:renderDash,musteriler:renderM,servisler:renderS,stok:renderStok,faturalar:renderF,gecmis:renderG}[p]||function(){})();
+}
+function handleQuickAdd(){const M={dashboard:'m-modal',musteriler:'m-modal',servisler:'s-modal',stok:'p-modal',faturalar:'f-modal',gecmis:'g-modal'};openMod(M[curPage]||'m-modal');}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlayBg').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlayBg').classList.remove('open');}
+
+// ===== MODAL =====
+function openMod(id){
+  populateSels();
+  document.getElementById(id).classList.add('open');
+  const t=today();
+  document.querySelectorAll('#'+id+' input[type=date]').forEach(el=>{if(!el.value)el.value=t;});
+}
+function closeM(id){
+  document.getElementById(id).classList.remove('open');
+  if(id!=='ep-modal'){clearForm(id);editId=null;}else{epEkipmanId=null;}
+}
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',function(e){if(e.target===this)closeM(this.id);}));
+function clearForm(id){
+  document.querySelectorAll(`#${id} input`).forEach(el=>{if(el.type!=='checkbox')el.value='';});
+  document.querySelectorAll(`#${id} textarea`).forEach(el=>el.value='');
+  document.querySelectorAll(`#${id} select`).forEach(el=>el.selectedIndex=0);
+}
+
+function populateSels(){
+  const mo='<option value="">Müşteri seçin...</option>'+ST.musteriler.map(m=>`<option value="${m.id}">${m.ad}</option>`).join('');
+  ['s-musteri','f-musteri','g-musteri'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=mo;});
+}
+
+// ===== EKİPMAN =====
+let tempEkParcalar={}; // {ekipmanId: [parcaId, ...]}
+
+function openMModal(){
+  tempEk=[];tempEkParcalar={};
+  renderEkList();
+  openMod('m-modal');
+  document.getElementById('m-modal-title').textContent='🏭 Yeni Müşteri Ekle';
+}
+
+function addEkipman(){
+  const tip=document.getElementById('ek-tip').value;
+  const marka=document.getElementById('ek-marka').value.trim();
+  const adet=parseInt(document.getElementById('ek-adet').value)||1;
+  if(!tip){showToast('Ekipman tipi seçin!','error');return;}
+  const seri=document.getElementById('ek-seri').value.trim();
+  const id=String(Date.now());
+  tempEk.push({id,tip,marka,seri,adet,parcalar:[]});
+  document.getElementById('ek-marka').value='';
+  document.getElementById('ek-seri').value='';
+  document.getElementById('ek-adet').value='1';
+  renderEkList();
+  showToast(`${tip} eklendi`,'success');
+}
+
+function renderEkList(){
+  const cont=document.getElementById('ek-list');
+  if(!tempEk.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">Henüz ekipman eklenmedi.</div>';return;}
+  cont.innerHTML=tempEk.map(e=>{
+    const parcaSayisi=(e.parcalar||[]).length;
+    const parcaOzet=parcaSayisi?`${parcaSayisi} parça tanımlı`:'Parça tanımlanmadı';
+    return`<div class="ek-item">
+      <div class="ek-item-hd">
+        <div>
+          <div class="ek-item-name">${ekIcon(e.tip)} ${e.tip}${e.adet>1?' ('+e.adet+' adet)':''} ${e.marka?'— '+e.marka:''}${e.seri?' · SN: '+e.seri:''}</div>
+          <div class="ek-item-detail">⚙️ ${parcaOzet}</div>
+        </div>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-blue btn-sm" onclick="openEpModal('${e.id}')">⚙️ Parçalar</button>
+          <button class="btn btn-danger btn-sm" onclick="removeEk('${e.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function removeEk(id){tempEk=tempEk.filter(e=>String(e.id)!==String(id));renderEkList();}
+
+function openEpModal(ekId){
+  epEkipmanId=String(ekId);
+  const ek=tempEk.find(e=>String(e.id)===String(ekId));
+  if(!ek)return;
+  document.getElementById('ep-modal-title').textContent=`⚙️ ${ek.tip}${ek.marka?' — '+ek.marka:''} — Parçalar`;
+
+  const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':'filtre';
+  const tpler=PARCA_TIPLERI[kat]||[];
+  document.getElementById('ep-tip').innerHTML=tpler.map(t=>`<option>${t}</option>`).join('');
+
+  ['ep-orijinal','ep-parca-adi','ep-yansanayi','ep-yansanayi2','ep-fiyat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const adetEl3=document.getElementById('ep-adet');if(adetEl3)adetEl3.value='1';
+
+  const adetGrp3=document.getElementById('ep-adet-grp');if(adetGrp3)adetGrp3.style.display=tpler.length?'block':'none';
+  const mm=document.getElementById('ep-orijinal-match');if(mm)mm.style.display='none';
+  renderEpParcaListesi(ek);
+  document.getElementById('ep-modal').classList.add('open');
+}
+
+function renderEpParcaListesi(ek){
+  const cont=document.getElementById('ep-parca-listesi');
+  if(!ek.parcalar||!ek.parcalar.length){
+    cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0 12px">Bu ekipmana henüz parça eklenmedi.</div>';
+    return;
+  }
+  cont.innerHTML=ek.parcalar.map((p,i)=>`
+    <div class="servis-parca-item" style="margin-bottom:7px">
+      <span class="sp-icon">⚙️</span>
+      <div class="sp-info">
+        <div class="sp-name">${p.tip}${p.marka?` <span style="color:var(--text2);font-size:11px">— ${p.marka}</span>`:''}</div>
+        <div class="sp-code">OEM: <strong>${p.orijinal||'—'}</strong>${p.adet&&p.adet>1?' · <strong>'+p.adet+' adet</strong>':''} · YS1: <strong>${p.yansanayi||'—'}</strong>${p.yansanayi2?' · YS2: <strong>'+p.yansanayi2+'</strong>':''}${p.fiyat?' · €'+Number(p.fiyat).toFixed(2):''}</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removeEpParca(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addEpParca(){
+  const tip=document.getElementById('ep-tip').value;
+  if(!tip){showToast('Parça tipi seçin!','error');return;}
+  const ek=tempEk.find(e=>String(e.id)===String(epEkipmanId));if(!ek){showToast('Ekipman bulunamadı!','error');return;}
+  if(!ek.parcalar)ek.parcalar=[];
+  const adetEl=document.getElementById('ep-adet');
+  const adet=parseInt(adetEl&&adetEl.value)||1;
+  const yeniParca={
+    tip,
+    adet:adet>1?adet:undefined,
+    ad:document.getElementById('ep-parca-adi').value.trim(),
+    orijinal:document.getElementById('ep-orijinal').value.trim(),
+    yansanayi:document.getElementById('ep-yansanayi').value.trim(),
+    yansanayi2:document.getElementById('ep-yansanayi2').value.trim(),
+    fiyat:parseFloat(document.getElementById('ep-fiyat').value)||0
+  };
+
+  if(yeniParca.orijinal && ek.parcalar.some(p=>p.orijinal===yeniParca.orijinal)){
+    showToast('Bu orijinal kodlu parça zaten ekli!','error');return;
+  }
+  ek.parcalar.push(yeniParca);
+
+  ogren(yeniParca);
+
+  ['ep-orijinal','ep-parca-adi','ep-yansanayi','ep-yansanayi2','ep-fiyat'].forEach(id=>{document.getElementById(id).value='';});
+  const adetEl2=document.getElementById('ep-adet');if(adetEl2)adetEl2.value='1';
+  const adetGrp2=document.getElementById('ep-adet-grp');if(adetGrp2)adetGrp2.style.display='none';
+  const m=document.getElementById('ep-orijinal-match');if(m)m.style.display='none';
+  renderEpParcaListesi(ek);
+  renderEkList();
+  showToast(`${tip} eklendi ✓`,'success');
+}
+
+function removeEpParca(idx){
+  const ek=tempEk.find(e=>String(e.id)===String(epEkipmanId));if(!ek||!ek.parcalar)return;
+  ek.parcalar.splice(idx,1);
+  renderEpParcaListesi(ek);
+  renderEkList();
+}
+
+// ===== MÜŞTERİ KAYDET =====
+function saveM(){
+  const ad=document.getElementById('m-ad').value.trim();
+  if(!ad){showToast('Firma adı zorunludur!','error');return;}
+  const idx=editId!=null?ST.musteriler.findIndex(m=>String(m.id)===String(editId)):-1;
+  const renk=idx>-1?ST.musteriler[idx].renk:colorFor(ST.musteriler.length);
+  const newId=editId!=null?editId:String(Date.now());
+  const m={id:newId,ad,yetkili:document.getElementById('m-yetkili').value,tel:document.getElementById('m-tel').value,email:document.getElementById('m-email').value,adres:document.getElementById('m-adres').value,notlar:document.getElementById('m-notlar').value,ekipmanlar:[...tempEk],renk,olusturma:idx>-1?ST.musteriler[idx].olusturma:new Date().toISOString()};
+  if(idx>-1)ST.musteriler[idx]=m;else{ST.musteriler.push(m);addAkt('🏭',`Yeni müşteri: ${m.ad}`);}
+
+  let yeniParcaSayisi=0;
+  tempEk.forEach(ek=>{
+    if(!ek.parcalar||!ek.parcalar.length)return;
+    const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':'filtre';
+    ek.parcalar.forEach(p=>{
+    
+      const zatenVar=ST.parcalar.some(sp=>
+        (p.orijinal&&sp.orijinal&&sp.orijinal===p.orijinal)||
+        (p.yansanayi&&sp.yansanayi&&sp.yansanayi===p.yansanayi&&sp.kategori===kat&&sp.tip===p.tip)
+      );
+      if(!zatenVar){
+        const yeniP={
+          id:String(Date.now()+Math.random()),
+          kategori:kat,
+          tip:p.tip,
+          ad:p.ad||p.tip||'',
+          marka:p.marka||ek.marka||'',
+          orijinal:p.orijinal||'',
+          yansanayi:p.yansanayi||'',
+          yansanayi2:p.yansanayi2||'',
+          fiyat:p.fiyat||0,
+          stok:0,
+          minstok:2,
+          notlar:`${m.ad} — ${ek.tip}${ek.marka?' '+ek.marka:''}`,
+          olusturma:new Date().toISOString()
+        };
+        ST.parcalar.push(yeniP);
+        yeniParcaSayisi++;
+      }
+    });
+  });
+
+  save();closeM('m-modal');renderM();updateBadges();renderDash();
+  if(yeniParcaSayisi>0){
+    showToast(`${m.ad} kaydedildi · ${yeniParcaSayisi} parça stok listesine eklendi ✓`,'success');
+    addAkt('📦',`${yeniParcaSayisi} parça stok listesine eklendi (${m.ad})`);
+  } else {
+    showToast(`${m.ad} kaydedildi ✓`,'success');
+  }
+}
+
+function editMusteri(id){
+  const m=ST.musteriler.find(x=>String(x.id)===String(id));if(!m)return;
+  tempEk=JSON.parse(JSON.stringify(m.ekipmanlar||[])).map(e=>({...e,id:String(e.id)}));
+  document.getElementById('m-ad').value=m.ad||'';
+  document.getElementById('m-yetkili').value=m.yetkili||'';
+  document.getElementById('m-tel').value=m.tel||'';
+  document.getElementById('m-email').value=m.email||'';
+  document.getElementById('m-adres').value=m.adres||'';
+  document.getElementById('m-notlar').value=m.notlar||'';
+  document.getElementById('m-modal-title').textContent='✏️ Müşteri Düzenle';
+  renderEkList();
+  editId=String(id);
+  document.getElementById('m-modal').classList.add('open');
+}
+
+function deleteMusteri(id){
+  if(!confirm('Bu müşteriyi silmek istediğinize emin misiniz?'))return;
+  ST.musteriler=ST.musteriler.filter(m=>String(m.id)!==String(id));
+  save();renderM();updateBadges();renderDash();showToast('Müşteri silindi','info');
+}
+
+// ===== MÜŞTERİ RENDER =====
+function renderM(){
+  const q=mSearch.toLowerCase();
+  const list=ST.musteriler.filter(m=>!q||m.ad.toLowerCase().includes(q)||(m.tel&&m.tel.includes(q)));
+  const tbody=document.getElementById('m-tbody');
+  if(!list.length){tbody.innerHTML=emptyRow(6,'🏭','Müşteri yok','Yeni müşteri eklemek için butona tıklayın.');return;}
+  tbody.innerHTML=list.map((m,i)=>{
+    const ekSayisi=(m.ekipmanlar||[]).reduce((a,e)=>a+(e.adet||1),0);
+    const ekOzet=(m.ekipmanlar||[]).map(e=>`${ekIcon(e.tip)} ${e.tip}${e.adet>1?' ×'+e.adet:''}${e.seri?' (SN:'+e.seri+')':''}`).join(', ')||'—';
+    return`<tr style="cursor:pointer" onclick="musteriDetay('${m.id}')">
+      <td><div style="display:flex;align-items:center;gap:9px">
+        <div style="width:33px;height:33px;border-radius:9px;background:${m.renk||colorFor(i)};display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:white;flex-shrink:0">${initials(m.ad)}</div>
+        <div><div style="font-weight:500">${m.ad}</div><div style="font-size:11px;color:var(--text2)">${m.yetkili||''}</div></div>
+      </div></td>
+      <td><div style="font-size:12px">${m.tel||'—'}</div><div style="font-size:11px;color:var(--text2)">${m.email||''}</div></td>
+      <td style="font-size:12px;color:var(--text2)">${m.adres||'—'}</td>
+      <td style="font-size:12px;max-width:170px">${ekOzet}</td>
+      <td><span class="badge bb">${ekSayisi} ekipman</span></td>
+      <td><div style="display:flex;gap:5px" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-sm" onclick="editMusteri('${m.id}')">&#x270F;</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteMusteri('${m.id}')">&#x1F5D1;</button>
+      </div></td>
+    </tr>`;}).join('');
+}
+
+// ===== MUSTERİ DETAY =====
+function musteriDetay(id){
+  const m=ST.musteriler.find(x=>String(x.id)===String(id));
+  if(!m)return;
+  document.getElementById('md-baslik').textContent=m.ad;
+  document.getElementById('md-duzenle-btn').onclick=function(){closeM('md-modal');editMusteri(m.id);};
+
+  let genelToplam=0;
+  const ekHtml=(m.ekipmanlar||[]).map(function(ek){
+    const parcalar=ek.parcalar||[];
+    let ekToplam=0;
+    const parcaRows=parcalar.map(function(p){
+      const ekAdet=Number(ek.adet)||1;
+      const parcaAdet=Number(p.adet)||1;
+      const adet=parcaAdet*ekAdet;
+      const birimFiyat=Number(p.fiyat)||0;
+      const toplam=adet*birimFiyat;
+      ekToplam+=toplam;
+      const muadilHtml=p.yansanayi
+        ?('<span style="color:#facc15;font-family:monospace">'+p.yansanayi+'</span>'+(p.yansanayi2?'<br><span style="color:#a78bfa;font-family:monospace">'+p.yansanayi2+'</span>':''))
+        :'<span style="color:var(--text2)">—</span>';
+      return'<tr>'
+        +'<td style="padding:7px 10px;font-size:12px;color:var(--text2)">'+p.tip+'</td>'
+        +'<td style="padding:7px 10px;font-size:12px;font-family:monospace">'+(p.orijinal||'—')+'</td>'
+        +'<td style="padding:7px 10px;font-size:12px">'+muadilHtml+'</td>'
+        +'<td style="padding:7px 10px;font-size:12px;text-align:center">'+(ekAdet>1?(parcaAdet+'×'+ekAdet+'=<b>'+adet+'</b>'):adet)+'</td>'
+        +'<td style="padding:7px 10px;font-size:12px;text-align:right">'+(birimFiyat?'<b>€'+birimFiyat.toFixed(2)+'</b>':'—')+'</td>'
+        +'<td style="padding:7px 10px;font-size:13px;text-align:right;font-weight:700;color:'+(toplam?'var(--accent)':'var(--text2)')+'">'+(toplam?'€'+toplam.toFixed(2):'—')+'</td>'
+        +'</tr>';
+    }).join('');
+    genelToplam+=ekToplam;
+
+    const parcaTablo=parcalar.length
+      ?('<table style="width:100%;border-collapse:collapse;margin-top:8px">'
+        +'<thead><tr style="background:rgba(255,255,255,0.04)">'
+        +'<th style="padding:6px 10px;text-align:left;font-size:11px;color:var(--text2);font-weight:500">Tip</th>'
+        +'<th style="padding:6px 10px;text-align:left;font-size:11px;color:var(--text2);font-weight:500">OEM Kodu</th>'
+        +'<th style="padding:6px 10px;text-align:left;font-size:11px;color:var(--text2);font-weight:500">Muadil</th>'
+        +'<th style="padding:6px 10px;text-align:center;font-size:11px;color:var(--text2);font-weight:500">Adet</th>'
+        +'<th style="padding:6px 10px;text-align:right;font-size:11px;color:var(--text2);font-weight:500">Birim</th>'
+        +'<th style="padding:6px 10px;text-align:right;font-size:11px;color:var(--text2);font-weight:500">Toplam</th>'
+        +'</tr></thead>'
+        +'<tbody>'+parcaRows+'</tbody>'
+        +'<tfoot><tr style="border-top:1px solid var(--border)">'
+        +'<td colspan="5" style="padding:8px 10px;font-size:12px;color:var(--text2);text-align:right">Ekipman Parça Toplam:</td>'
+        +'<td style="padding:8px 10px;font-size:14px;font-weight:800;text-align:right;color:var(--accent)">€'+ekToplam.toFixed(2)+'</td>'
+        +'</tr></tfoot>'
+        +'</table>')
+      :'<div style="font-size:12px;color:var(--text2);padding:10px;text-align:center">Parça eklenmemis</div>';
+
+    return'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+      +'<span style="font-size:20px">'+ekIcon(ek.tip)+'</span>'
+      +'<div>'
+      +'<div style="font-weight:600;font-size:14px">'+ek.tip+(ek.marka?' — '+ek.marka:'')+(ek.model?' '+ek.model:'')+'</div>'
+      +'<div style="font-size:11px;color:var(--text2)">'+(ek.seri?'SN: '+ek.seri:'')+(ek.adet>1?' · '+ek.adet+' adet':'')+'</div>'
+      +'</div></div>'
+      +parcaTablo
+      +'</div>';
+  }).join('');
+
+  const servisler=ST.servisler.filter(function(s){return String(s.musteriId)===String(id);});
+  const bekleyen=servisler.filter(function(s){return s.durum!=='tamamlandi';});
+
+  const bilgi='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+    +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">'
+    +'<div style="font-size:11px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">İletisim</div>'
+    +(m.yetkili?'<div style="font-weight:500;font-size:13px">'+m.yetkili+'</div>':'')
+    +(m.tel?'<div style="font-size:12px;color:var(--text2);margin-top:4px">&#128222; '+m.tel+'</div>':'')
+    +(m.email?'<div style="font-size:12px;color:var(--text2);margin-top:2px">&#9993; '+m.email+'</div>':'')
+    +(m.adres?'<div style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.5">&#128205; '+m.adres+'</div>':'')
+    +'</div>'
+    +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px">'
+    +'<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Toplam Parca Maliyeti</div>'
+    +'<div style="font-size:30px;font-weight:800;color:var(--accent);font-family:Syne,sans-serif">€'+genelToplam.toFixed(2)+'</div>'
+    +'<div style="font-size:11px;color:var(--text2)">'+(m.ekipmanlar||[]).length+' ekipman &middot; '+(m.ekipmanlar||[]).reduce(function(a,e){return a+(e.parcalar||[]).length;},0)+' parca kalemi</div>'
+    +(bekleyen.length?'<div style="margin-top:6px;font-size:11px;color:#f59e0b;font-weight:600">'+bekleyen.length+' bekleyen servis</div>':'')
+    +'</div>'
+    +'</div>';
+
+  document.getElementById('md-content').innerHTML=bilgi+(ekHtml||'<div style="text-align:center;padding:30px;color:var(--text2)">Ekipman eklenmemis</div>');
+  openMod('md-modal');
+}
+
+// ===== SERVİS =====
+function loadSEkipman(musteriId){
+  const grp=document.getElementById('s-ekipman-grp');
+  const listEl=document.getElementById('s-ekipman-list');
+  document.getElementById('servis-parca-blok').style.display='none';
+  if(!musteriId){grp.style.display='none';listEl.innerHTML='';return;}
+  const m=ST.musteriler.find(x=>x.id==musteriId);
+  if(!m||!m.ekipmanlar||!m.ekipmanlar.length){
+    grp.style.display='block';
+    listEl.innerHTML='<div style="font-size:12px;color:var(--text2);padding:6px">Bu müşteriye ait ekipman yok</div>';
+    return;
+  }
+  grp.style.display='block';
+  listEl.innerHTML=m.ekipmanlar.map(e=>`
+    <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:background .15s" 
+      onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''"
+      onclick="loadServisParçalar()">
+      <input type="checkbox" class="s-ek-cb" value="${e.id}" 
+        style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+      <span style="font-size:14px">${ekIcon(e.tip)}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${e.tip}${e.marka?' — '+e.marka:''}${e.model?' '+e.model:''}</div>
+        <div style="font-size:11px;color:var(--text2)">${e.seri?'SN: '+e.seri+' · ':''}${(e.parcalar||[]).length} parça kalemi</div>
+      </div>
+    </label>`).join('');
+}
+
+function sEkipmanTumu(sec){
+  document.querySelectorAll('.s-ek-cb').forEach(cb=>cb.checked=sec);
+  loadServisParçalar();
+}
+
+function loadServisParçalar(){
+  const musteriId=document.getElementById('s-musteri').value;
+  const blok=document.getElementById('servis-parca-blok');
+  const list=document.getElementById('servis-parca-list');
+  const seciliIds=[...document.querySelectorAll('.s-ek-cb:checked')].map(cb=>cb.value);
+  if(!musteriId||!seciliIds.length){blok.style.display='none';return;}
+  const m=ST.musteriler.find(x=>x.id==musteriId);
+  if(!m)return;
+
+  const tumParcalar=[];
+  seciliIds.forEach(ekId=>{
+    const ek=m.ekipmanlar?m.ekipmanlar.find(e=>String(e.id)===String(ekId)):null;
+    if(!ek||!ek.parcalar||!ek.parcalar.length)return;
+
+  
+    tumParcalar.push(`<div style="padding:7px 12px;background:rgba(255,255,255,0.04);border-radius:7px;margin:8px 0 4px;font-size:12px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:6px">
+      <span>${ekIcon(ek.tip)}</span><span>${ek.tip}${ek.marka?' — '+ek.marka:''}${ek.seri?' · SN:'+ek.seri:''}</span>
+    </div>`);
+
+    ek.parcalar.forEach((p,pi)=>{
+      const uid=`sp_${ekId}_${pi}`;
+      const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':'filtre';
+    
+      const spOem=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.orijinal&&x.orijinal===p.orijinal);
+    
+      const spYs1=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.yansanayi&&x.yansanayi===p.yansanayi);
+    
+      const spYs2=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.yansanayi2&&x.yansanayi===p.yansanayi2);
+
+      const stokBadge=(sp)=>{
+        if(!sp)return'<span style="font-size:10px;color:var(--text3)">stok kaydı yok</span>';
+        const s=sp.stok||0,mn=sp.minstok||2;
+        return s===0?'<span style="font-size:10px;color:#f87171">❌ Stokta yok</span>'
+          :s<=mn?`<span style="font-size:10px;color:#fbbf24">⚠️ ${s} adet</span>`
+          :`<span style="font-size:10px;color:#4ade80">✅ ${s} adet</span>`;
+      };
+
+    
+      const hasYs1=!!(p.yansanayi);
+      const hasYs2=!!(p.yansanayi2);
+      const opsiyonlar=[
+        `<button type="button" id="${uid}_oem" onclick="parcaTercihi('${uid}','oem')"
+          style="padding:4px 9px;border-radius:5px;font-size:11px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#fff;font-weight:600">
+          OEM${p.orijinal?' · '+p.orijinal:''} ${stokBadge(spOem)}</button>`
+      ];
+      if(hasYs1)opsiyonlar.push(
+        `<button type="button" id="${uid}_ys1" onclick="parcaTercihi('${uid}','ys1')"
+          style="padding:4px 9px;border-radius:5px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text1)">
+          Muadil 1 · <span style="font-family:monospace">${p.yansanayi}</span> ${stokBadge(spYs1)}</button>`
+      );
+      if(hasYs2)opsiyonlar.push(
+        `<button type="button" id="${uid}_ys2" onclick="parcaTercihi('${uid}','ys2')"
+          style="padding:4px 9px;border-radius:5px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text1)">
+          Muadil 2 · <span style="font-family:monospace">${p.yansanayi2}</span> ${stokBadge(spYs2)}</button>`
+      );
+
+      tumParcalar.push(`<div class="servis-parca-item" style="flex-direction:column;align-items:flex-start;gap:6px" 
+        data-uid="${uid}" data-ekid="${ekId}" data-pi="${pi}" data-tercih="oem">
+        <div style="display:flex;align-items:center;gap:8px;width:100%">
+          <span class="sp-icon" style="font-size:14px">⚙️</span>
+          <div class="sp-info" style="flex:1">
+            <div class="sp-name">${p.tip}${p.adet&&p.adet>1?' <strong>('+p.adet+' adet)</strong>':''}</div>
+            ${p.fiyat?`<div style="font-size:11px;color:var(--text2)">Birim: €${Number(p.fiyat).toFixed(2)}</div>`:''}
+          </div>
+        </div>
+        ${(hasYs1||hasYs2)?`<div style="display:flex;flex-wrap:wrap;gap:5px;padding-left:30px">${opsiyonlar.join('')}</div>`
+          :`<div style="padding-left:30px;font-size:11px;color:var(--text2)">OEM: <strong>${p.orijinal||'—'}</strong> ${stokBadge(spOem)}</div>`}
+      </div>`);
+    });
+  });
+
+  if(!tumParcalar.length){blok.style.display='none';return;}
+  blok.style.display='block';
+  list.innerHTML=tumParcalar.join('');
+}
+
+function parcaTercihi(uid,tercih){
+
+  ['oem','ys1','ys2'].forEach(t=>{
+    const btn=document.getElementById(`${uid}_${t}`);
+    if(!btn)return;
+    btn.style.background=t===tercih?'var(--accent)':'transparent';
+    btn.style.color=t===tercih?'#fff':'var(--text1)';
+    btn.style.borderColor=t===tercih?'var(--accent)':'var(--border)';
+    btn.style.fontWeight=t===tercih?'600':'400';
+  });
+
+  const item=document.querySelector(`[data-uid="${uid}"]`);
+  if(item)item.dataset.tercih=tercih;
+}
+
+function openSModal(){
+  populateSels();
+
+  document.getElementById('s-ekipman-grp').style.display='none';
+  document.getElementById('s-ekipman-list').innerHTML='';
+  document.getElementById('servis-parca-blok').style.display='none';
+  openMod('s-modal');
+}
+
+function saveS(){
+  const musteriId=document.getElementById('s-musteri').value;
+  const tarih=document.getElementById('s-tarih').value;
+  if(!musteriId||!tarih){showToast('Müşteri ve tarih zorunludur!','error');return;}
+  const seciliIds=[...document.querySelectorAll('.s-ek-cb:checked')].map(cb=>cb.value);
+  if(!seciliIds.length){showToast('En az bir ekipman seçin!','error');return;}
+  const m=ST.musteriler.find(x=>x.id==musteriId);
+  const periyot=document.getElementById('s-periyot').value;
+  const tip=document.getElementById('s-tip').value;
+  const notlar=document.getElementById('s-notlar').value;
+
+  const tercihler={};
+  document.querySelectorAll('[data-uid]').forEach(el=>{
+    tercihler[el.dataset.uid]={ekId:el.dataset.ekid,pi:el.dataset.pi,tercih:el.dataset.tercih||'oem'};
+  });
+
+  let eklenen=0;
+  seciliIds.forEach(ekId=>{
+    const ek=m&&m.ekipmanlar?m.ekipmanlar.find(e=>String(e.id)===String(ekId)):null;
+    const sonrakiTarih=periyot&&tarih?addMonths(tarih,periyot):null;
+    const idx=(editId!=null&&seciliIds.length===1)?ST.servisler.findIndex(x=>String(x.id)===String(editId)):-1;
+
+  
+    const ekTercihler=Object.values(tercihler).filter(t=>t.ekId===String(ekId));
+
+    const s={
+      id:idx>-1?editId:String(Date.now()+eklenen),
+      musteriId:String(musteriId),musteriAd:m?m.ad:'',
+      ekipmanId:ek?String(ek.id):null,
+      ekipmanAd:ek?`${ek.tip}${ek.marka?' — '+ek.marka:''}`:'',
+      ekipmanTip:ek?ek.tip:'',
+      tip,tarih,periyot,sonrakiTarih,notlar,
+      parcaTercihleri:ekTercihler,
+      durum:daysDiff(tarih)<0?'gecikti':'bekliyor',
+      olusturma:new Date().toISOString()
+    };
+    if(idx>-1)ST.servisler[idx]=s;
+    else ST.servisler.push(s);
+    eklenen++;
+  });
+  addAkt('🔧',`${eklenen} ekipman için servis planı: ${m?m.ad:''} — ${fmtDate(tarih)}${periyot?' ('+periyot+' aylık periyot)':''}`);
+  save();closeM('s-modal');renderS();updateBadges();renderDash();
+  showToast(`${eklenen} ekipman için servis planı kaydedildi ✓`,'success');
+}
+
+function tamamlaServis(id){
+  const s=ST.servisler.find(x=>String(x.id)===String(id));if(!s)return;
+  s.durum='tamamlandi';
+  addAkt('✅',`Servis tamamlandı: ${s.musteriAd}${s.ekipmanAd?' — '+s.ekipmanAd:''}`);
+
+  if(s.sonrakiTarih){
+    ST.servisler.push({id:Date.now(),musteriId:s.musteriId,musteriAd:s.musteriAd,ekipmanId:s.ekipmanId,ekipmanAd:s.ekipmanAd,ekipmanTip:s.ekipmanTip,tip:s.tip,tarih:s.sonrakiTarih,periyot:s.periyot,sonrakiTarih:s.periyot?addMonths(s.sonrakiTarih,s.periyot):null,notlar:'Otomatik oluşturuldu',durum:'bekliyor',olusturma:new Date().toISOString()});
+    showToast(`Sonraki servis ${s.periyot} ay sonraya otomatik planlandı!`,'info');
+  }
+  save();renderS();updateBadges();renderDash();showToast('Servis tamamlandı ✓','success');
+}
+
+function deleteServis(id){
+  if(!confirm('Bu servis planını silmek istediğinize emin misiniz?'))return;
+  ST.servisler=ST.servisler.filter(s=>String(s.id)!==String(id));
+  save();renderS();updateBadges();renderDash();showToast('Servis silindi','info');
+}
+
+function renderS(){
+  let list=ST.servisler.filter(s=>!sSearch||s.musteriAd.toLowerCase().includes(sSearch.toLowerCase())||(s.ekipmanAd&&s.ekipmanAd.toLowerCase().includes(sSearch.toLowerCase())));
+  if(sDurumF)list=list.filter(s=>s.durum===sDurumF);
+  list.sort((a,b)=>new Date(a.tarih)-new Date(b.tarih));
+  const tbody=document.getElementById('s-tbody');
+  if(!list.length){tbody.innerHTML=emptyRow(7,'🔧','Servis planı yok','Yeni servis planı eklemek için butona tıklayın.');return;}
+  tbody.innerHTML=list.map(s=>`
+    <tr>
+      <td style="font-weight:500;font-size:13px">${s.musteriAd||'—'}</td>
+      <td style="font-size:12px">${s.ekipmanAd?`${ekIcon(s.ekipmanTip||'')} ${s.ekipmanAd}`:'—'}</td>
+      <td style="font-size:12px">${s.tip||'—'}</td>
+      <td style="font-size:13px">${fmtDate(s.tarih)}</td>
+      <td>${s.periyot?`<span class="badge bo">${s.periyot} Aylık</span>`:'<span class="badge bgr">Tek Sefer</span>'}</td>
+      <td>${durumBadge(s.durum)}</td>
+      <td><div style="display:flex;gap:5px">
+        ${s.durum!=='tamamlandi'?`<button class="btn btn-success btn-sm" onclick="tamamlaServis('${s.id}')">✅</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="deleteServis('${s.id}')">🗑️</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+// ===== STOK / PARÇA =====
+// ===== MUADİL AUTOCOMPLETE (YS1 / YS2 alanları için) =====
+function muadilAC(val, ddId, inputId, ys2Id){
+  const dd=document.getElementById(ddId);
+  const q=val.trim().toUpperCase();
+  if(q.length<2){dd.style.display='none';return;}
+
+  const kaeser=KAESER_LISTE.filter(p=>p.muadil.toUpperCase().includes(q)).slice(0,5)
+    .map(p=>({kaynak:'Kaeser',muadil:p.muadil,oem:p.oem,ad:(p.aciklama||'')+(p.model?' ('+p.model+')':''),fiyat:p.fiyat||0}));
+
+  const atlas=ATLAS_LISTE.filter(p=>p.muadil.toUpperCase().includes(q)).slice(0,5)
+    .map(p=>({kaynak:'Atlas',muadil:p.muadil,oem:p.oem,ad:(p.aciklama||'')+(p.model?' ('+p.model+')':''),fiyat:p.fiyat||0}));
+
+  const kayitli=ST.parcalar.filter(p=>p.yansanayi&&p.yansanayi.toUpperCase().includes(q)).slice(0,4)
+    .map(p=>({kaynak:'Kayıtlı',muadil:p.yansanayi,oem:p.orijinal||'',ad:p.tip||'',fiyat:p.fiyat||0}));
+
+  const ogrenilen=Object.entries(OGRENILEN).filter(([,v])=>v.muadil&&v.muadil.toUpperCase().includes(q)).slice(0,3)
+    .map(([k,v])=>({kaynak:'Öğrenilmiş',muadil:v.muadil,oem:k,ad:v.ad||'',fiyat:v.fiyat||0}));
+
+  const sonuclar=[...kayitli,...ogrenilen,...kaeser,...atlas].slice(0,14);
+  if(!sonuclar.length){dd.style.display='none';return;}
+
+  const renkMap={'Kaeser':'rgba(59,130,246,0.15)','Atlas':'rgba(34,197,94,0.15)','Kayıtlı':'rgba(99,102,241,0.15)','Öğrenilmiş':'rgba(168,85,247,0.15)'};
+  const txtMap={'Kaeser':'#60a5fa','Atlas':'#4ade80','Kayıtlı':'#818cf8','Öğrenilmiş':'#c084fc'};
+
+  dd.innerHTML=sonuclar.map(p=>`
+    <div onclick="muadilSec('${p.muadil}','${p.oem}','${inputId}','${ys2Id||''}','${ddId}',${p.fiyat})"
+      style="padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:8px"
+      onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background=''">
+      <div style="flex:1;min-width:0">
+        <div style="font-family:monospace;font-size:13px;font-weight:600">${p.muadil}</div>
+        <div style="font-size:11px;color:var(--text2)">${p.ad||'—'}${p.oem?' · OEM: '+p.oem:''}${p.fiyat?' · €'+Number(p.fiyat).toFixed(2):''}</div>
+      </div>
+      <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${renkMap[p.kaynak]||'rgba(255,255,255,0.1)'};color:${txtMap[p.kaynak]||'#fff'};white-space:nowrap">${p.kaynak}</span>
+    </div>`).join('');
+  dd.style.display='block';
+}
+
+function muadilSec(muadil, oem, inputId, ys2Id, ddId, fiyat){
+  document.getElementById(inputId).value=muadil;
+  document.getElementById(ddId).style.display='none';
+
+  const oemEl=document.getElementById(inputId.includes('ep')?'ep-orijinal':'p-orijinal');
+  if(oemEl&&!oemEl.value&&oem)oemEl.value=oem;
+
+  const fiyatEl=document.getElementById(inputId.includes('ep')?'ep-fiyat':'p-fiyat');
+  if(fiyatEl&&(!fiyatEl.value||Number(fiyatEl.value)===0)&&fiyat)fiyatEl.value=fiyat;
+  showToast(`${muadil} seçildi${oem?' · OEM: '+oem:''}${fiyat?' · €'+Number(fiyat).toFixed(2):''}`, 'success');
+}
+
+function stokOrijinalAC(val){
+  const dd=document.getElementById('p-orijinal-dropdown');
+  const q=val.trim().toUpperCase();
+  if(q.length<2){dd.style.display='none';return;}
+
+  const mevcutlar=ST.parcalar
+    .filter(p=>p.orijinal&&p.orijinal.toUpperCase().includes(q))
+    .slice(0,6)
+    .map(p=>({kaynak:'Kayıtlı',kod:p.orijinal,ad:p.ad||p.tip||'',fiyat:p.fiyat||0,yansanayi:p.yansanayi||'',yansanayi2:p.yansanayi2||'',tip:p.tip||'',kat:p.kategori||''}));
+
+  const ogrenilen=Object.entries(OGRENILEN)
+    .filter(([k])=>k.includes(q))
+    .slice(0,4)
+    .map(([k,v])=>({kaynak:'Öğrenilmiş',kod:k,ad:v.ad||'',fiyat:v.fiyat||0,yansanayi:v.muadil||'',yansanayi2:v.muadil2||'',tip:v.tip||'',kat:''}));
+
+  const aag=AAG_LISTE.filter(p=>p.kod.toUpperCase().includes(q)||p.ad.toUpperCase().includes(q)).slice(0,6)
+    .map(p=>({kaynak:'AAG',kod:p.kod,ad:p.ad,fiyat:p.fiyat||0,yansanayi:'',yansanayi2:'',tip:'',kat:'kurutucu'}));
+
+  const lupamat=LUPAMAT_LISTE.filter(p=>p.kod.toUpperCase().includes(q)||p.ad.toUpperCase().includes(q)).slice(0,5)
+    .map(p=>({kaynak:'Lupamat',kod:p.kod,ad:p.ad||'',fiyat:p.fiyat||0,yansanayi:MUADIL_MAP[p.kod]||'',yansanayi2:'',tip:p.ad||'',kat:'kompressor'}));
+  const kaeser=KAESER_LISTE.filter(p=>p.oem.toUpperCase().includes(q)||p.muadil.toUpperCase().includes(q)).slice(0,5)
+    .map(p=>({kaynak:'Kaeser',kod:p.oem,ad:(p.aciklama||'')+(p.model?' ('+p.model+')':''),fiyat:p.fiyat||0,yansanayi:p.muadil||'',yansanayi2:'',tip:p.aciklama||'',kat:'kompressor'}));
+  const atlas=ATLAS_LISTE.filter(p=>p.oem.toUpperCase().includes(q)||p.muadil.toUpperCase().includes(q)).slice(0,5)
+    .map(p=>({kaynak:'Atlas',kod:p.oem,ad:(p.aciklama||'')+(p.model?' ('+p.model+')':''),fiyat:p.fiyat||0,yansanayi:p.muadil||'',yansanayi2:'',tip:p.aciklama||'',kat:'kompressor'}));
+
+  const sonuclar=[...mevcutlar,...ogrenilen,...aag,...lupamat,...kaeser,...atlas].slice(0,14);
+  if(!sonuclar.length){dd.style.display='none';return;}
+
+  const renkMap={
+    'Kayıtlı':'rgba(99,102,241,0.15)','Öğrenilmiş':'rgba(168,85,247,0.15)',
+    'AAG':'rgba(234,179,8,0.15)',
+    'Lupamat':'rgba(232,93,26,0.15)','Kaeser':'rgba(59,130,246,0.15)','Atlas':'rgba(34,197,94,0.15)'
+  };
+  const txtMap={
+    'Kayıtlı':'#818cf8','Öğrenilmiş':'#c084fc',
+    'AAG':'#facc15',
+    'Lupamat':'var(--accent)','Kaeser':'#60a5fa','Atlas':'#4ade80'
+  };
+
+  dd.innerHTML=sonuclar.map(p=>`
+    <div onclick="stokSeçOrijinal('${p.kod}','${p.ad.replace(/'/g,"\\'")}',${p.fiyat},'${p.yansanayi}','${p.yansanayi2}','${p.tip}','${p.kat}')"
+      style="padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:8px"
+      onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background=''">
+      <div style="flex:1;min-width:0">
+        <div style="font-family:monospace;font-size:13px;font-weight:600">${p.kod}</div>
+        <div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.ad||'—'}${p.fiyat?' · €'+Number(p.fiyat).toFixed(2):''}</div>
+      </div>
+      <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${renkMap[p.kaynak]||'rgba(255,255,255,0.1)'};color:${txtMap[p.kaynak]||'#fff'};white-space:nowrap">${p.kaynak}</span>
+    </div>`).join('');
+  dd.style.display='block';
+}
+
+function stokSeçOrijinal(kod,ad,fiyat,ys1,ys2,tip,kat){
+  document.getElementById('p-orijinal').value=kod;
+  document.getElementById('p-orijinal-dropdown').style.display='none';
+  document.getElementById('p-orijinal-match').style.display='inline';
+
+  if(fiyat&&!(parseFloat(document.getElementById('p-fiyat').value)))document.getElementById('p-fiyat').value=fiyat;
+
+  if(ys1&&!document.getElementById('p-yansanayi').value)document.getElementById('p-yansanayi').value=ys1;
+
+  if(ad&&!document.getElementById('p-marka').value)document.getElementById('p-marka').value=ad;
+
+  if(kat){
+    const katSel=document.getElementById('p-kat');
+    if(katSel&&katSel.value!==kat){katSel.value=kat;updatePTip(kat);}
+  }
+
+  if(tip){
+    const tipSel=document.getElementById('p-tip');
+    if(tipSel){
+    
+      const opt=[...tipSel.options].find(o=>o.text===tip)
+        ||[...tipSel.options].find(o=>tip.toLowerCase().includes(o.text.toLowerCase())||o.text.toLowerCase().includes(tip.toLowerCase()));
+      if(opt)tipSel.value=opt.value;
+    }
+  }
+  showToast(`${kod} seçildi${fiyat?' · €'+Number(fiyat).toFixed(2):''}${ys1?' · '+ys1:''}`, 'success');
+}
+
+function updatePTip(kat){
+  const tpler=PARCA_TIPLERI[kat]||[];
+  document.getElementById('p-tip').innerHTML=tpler.map(t=>`<option>${t}</option>`).join('');
+}
+function openPModal(){updatePTip('kompressor');openMod('p-modal');}
+
+function saveP(){
+  const tip=document.getElementById('p-tip').value;
+  if(!tip){showToast('Parça tipi seçin!','error');return;}
+  const p={id:Date.now(),kategori:document.getElementById('p-kat').value,tip,marka:document.getElementById('p-marka').value,fiyat:parseFloat(document.getElementById('p-fiyat').value)||0,orijinal:document.getElementById('p-orijinal').value.trim(),yansanayi:document.getElementById('p-yansanayi').value.trim(),stok:parseInt(document.getElementById('p-stok').value)||0,minstok:parseInt(document.getElementById('p-minstok').value)||2,notlar:document.getElementById('p-notlar').value,olusturma:new Date().toISOString()};
+  ST.parcalar.push(p);
+  addAkt('📦',`Parça eklendi: ${p.tip} (Stok: ${p.stok})`);
+  save();closeM('p-modal');renderStok();updateBadges();showToast('Parça kaydedildi ✓','success');
+}
+
+function stokGuncelle(id, delta){
+  const p=ST.parcalar.find(x=>String(x.id)===String(id));if(!p)return;
+  p.stok=Math.max(0,(p.stok||0)+delta);
+  save();renderStok();updateBadges();renderDash();
+}
+
+function deleteParca(id){
+  if(!confirm('Bu parçayı silmek istediğinize emin misiniz?'))return;
+  ST.parcalar=ST.parcalar.filter(p=>String(p.id)!==String(id));
+  save();renderStok();updateBadges();showToast('Parça silindi','info');
+}
+
+function setTab(el){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+
+function renderStok(){
+  const q=pSearch.toLowerCase();
+  const list=ST.parcalar.filter(p=>p.kategori===stokTab&&(!q||p.tip.toLowerCase().includes(q)||(p.orijinal&&p.orijinal.toLowerCase().includes(q))||(p.yansanayi&&p.yansanayi.toLowerCase().includes(q))));
+  const cont=document.getElementById('stok-listesi');
+  if(!list.length){
+    cont.innerHTML=`<div class="card"><div class="card-bd"><div class="empty-s"><div class="empty-i">📦</div><div class="empty-t">${KAT_LABEL[stokTab]} yedek parçası yok</div><div class="empty-d">Parça eklemek için butona tıklayın.</div></div></div></div>`;return;
+  }
+  const stokUyarilar=list.filter(p=>(p.stok||0)<=(p.minstok||2));
+  let html='';
+  if(stokUyarilar.length)html+=`<div class="alert al-r" style="margin-bottom:14px">⚠️ <strong>${stokUyarilar.length} parça</strong> minimum stok seviyesinde veya altında!</div>`;
+  html+='<div class="card"><div class="card-bd">'+list.map(p=>{
+    const stok=p.stok||0;const min=p.minstok||2;
+    const sc=stok===0?'br':stok<=min?'by':'bg';
+    const stokLabel=stok===0?`<span class="badge br">❌ Stok Yok</span>`:stok<=min?`<span class="badge by">⚠️ Düşük (${stok})</span>`:`<span class="badge bg">✅ ${stok} adet</span>`;
+    return`<div class="stok-row">
+      <div class="stok-info">
+        <div class="stok-name">${p.tip}${p.marka?` <span style="color:var(--text2);font-size:12px">— ${p.marka}</span>`:''}</div>
+        <div class="stok-codes">OEM: <strong>${p.orijinal||'—'}</strong> · YS: <strong>${p.yansanayi||'—'}</strong>${p.fiyat?' · '+fmtEur(p.fiyat):''}</div>
+      </div>
+      <div class="stok-count">
+        ${stokLabel}
+        <div class="stok-ctrl">
+          <button class="stok-btn" onclick="stokGuncelle('${p.id}',-1)">−</button>
+          <div class="stok-num" style="min-width:28px;text-align:center">${stok}</div>
+          <button class="stok-btn" onclick="stokGuncelle('${p.id}',+1)">＋</button>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteParca('${p.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('')+'</div></div>';
+  cont.innerHTML=html;
+}
+
+// ===== FATURA =====
+function openFModal(){populateSels();openMod('f-modal');}
+
+function saveF(){
+  const musteriId=document.getElementById('f-musteri').value;
+  const tutar=document.getElementById('f-tutar').value;
+  if(!musteriId||!tutar){showToast('Müşteri ve tutar zorunludur!','error');return;}
+  const m=ST.musteriler.find(x=>x.id==musteriId);
+  const f={id:String(Date.now()),no:'F-'+String(ST.faturalar.length+1).padStart(4,'0'),musteriId:String(musteriId),musteriAd:m?m.ad:'',tip:document.getElementById('f-tip').value,aciklama:document.getElementById('f-aciklama').value,tutar:parseFloat(tutar),tarih:document.getElementById('f-tarih').value,durum:document.getElementById('f-durum').value,notlar:document.getElementById('f-notlar').value,olusturma:new Date().toISOString()};
+  ST.faturalar.push(f);addAkt('🧾',`${f.tip}: ${f.musteriAd} — ${fmtEur(f.tutar)}`);
+  save();closeM('f-modal');renderF();updateBadges();showToast(`${f.tip} kaydedildi ✓`,'success');
+}
+
+function odendiFatura(id){
+  const f=ST.faturalar.find(x=>String(x.id)===String(id));if(!f)return;
+  f.durum='odendi';addAkt('💶',`Ödeme: ${f.musteriAd} — ${fmtEur(f.tutar)}`);
+  save();renderF();updateBadges();showToast('Ödeme kaydedildi ✓','success');
+}
+
+function deleteFatura(id){
+  if(!confirm('Bu kaydı silmek istediğinize emin misiniz?'))return;
+  ST.faturalar=ST.faturalar.filter(f=>String(f.id)!==String(id));
+  save();renderF();updateBadges();showToast('Kayıt silindi','info');
+}
+
+function renderF(){
+  const q=fSearch.toLowerCase();
+  const list=ST.faturalar.filter(f=>!q||f.musteriAd.toLowerCase().includes(q)||(f.aciklama&&f.aciklama.toLowerCase().includes(q))).sort((a,b)=>new Date(b.olusturma)-new Date(a.olusturma));
+  const tbody=document.getElementById('f-tbody');
+  if(!list.length){tbody.innerHTML=emptyRow(8,'🧾','Kayıt yok','Yeni teklif/fatura eklemek için butona tıklayın.');}
+  else tbody.innerHTML=list.map(f=>`
+    <tr>
+      <td style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--accent)">${f.no}</td>
+      <td style="font-weight:500;font-size:13px">${f.musteriAd}</td>
+      <td style="font-size:12px;color:var(--text2)">${f.aciklama||'—'}</td>
+      <td style="font-weight:600">${fmtEur(f.tutar)}</td>
+      <td style="font-size:12px">${fmtDate(f.tarih)}</td>
+      <td><span class="badge bo">${f.tip}</span></td>
+      <td>${durumBadge(f.durum)}</td>
+      <td><div style="display:flex;gap:5px">
+        ${f.durum==='bekliyor'?`<button class="btn btn-success btn-sm" onclick="odendiFatura('${f.id}')">✅</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="deleteFatura('${f.id}')">🗑️</button>
+      </div></td>
+    </tr>`).join('');
+  const toplam=ST.faturalar.reduce((a,f)=>a+f.tutar,0);
+  const odenen=ST.faturalar.filter(f=>f.durum==='odendi').reduce((a,f)=>a+f.tutar,0);
+  const bekleyen=ST.faturalar.filter(f=>f.durum==='bekliyor').reduce((a,f)=>a+f.tutar,0);
+  document.getElementById('f-ozet').innerHTML=`Toplam: <b>${fmtEur(toplam)}</b> · <span style="color:var(--green)">Ödenen: <b>${fmtEur(odenen)}</b></span> · <span style="color:var(--yellow)">Bekleyen: <b>${fmtEur(bekleyen)}</b></span>`;
+}
+
+// ===== GEÇMİŞ =====
+function loadGEkipman(musteriId){
+  const sel=document.getElementById('g-ekipman');
+  if(!musteriId){sel.innerHTML='<option value="">Seçin...</option>';renderGParcalar(null);return;}
+  const m=ST.musteriler.find(x=>x.id==musteriId);
+  if(!m||!m.ekipmanlar||!m.ekipmanlar.length){sel.innerHTML='<option value="">Ekipman yok</option>';return;}
+  sel.innerHTML='<option value="">Seçin...</option>'+m.ekipmanlar.map(e=>`<option value="${e.id}">${ekIcon(e.tip)} ${e.tip}${e.marka?' — '+e.marka:''}</option>`).join('');
+  sel.onchange=()=>renderGParcalar(musteriId,sel.value);
+}
+
+function renderGParcalar(musteriId,ekipmanId){
+  const cont=document.getElementById('g-parca-listesi');
+  if(!musteriId||!ekipmanId){cont.innerHTML='<div style="font-size:12px;color:var(--text3)">Müşteri ve ekipman seçin.</div>';return;}
+  const m=ST.musteriler.find(x=>x.id==musteriId);
+  const ek=m&&m.ekipmanlar?m.ekipmanlar.find(e=>e.id==ekipmanId):null;
+  if(!ek||!ek.parcalar||!ek.parcalar.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3)">Bu ekipmana parça tanımlanmamış.</div>';return;}
+  const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':'filtre';
+  cont.innerHTML=ek.parcalar.map((p,i)=>{
+    const sp=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&((p.orijinal&&x.orijinal===p.orijinal)||(p.yansanayi&&x.yansanayi===p.yansanayi)));
+    const stok=sp?(sp.stok||0):0;
+    const min=sp?(sp.minstok||2):2;
+    const sc=stok===0?'empty':stok<=min?'warn':'ok';
+    const stokText=stok===0?'❌ Stokta yok':stok<=min?`⚠️ Düşük (${stok})`:stok+' adet';
+    return`<div class="servis-parca-item">
+      <input type="checkbox" id="gp_${i}" value="${sp?sp.id:''}" data-pid="${sp?sp.id:''}" style="accent-color:var(--accent);flex-shrink:0" ${!sp||stok===0?'disabled':''}>
+      <span class="sp-icon">⚙️</span>
+      <div class="sp-info">
+        <div class="sp-name">${p.tip}${p.marka?` — ${p.marka}`:''}</div>
+        <div class="sp-code">OEM: ${p.orijinal||'—'} · YS: ${p.yansanayi||'—'}</div>
+      </div>
+      <div class="sp-stok ${sc}">${stokText}</div>
+    </div>`;
+  }).join('');
+}
+
+// Periyot önizleme
+document.addEventListener('change',function(e){
+  if(e.target.id==='g-periyot'){
+    const tarih=document.getElementById('g-tarih').value;
+    const p=e.target.value;
+    const prev=document.getElementById('g-periyot-preview');
+    if(p&&tarih){const nt=addMonths(tarih,p);prev.textContent=`Sonraki: ${fmtDate(nt)}`;}
+    else prev.textContent='—';
+  }
+  if(e.target.id==='g-tarih'){
+    const p=document.getElementById('g-periyot').value;
+    const prev=document.getElementById('g-periyot-preview');
+    if(p&&e.target.value){const nt=addMonths(e.target.value,p);prev.textContent=`Sonraki: ${fmtDate(nt)}`;}
+    else prev.textContent='—';
+  }
+});
+
+function openGModal(){populateSels();openMod('g-modal');document.getElementById('g-parca-listesi').innerHTML='<div style="font-size:12px;color:var(--text3)">Müşteri ve ekipman seçin.</div>';}
+
+function saveG(){
+  const musteriId=document.getElementById('g-musteri').value;
+  const islemler=document.getElementById('g-islemler').value.trim();
+  if(!musteriId||!islemler){showToast('Müşteri ve işlemler zorunludur!','error');return;}
+  const m=ST.musteriler.find(x=>x.id==musteriId);
+  const ekipmanId=document.getElementById('g-ekipman').value;
+  const ek=m&&m.ekipmanlar?m.ekipmanlar.find(e=>e.id==ekipmanId):null;
+  const periyot=document.getElementById('g-periyot').value;
+  const tarih=document.getElementById('g-tarih').value;
+  const sonrakiTarih=periyot&&tarih?addMonths(tarih,periyot):null;
+
+  const kullanilanParcaIdler=Array.from(document.querySelectorAll('#g-parca-listesi input[type=checkbox]:checked')).map(el=>parseInt(el.value));
+  kullanilanParcaIdler.forEach(pid=>{
+    const p=ST.parcalar.find(x=>x.id===pid);
+    if(p&&p.stok>0){p.stok--;addAkt('📦',`Stok düşüldü: ${p.tip} (kalan: ${p.stok})`);}
+  });
+  const g={id:String(Date.now()),musteriId:String(musteriId),musteriAd:m?m.ad:'',ekipmanId:ekipmanId?String(ekipmanId):null,ekipmanAd:ek?`${ek.tip}${ek.marka?' — '+ek.marka:''}`:'',tarih,tip:document.getElementById('g-tip').value,kullanilanParcalar:kullanilanParcaIdler,periyot,sonrakiTarih,islemler,olusturma:new Date().toISOString()};
+  ST.gecmis.unshift(g);
+
+  if(sonrakiTarih){
+    ST.servisler.push({id:Date.now()+1,musteriId:g.musteriId,musteriAd:g.musteriAd,ekipmanId:g.ekipmanId,ekipmanAd:g.ekipmanAd,ekipmanTip:ek?ek.tip:'',tip:g.tip,tarih:sonrakiTarih,periyot,sonrakiTarih:addMonths(sonrakiTarih,periyot),notlar:'Otomatik oluşturuldu',durum:'bekliyor',olusturma:new Date().toISOString()});
+    showToast(`${periyot} ay sonraya yeni servis planı oluşturuldu!`,'info');
+  }
+  addAkt('📋',`Servis notu: ${g.musteriAd}${g.ekipmanAd?' — '+g.ekipmanAd:''} · ${fmtDate(tarih)}`);
+  save();closeM('g-modal');renderG();updateBadges();renderDash();showToast('Servis notu kaydedildi ✓','success');
+}
+
+function deleteGecmis(id){
+  if(!confirm('Bu notu silmek istediğinize emin misiniz?'))return;
+  ST.gecmis=ST.gecmis.filter(g=>String(g.id)!==String(id));
+  save();renderG();showToast('Not silindi','info');
+}
+
+function renderG(){
+  const cont=document.getElementById('gecmis-tl');
+  if(!ST.gecmis.length){cont.innerHTML='<div class="empty-s"><div class="empty-i">📋</div><div class="empty-t">Servis geçmişi yok</div><div class="empty-d">Servis notu eklemek için butona tıklayın.</div></div>';return;}
+  cont.innerHTML='<div class="tl">'+ST.gecmis.map(g=>{
+    const kullParcalar=g.kullanilanParcalar&&g.kullanilanParcalar.length?g.kullanilanParcalar.map(pid=>{const p=ST.parcalar.find(x=>x.id==pid);return p?p.tip:'?';}).join(', '):null;
+    return`<div class="tl-item">
+      <div class="tl-dot">🔧</div>
+      <div class="tl-cont">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div>
+            <div class="tl-title">${g.musteriAd}${g.ekipmanAd?' — '+g.ekipmanAd:''}</div>
+            <div class="tl-date">${fmtDate(g.tarih)} · ${g.tip}</div>
+            <div class="tl-desc">${g.islemler}</div>
+            ${kullParcalar?`<div style="margin-top:5px;font-size:11px;color:var(--blue)">⚙️ Kullanılan parçalar: ${kullParcalar}</div>`:''}
+            ${g.sonrakiTarih?`<div style="margin-top:3px;font-size:11px;color:var(--accent)">📅 Sonraki servis: ${fmtDate(g.sonrakiTarih)}${g.periyot?' ('+g.periyot+' aylık periyot)':''}</div>`:''}
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteGecmis('${g.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+// ===== DASHBOARD =====
+function renderDash(){
+  ST.servisler.forEach(s=>{if(s.durum!=='tamamlandi')s.durum=daysDiff(s.tarih)<0?'gecikti':'bekliyor';});
+  const bek=ST.servisler.filter(s=>s.durum==='bekliyor').length;
+  const gec=ST.servisler.filter(s=>s.durum==='gecikti').length;
+  const stokU=ST.parcalar.filter(p=>(p.stok||0)<=(p.minstok||2)).length;
+  document.getElementById('s-m').textContent=ST.musteriler.length;
+  document.getElementById('s-b').textContent=bek;
+  document.getElementById('s-t').textContent=ST.gecmis.length;
+  document.getElementById('s-stok').textContent=stokU;
+  document.getElementById('tr-m').textContent=`${ST.musteriler.length} firma kayıtlı`;
+  document.getElementById('tr-b').textContent=`${bek} servis bekliyor`;
+  document.getElementById('tr-stok').textContent=stokU>0?`${stokU} parça kritik seviyede!`:'Tüm stoklar yeterli ✓';
+
+  const uyar=ST.servisler.filter(s=>s.durum!=='tamamlandi'&&daysDiff(s.tarih)<=14).sort((a,b)=>new Date(a.tarih)-new Date(b.tarih));
+  document.getElementById('uyari-bdg').textContent=uyar.length;
+  document.getElementById('uyari-list').innerHTML=!uyar.length?'<div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Her şey yolunda!</div></div>':
+    uyar.map(s=>{const d=daysDiff(s.tarih);return`<div class="alert ${d<0?'al-r':'al-w'}"><span>${d<0?'🔴':'⚠️'}</span><div><strong>${s.musteriAd}</strong>${s.ekipmanAd?' — '+s.ekipmanAd:''}<br><small>${fmtDate(s.tarih)} · ${d<0?Math.abs(d)+' gün gecikti!':d+' gün kaldı'}</small></div></div>`;}).join('');
+
+  const krit=ST.parcalar.filter(p=>(p.stok||0)<=(p.minstok||2)).slice(0,5);
+  document.getElementById('kritik-stok').innerHTML=!krit.length?'<div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Stok durumu normal</div></div>':
+    krit.map(p=>{const s=p.stok||0;return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:500">${p.tip}</div><div style="font-size:11px;color:var(--text2)">${KAT_LABEL[p.kategori]||''}</div></div><span class="badge ${s===0?'br':'by'}">${s===0?'❌ Stok Yok':'⚠️ '+s+' adet'}</span></div>`;}).join('');
+
+  document.getElementById('son-aktiv').innerHTML=!ST.aktiviteler.length?'<div class="empty-s"><div class="empty-i">📝</div><div class="empty-t">Henüz aktivite yok</div></div>':
+    '<div class="tl">'+ST.aktiviteler.slice(0,10).map(a=>`<div class="tl-item"><div class="tl-dot">${a.icon}</div><div class="tl-cont"><div class="tl-title">${a.text}</div><div class="tl-date">${a.zaman}</div></div></div>`).join('')+'</div>';
+  updateBadges();
+}
+
+// ===== INIT =====
+updatePTip('kompressor');
+// Giriş bekliyor — initFirebase doLogin'den çağrılacak
+</script>
+</div><!-- /app-wrap -->
+</body>
+</html>

@@ -1800,7 +1800,7 @@ function loadServisParçalar(){
       );
 
       tumParcalar.push(`<div class="servis-parca-item" style="flex-direction:column;align-items:flex-start;gap:6px" 
-        data-uid="${uid}" data-ekid="${ekId}" data-pi="${pi}" data-tercih="oem" data-kullanilacak="1">
+        data-uid="${uid}" data-ekid="${ekId}" data-pi="${pi}" data-tercih="oem" data-kullanilacak="1" data-adet="1">
         <div style="display:flex;align-items:center;gap:8px;width:100%">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none" title="Bu serviste kullanılacak mı?">
             <input type="checkbox" id="${uid}_kull" checked onchange="kullAnimDegis('${uid}',this.checked)"
@@ -1808,8 +1808,14 @@ function loadServisParçalar(){
           </label>
           <span class="sp-icon" style="font-size:14px">⚙️</span>
           <div class="sp-info" style="flex:1" id="${uid}_icerik">
-            <div class="sp-name">${p.tip}${p.adet&&p.adet>1?' <strong>('+p.adet+' adet)</strong>':''}</div>
+            <div class="sp-name">${p.tip}</div>
             ${p.fiyat?`<div style="font-size:11px;color:var(--text2)">Birim: €${Number(p.fiyat).toFixed(2)}</div>`:''}
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0" id="${uid}_adetgrp">
+            <button type="button" onclick="adetDegis('${uid}',-1)" style="width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);color:var(--text1);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">−</button>
+            <span id="${uid}_adetlbl" style="font-size:13px;font-weight:700;min-width:18px;text-align:center">1</span>
+            <button type="button" onclick="adetDegis('${uid}',+1)" style="width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);color:var(--text1);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">+</button>
+            <span style="font-size:10px;color:var(--text3)">adet</span>
           </div>
         </div>
         <div id="${uid}_secimler" style="padding-left:46px">
@@ -1825,15 +1831,27 @@ function loadServisParçalar(){
   list.innerHTML=tumParcalar.join('');
 }
 
+function adetDegis(uid, delta){
+  const item=document.querySelector(`[data-uid="${uid}"]`);
+  if(!item||item.dataset.kullanilacak==='0')return;
+  const mevcut=parseInt(item.dataset.adet)||1;
+  const yeni=Math.max(1,Math.min(9,mevcut+delta));
+  item.dataset.adet=String(yeni);
+  const lbl=document.getElementById(`${uid}_adetlbl`);
+  if(lbl)lbl.textContent=yeni;
+}
+
 function kullAnimDegis(uid, kullanilacak){
   const item=document.querySelector(`[data-uid="${uid}"]`);
   if(!item)return;
   item.dataset.kullanilacak=kullanilacak?'1':'0';
   const icerik=document.getElementById(`${uid}_icerik`);
   const secimler=document.getElementById(`${uid}_secimler`);
+  const adetgrp=document.getElementById(`${uid}_adetgrp`);
   const opasite=kullanilacak?'1':'0.35';
   if(icerik)icerik.style.opacity=opasite;
   if(secimler)secimler.style.opacity=opasite;
+  if(adetgrp)adetgrp.style.opacity=opasite;
   // Seçim butonlarını da disable et
   ['oem','ys1','ys2'].forEach(t=>{
     const btn=document.getElementById(`${uid}_${t}`);
@@ -1880,7 +1898,7 @@ function saveS(){
   document.querySelectorAll('[data-uid]').forEach(el=>{
     // Sadece "kullanılacak" işaretli olanları al
     if(el.dataset.kullanilacak==='0')return;
-    tercihler[el.dataset.uid]={ekId:el.dataset.ekid,pi:el.dataset.pi,tercih:el.dataset.tercih||'oem'};
+    tercihler[el.dataset.uid]={ekId:el.dataset.ekid,pi:el.dataset.pi,tercih:el.dataset.tercih||'oem',adet:parseInt(el.dataset.adet)||1};
   });
 
   let eklenen=0;
@@ -2077,9 +2095,10 @@ function tamamlaKaydet(){
         stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.yansanayi===p.yansanayi2&&x.parcaTuru==='muadil');
       }
       if(stokKaydi&&stokKaydi.stok>0){
-        stokKaydi.stok=Math.max(0,stokKaydi.stok-1);
-        stokDusulenler.push(`${stokKaydi.tip} (kalan: ${stokKaydi.stok})`);
-        addAkt('📦',`Stoktan düşüldü: ${stokKaydi.tip} — ${s.ekipmanAd} servisi`);
+        const adet=t.adet||1;
+        stokKaydi.stok=Math.max(0,stokKaydi.stok-adet);
+        stokDusulenler.push(`${stokKaydi.tip} ×${adet} (kalan: ${stokKaydi.stok})`);
+        addAkt('📦',`Stoktan düşüldü: ${stokKaydi.tip} ×${adet} — ${s.ekipmanAd} servisi`);
       }
     });
   });
@@ -2120,6 +2139,22 @@ function siparisVer(id){
   s.siparisT=new Date().toISOString();
   addAkt('🛒',`Sipariş verildi: ${s.parcaAd}`);
   save();renderDash();showToast('Sipariş verildi olarak işaretlendi ✓','success');
+}
+
+function siparisVerGrup(ids){
+  if(!ST.siparisler)return;
+  let parcaAd='';
+  let toplamAdet=0;
+  ids.forEach(id=>{
+    const s=ST.siparisler.find(x=>String(x.id)===String(id));
+    if(!s)return;
+    s.durum='siparis_verildi';
+    s.siparisT=new Date().toISOString();
+    parcaAd=s.parcaAd;
+    toplamAdet+=(s.adet||1);
+  });
+  if(parcaAd)addAkt('🛒',`Sipariş verildi: ${parcaAd} ×${toplamAdet} adet`);
+  save();renderDash();showToast(`Sipariş verildi ✓ — ${parcaAd} ×${toplamAdet} adet`,'success');
 }
 
 function onaylaServisGrup(idsStr){
@@ -2178,9 +2213,10 @@ function kontolEksikParca(servisIds,musteriAd){
         stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.yansanayi===arananKod&&x.parcaTuru==='muadil');
       }
 
-      // Stok kaydı yok veya stok=0 ise sipariş listesine ekle
+      // Stok kaydı yok veya stok yetersizse sipariş listesine ekle
       const stokAdedi=stokKaydi?(stokKaydi.stok||0):0;
-      if(stokAdedi===0){
+      const istenenAdet=t.adet||1;
+      if(stokAdedi<istenenAdet){
         // Zaten listede var mı?
         const zatenVar=ST.siparisler.find(s=>
           s.durum==='bekliyor'&&
@@ -2195,6 +2231,7 @@ function kontolEksikParca(servisIds,musteriAd){
             parcaAd:p.tip,
             arananKod,
             kodTipi,
+            adet:istenenAdet,
             ekipmanAd:servis.ekipmanAd||'',
             kategori:kat,
             tetikleyen:musteriAd,
@@ -3026,21 +3063,51 @@ function renderDash(){
   if(!ST.siparisler)ST.siparisler=[];
   const bekSiparisler=ST.siparisler.filter(s=>s.durum==='bekliyor');
   const sipBdg=document.getElementById('siparis-bdg');
-  if(sipBdg){sipBdg.textContent=bekSiparisler.length;sipBdg.style.display=bekSiparisler.length?'':'none';}
+  // Badge: kaç farklı malzeme bekliyor
+  const tekil=new Set(bekSiparisler.map(s=>s.arananKod||s.id));
+  if(sipBdg){sipBdg.textContent=tekil.size;sipBdg.style.display=tekil.size?'':'none';}
   const sipList=document.getElementById('siparis-list');
   if(sipList){
     if(!bekSiparisler.length){sipList.innerHTML='<div class="empty-s"><div class="empty-i">✅</div><div class="empty-t">Bekleyen sipariş yok</div></div>';}
-    else{sipList.innerHTML=bekSiparisler.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500">${s.parcaAd} <span style="font-size:11px;background:rgba(232,93,26,0.15);color:var(--accent);padding:2px 7px;border-radius:4px">${s.kodTipi||'OEM'}</span></div>
-        <div style="font-size:11px;color:var(--text2);font-family:monospace;margin-top:2px">${s.arananKod||s.parcaOem||'—'}</div>
-        <div style="font-size:11px;color:var(--text2)">${s.ekipmanAd?'🔧 '+s.ekipmanAd+' · ':''} Onay: ${s.tetikleyen||'—'}</div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-        <span class="badge by">⏳ Sipariş Gerek</span>
-        <button class="btn btn-success btn-sm" onclick="siparisVer('${s.id}')" title="Sipariş Verildi">✓</button>
-      </div>
-    </div>`).join('');}
+    else{
+      // Aynı arananKod'ları grupla — toplam adet topla
+      const gruplar={};
+      bekSiparisler.forEach(s=>{
+        const key=s.arananKod||s.id;
+        if(!gruplar[key]){
+          gruplar[key]={
+            ids:[s.id],
+            parcaAd:s.parcaAd,
+            arananKod:s.arananKod||'—',
+            kodTipi:s.kodTipi||'OEM',
+            toplamAdet:s.adet||1,
+            ekipmanlar:[s.ekipmanAd].filter(Boolean),
+            tetikleyenler:[s.tetikleyen].filter(Boolean)
+          };
+        } else {
+          gruplar[key].ids.push(s.id);
+          gruplar[key].toplamAdet+=(s.adet||1);
+          if(s.ekipmanAd&&!gruplar[key].ekipmanlar.includes(s.ekipmanAd))gruplar[key].ekipmanlar.push(s.ekipmanAd);
+          if(s.tetikleyen&&!gruplar[key].tetikleyenler.includes(s.tetikleyen))gruplar[key].tetikleyenler.push(s.tetikleyen);
+        }
+      });
+      sipList.innerHTML=Object.values(gruplar).map(g=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-size:13px;font-weight:500">
+              ${g.parcaAd}
+              <span style="font-size:11px;background:rgba(232,93,26,0.15);color:var(--accent);padding:2px 7px;border-radius:4px">${g.kodTipi}</span>
+              <span style="font-size:12px;background:rgba(251,191,36,0.2);color:#fbbf24;padding:2px 9px;border-radius:4px;font-weight:700">×${g.toplamAdet} adet</span>
+            </div>
+            <div style="font-size:11px;color:var(--text2);font-family:monospace;margin-top:2px">${g.arananKod}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${g.ekipmanlar.length?'🔧 '+g.ekipmanlar.join(', ')+'  ':''} ${g.tetikleyenler.length?'· '+g.tetikleyenler.join(', '):''}</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+            <span class="badge by">⏳ Sipariş Gerek</span>
+            <button class="btn btn-success btn-sm" onclick="siparisVerGrup(${JSON.stringify(g.ids)})" title="Sipariş Verildi">✓</button>
+          </div>
+        </div>`).join('');
+    }
   }
 
   document.getElementById('son-aktiv').innerHTML=!ST.aktiviteler.length?'<div class="empty-s"><div class="empty-i">📝</div><div class="empty-t">Henüz aktivite yok</div></div>':

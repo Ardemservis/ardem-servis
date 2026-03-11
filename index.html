@@ -827,6 +827,48 @@ function savePw(){
 }
 
 // ===== FİYAT LİSTELERİ (Firebase'den yüklenir) =====
+// Airomak Kompresör Yedek Parça Listesi (Lupamat — 19/01/2026)
+const AIROMAK_LISTE=[
+  // Seperatörler
+  {kod:'LEVK-1301.00', ad:'5,5 KW Makine Seperatör',      fiyat:46,   kat:'kompressor', tip:'Seperatör Filtresi'},
+  {kod:'LEVK-1302.00', ad:'11-15 KW Makine Seperatör',    fiyat:46,   kat:'kompressor', tip:'Seperatör Filtresi'},
+  {kod:'LEVK-1304.00', ad:'22 KW Makine Seperatör',       fiyat:54,   kat:'kompressor', tip:'Seperatör Filtresi'},
+  {kod:'LEVK-1305.00', ad:'37 KW Makine Seperatör',       fiyat:75,   kat:'kompressor', tip:'Seperatör Filtresi'},
+  {kod:'LEVK-1306.00', ad:'55 KW Makine Seperatör',       fiyat:206,  kat:'kompressor', tip:'Seperatör Filtresi'},
+  {kod:'LEVK-1307.00', ad:'7,5 KW Makine Seperatör',      fiyat:46,   kat:'kompressor', tip:'Seperatör Filtresi'},
+  // Hava Filtreleri
+  {kod:'LEVS-0301.00', ad:'5,5 KW Makine Hava Filtresi',  fiyat:11,   kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVS-0302.00', ad:'11-15 KW Makine Hava Filtresi',fiyat:11,   kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVS-0304.00', ad:'22 KW Makine Hava Filtresi',   fiyat:20,   kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVS-0305.00', ad:'37 KW Makine Hava Filtresi',   fiyat:27,   kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVS-0306.00', ad:'55 KW Makine Hava Filtresi',   fiyat:55,   kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVS-0307.00', ad:'7,5 KW Makine Hava Filtresi',  fiyat:10,   kat:'kompressor', tip:'Hava Filtresi'},
+  // Yağ Filtreleri
+  {kod:'LEVK-1201.00', ad:'5,5 KW Yağ Filtresi',          fiyat:20,   kat:'kompressor', tip:'Yağ Filtresi'},
+  {kod:'LEVK-1207.00', ad:'7,5 KW Yağ Filtresi',          fiyat:20,   kat:'kompressor', tip:'Yağ Filtresi'},
+  {kod:'LEVK-1202.00', ad:'11-15-22-37 KW Makine Yağ Filtresi', fiyat:22, kat:'kompressor', tip:'Yağ Filtresi'},
+  // Emiş Kontrol Valfleri
+  {kod:'LEVK-0101.00', ad:'Emiş Kontrol Valfi 7,5 KW',    fiyat:166,  kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVK-0102.00', ad:'Emiş Kontrol Valfi 11-15 KW',  fiyat:96,   kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVK-0104.00', ad:'Emiş Kontrol Valfi 22 KW',     fiyat:390,  kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVK-0105.00', ad:'Emiş Kontrol Valfi 37 KW',     fiyat:459,  kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVK-0106.00', ad:'Emiş Kontrol Valfi 55 KW',     fiyat:640,  kat:'kompressor', tip:'Hava Filtresi'},
+  // Minimum Basınç Valfleri
+  {kod:'LEVK-0201.00', ad:'Minimum Basınç Valfi 7,5 KW',  fiyat:96,   kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVK-0202.00', ad:'Minimum Basınç Valfi 11-15 KW',fiyat:96,   kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVK-0204.00', ad:'Minimum Basınç Valfi 22 KW',   fiyat:135,  kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVK-0205.00', ad:'Minimum Basınç Valfi 37 KW',   fiyat:186,  kat:'kompressor', tip:'Hava Filtresi'},
+  {kod:'LEVK-0206.00', ad:'Minimum Basınç Valfi 55 KW',   fiyat:495,  kat:'kompressor', tip:'Hava Filtresi'},
+  // Radyatörler
+  {kod:'LEVS-0201.00', ad:'Radyatör 5,5 KW',              fiyat:125,  kat:'kompressor', tip:'Yağ Filtresi'},
+  {kod:'LEVS-0202.00', ad:'Radyatör 11 KW',               fiyat:270,  kat:'kompressor', tip:'Yağ Filtresi'},
+  {kod:'LEVS-0203.00', ad:'Radyatör 15 KW',               fiyat:270,  kat:'kompressor', tip:'Yağ Filtresi'},
+  {kod:'LEVS-0204.00', ad:'Radyatör 22 KW',               fiyat:660,  kat:'kompressor', tip:'Yağ Filtresi'},
+  {kod:'LEVS-0205.00', ad:'Radyatör 37 KW',               fiyat:660,  kat:'kompressor', tip:'Yağ Filtresi'},
+  {kod:'LEVS-0206.00', ad:'Radyatör 55 KW',               fiyat:1150, kat:'kompressor', tip:'Yağ Filtresi'},
+  {kod:'LEVS-0207.00', ad:'Radyatör 7,5 KW',              fiyat:200,  kat:'kompressor', tip:'Yağ Filtresi'},
+];
+
 let LUPAMAT_LISTE=[];
 const MUADIL_MAP2={"VK-1570.00": "W 11 102", "VK-1580.00": "W 3145/1"};
 let MUADIL_MAP={};
@@ -961,7 +1003,10 @@ function orijinalAutoComplete(val){
     .slice(0,6)
     .map(([k,v])=>({kaynak:'Öğrenilmiş',kod:k,ad:v.ad||v.tip||'Manuel giriş',muadil:v.muadil||'',fiyat:v.fiyat||0,para:'EUR'}));
 
-  const sonuclar=[...aag,...kmt6,...lupamat,...kaeser,...atlas,...ogrenilen].slice(0,18);
+  const airomak=AIROMAK_LISTE.filter(p=>p.kod.toUpperCase().includes(q)||p.ad.toUpperCase().includes(q)).slice(0,6)
+    .map(p=>({kaynak:'Airomak',kod:p.kod,ad:p.ad,muadil:'',fiyat:p.fiyat,para:'EUR'}));
+
+  const sonuclar=[...aag,...kmt6,...airomak,...lupamat,...kaeser,...atlas,...ogrenilen].slice(0,18);
   if(!sonuclar.length){dd.style.display='none';match.style.display='none';return;}
   dd.style.display='block';
   dd.innerHTML=sonuclar.map(p=>`
@@ -969,7 +1014,7 @@ function orijinalAutoComplete(val){
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:6px">
           <span style="font-family:monospace;font-weight:700;color:var(--accent)">${p.kod}</span>
-          <span style="font-size:10px;padding:1px 5px;border-radius:4px;background:${p.kaynak==='Kaeser'?'rgba(59,130,246,0.15)':p.kaynak==='Atlas'?'rgba(34,197,94,0.15)':p.kaynak==='Öğrenilmiş'?'rgba(168,85,247,0.15)':p.kaynak==='AAG'?'rgba(234,179,8,0.15)':p.kaynak==='K-MT6'?'rgba(6,182,212,0.15)':'rgba(232,93,26,0.15)'};color:${p.kaynak==='Kaeser'?'#60a5fa':p.kaynak==='Atlas'?'#4ade80':p.kaynak==='Öğrenilmiş'?'#c084fc':p.kaynak==='AAG'?'#facc15':p.kaynak==='K-MT6'?'#22d3ee':'var(--accent)'}">${p.kaynak==='Atlas'?'Atlas Copco':p.kaynak}</span>
+          <span style="font-size:10px;padding:1px 5px;border-radius:4px;background:${p.kaynak==='Kaeser'?'rgba(59,130,246,0.15)':p.kaynak==='Atlas'?'rgba(34,197,94,0.15)':p.kaynak==='Öğrenilmiş'?'rgba(168,85,247,0.15)':p.kaynak==='AAG'?'rgba(234,179,8,0.15)':p.kaynak==='K-MT6'?'rgba(6,182,212,0.15)':p.kaynak==='Airomak'?'rgba(239,68,68,0.15)':'rgba(232,93,26,0.15)'};color:${p.kaynak==='Kaeser'?'#60a5fa':p.kaynak==='Atlas'?'#4ade80':p.kaynak==='Öğrenilmiş'?'#c084fc':p.kaynak==='AAG'?'#facc15':p.kaynak==='K-MT6'?'#22d3ee':p.kaynak==='Airomak'?'#f87171':'var(--accent)'}">${p.kaynak==='Atlas'?'Atlas Copco':p.kaynak}</span>
           ${p.muadil?`<span style="font-size:10px;color:var(--text3)">→ ${p.muadil}</span>`:''}
         </div>
         <div style="color:var(--text2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.ad}</div>

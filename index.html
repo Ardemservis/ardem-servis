@@ -987,7 +987,15 @@ function seçOrijinal(kod,ad,fiyat,muadil,para){
 
   const kodUpper=kod.toUpperCase().replace(/-00$/,'.00');
   const ogr=ogrenilmisGetir(kod);
-  const muadilDeger=muadil||MUADIL_MAP[kodUpper]||MUADIL_MAP[kod]||(ogr&&ogr.muadil)||'';
+  // Diğer müşteri ekipmanlarından da bu OEM kodun muadilini ara
+  let ekipmanMuadil='';
+  ST.musteriler.forEach(m=>(m.ekipmanlar||[]).forEach(ek=>{
+    (ek.parcalar||[]).forEach(p=>{
+      if(p.orijinal&&p.orijinal.toUpperCase()===kodUpper&&p.yansanayi&&!ekipmanMuadil)
+        ekipmanMuadil=p.yansanayi;
+    });
+  }));
+  const muadilDeger=muadil||MUADIL_MAP[kodUpper]||MUADIL_MAP[kod]||(ogr&&ogr.muadil)||ekipmanMuadil||'';
   const ys1=document.getElementById('ep-yansanayi');
   const ys2=document.getElementById('ep-yansanayi2');
   // Sadece ys1 boşsa doldur, ys2'ye otomatik dokunma
@@ -1386,6 +1394,7 @@ function openMod(id){
 }
 function closeM(id){
   document.getElementById(id).classList.remove('open');
+  if(id==='ep-modal'){epEkleButonuSifirla();}
   if(id==='p-modal'){
     // Düzenle modundan çıkınca butonu ve başlığı sıfırla
     const btn=document.getElementById('p-kaydet-btn');
@@ -1487,6 +1496,7 @@ function renderEpParcaListesi(ek){
         <div class="sp-name">${p.tip}${p.marka?` <span style="color:var(--text2);font-size:11px">— ${p.marka}</span>`:''}</div>
         <div class="sp-code">OEM: <strong>${p.orijinal||'—'}</strong>${p.adet&&p.adet>1?' · <strong>'+p.adet+' adet</strong>':''} · YS1: <strong>${p.yansanayi||'—'}</strong>${p.yansanayi2?' · YS2: <strong>'+p.yansanayi2+'</strong>':''}${p.fiyat?' · €'+Number(p.fiyat).toFixed(2):''}</div>
       </div>
+      <button class="btn btn-ghost btn-sm" onclick="duzenleEpParca(${i})" title="Düzenle">✏️</button>
       <button class="btn btn-danger btn-sm" onclick="removeEpParca(${i})">✕</button>
     </div>`).join('');
 }
@@ -1522,6 +1532,71 @@ function addEpParca(){
   renderEpParcaListesi(ek);
   renderEkList();
   showToast(`${tip} eklendi ✓`,'success');
+}
+
+
+// ===== EKİPMAN PARÇA DÜZENLE =====
+let _epDuzenleIdx=null; // Düzenlenen parçanın index'i
+
+function duzenleEpParca(idx){
+  const ek=tempEk.find(e=>String(e.id)===String(epEkipmanId));
+  if(!ek||!ek.parcalar||!ek.parcalar[idx])return;
+  const p=ek.parcalar[idx];
+  _epDuzenleIdx=idx;
+
+  // Parça tipini seç
+  const tipSel=document.getElementById('ep-tip');
+  if(tipSel){
+    if(![...tipSel.options].some(o=>o.value===p.tip)){
+      const opt=document.createElement('option');opt.value=p.tip;opt.textContent=p.tip;tipSel.appendChild(opt);
+    }
+    tipSel.value=p.tip;
+    epTipDegisti(p.tip);
+  }
+
+  // Alanları doldur
+  document.getElementById('ep-parca-adi').value=p.ad||'';
+  document.getElementById('ep-orijinal').value=p.orijinal||'';
+  document.getElementById('ep-yansanayi').value=p.yansanayi||'';
+  document.getElementById('ep-yansanayi2').value=p.yansanayi2||'';
+  document.getElementById('ep-fiyat').value=p.fiyat||'';
+  const adetEl=document.getElementById('ep-adet');if(adetEl)adetEl.value=p.adet||1;
+  const adetGrp=document.getElementById('ep-adet-grp');if(adetGrp)adetGrp.style.display='block';
+
+  // Butonu düzenleme moduna al — id ile, onclick attribute yok
+  const btn=document.getElementById('ep-ekle-btn');
+  if(btn){btn.textContent='💾 Güncelle';btn.onclick=saveEpParcaDuzenle;}
+}
+
+function saveEpParcaDuzenle(){
+  const ek=tempEk.find(e=>String(e.id)===String(epEkipmanId));
+  if(!ek||!ek.parcalar||_epDuzenleIdx===null)return;
+  const tip=document.getElementById('ep-tip').value;
+  if(!tip){showToast('Parça tipi seçin!','error');return;}
+
+  ek.parcalar[_epDuzenleIdx]={
+    tip,
+    ad:document.getElementById('ep-parca-adi').value.trim(),
+    orijinal:document.getElementById('ep-orijinal').value.trim(),
+    yansanayi:document.getElementById('ep-yansanayi').value.trim(),
+    yansanayi2:document.getElementById('ep-yansanayi2').value.trim(),
+    fiyat:parseFloat(document.getElementById('ep-fiyat').value)||0,
+    adet:parseInt(document.getElementById('ep-adet').value)||1
+  };
+  ogren(ek.parcalar[_epDuzenleIdx]);
+  _epDuzenleIdx=null;
+  epEkleButonuSifirla();
+  ['ep-orijinal','ep-parca-adi','ep-yansanayi','ep-yansanayi2','ep-fiyat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const adetEl=document.getElementById('ep-adet');if(adetEl)adetEl.value='1';
+  const adetGrp=document.getElementById('ep-adet-grp');if(adetGrp)adetGrp.style.display='none';
+  renderEpParcaListesi(ek);renderEkList();
+  showToast('Parça güncellendi ✓','success');
+}
+
+function epEkleButonuSifirla(){
+  _epDuzenleIdx=null;
+  const btn=document.getElementById('ep-ekle-btn');
+  if(btn){btn.textContent='➕ Parça Ekle';btn.onclick=addEpParca;}
 }
 
 function removeEpParca(idx){
@@ -3142,6 +3217,7 @@ function renderDash(){
 // ===== INIT =====
 updatePTip('kompressor');
 document.getElementById('p-kaydet-btn').onclick=saveP;
+const _epBtn=document.getElementById('ep-ekle-btn');if(_epBtn)_epBtn.onclick=addEpParca;
 // Giriş bekliyor — initFirebase doLogin'den çağrılacak
 </script>
 </div><!-- /app-wrap -->

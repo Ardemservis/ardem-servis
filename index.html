@@ -264,6 +264,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
   </nav>
   <div class="sidebar-footer">
     <div id="admin-menu-item" class="nav-item" style="margin-bottom:8px;display:none" onclick="openMod('pw-modal')"><span class="nav-icon">🔐</span>Şifre Değiştir</div>
+    <div class="nav-item" style="margin-bottom:8px;color:#f87171" onclick="cikisYap()"><span class="nav-icon">🚪</span>Çıkış Yap</div>
     <div class="user-card">
       <div class="u-avatar">AE</div>
       <div><div class="u-name">Ardem Endüstri</div><div class="u-role">Servis Yönetimi</div></div>
@@ -390,8 +391,8 @@ tr:hover td{background:rgba(255,255,255,0.015);}
     <div class="page" id="page-odemeler">
       <div class="page-hd"><div class="page-title">💰 Ödemeler</div></div>
 
-      <!-- Özet Kartlar: 2x2 grid -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <!-- Özet Kartlar: 4'lü yatay sıra -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
 
         <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:12px;padding:16px">
           <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Toplam Tahsil Edilecek</div>
@@ -799,6 +800,38 @@ const USERS_DEFAULT={
 };
 let currentUser=null;
 
+const OTURUM_KEY='ardem_oturum';
+const OTURUM_SURE=30; // gün
+
+function oturumKaydet(u){
+  const vade=new Date();
+  vade.setDate(vade.getDate()+OTURUM_SURE);
+  localStorage.setItem(OTURUM_KEY,JSON.stringify({kullanici:u,vade:vade.toISOString()}));
+}
+
+function oturumKontrol(){
+  try{
+    const kayit=JSON.parse(localStorage.getItem(OTURUM_KEY)||'null');
+    if(!kayit)return null;
+    if(new Date(kayit.vade)<new Date()){
+      localStorage.removeItem(OTURUM_KEY);
+      return null;
+    }
+    if(!USERS_DEFAULT[kayit.kullanici])return null;
+    return kayit.kullanici;
+  }catch(e){return null;}
+}
+
+function oturumAc(u){
+  currentUser={ad:u,rol:USERS_DEFAULT[u].rol};
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('splash').style.display='flex';
+  const adminMenu=document.getElementById('admin-menu-item');
+  if(adminMenu)adminMenu.style.display=currentUser.rol==='admin'?'flex':'none';
+  document.querySelector('.u-name').textContent=u==='admin'?'Admin':'Ardem Kullanıcı';
+  initFirebase();
+}
+
 function getPass(user){
   return USERS_DEFAULT[user]?.sifre||'';
 }
@@ -810,16 +843,21 @@ function doLogin(){
   if(!USERS_DEFAULT[u]){err.style.display='block';return;}
   if(getPass(u)!==p){err.style.display='block';return;}
   err.style.display='none';
-  currentUser={ad:u,rol:USERS_DEFAULT[u].rol};
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('splash').style.display='flex';
-
-  const adminMenu=document.getElementById('admin-menu-item');
-  if(adminMenu)adminMenu.style.display=currentUser.rol==='admin'?'flex':'none';
-
-  document.querySelector('.u-name').textContent=u==='admin'?'Admin':'Ardem Kullanıcı';
-  initFirebase();
+  oturumKaydet(u);
+  oturumAc(u);
 }
+
+// Sayfa yüklenince otomatik oturum kontrolü
+(function(){
+  const u=oturumKontrol();
+  if(u){
+    // Kayıtlı oturum var — şifre sormadan aç
+    oturumAc(u);
+    // Vadeyi yenile (her girişte 30 gün uzat)
+    oturumKaydet(u);
+  }
+  // Yoksa login ekranı zaten görünür (display:flex default)
+})();
 
 function savePw(){
   const u=document.getElementById('pw-user').value;
@@ -833,6 +871,12 @@ function savePw(){
   err.style.display='none';
   closeM('pw-modal');
   showToast(`${u} şifresi güncellendi ✓`,'success');
+}
+
+function cikisYap(){
+  if(!confirm('Çıkış yapmak istediğinize emin misiniz?'))return;
+  localStorage.removeItem(OTURUM_KEY);
+  location.reload();
 }
 
 // ===== FİYAT LİSTELERİ (Firebase'den yüklenir) =====
@@ -1403,7 +1447,7 @@ function goPage(p,el){
   const T={dashboard:'Gösterge Paneli',musteriler:'Müşteriler',servisler:'Servis Planları',stok:'Yedek Parça Stok',faturalar:'Teklifler / Faturalar',gecmis:'Servis Geçmişi'};
   document.getElementById('pageTitle').textContent=T[p]||p;
   closeSidebar();
-  ({dashboard:renderDash,musteriler:renderM,servisler:renderS,stok:renderStok,faturalar:renderF,gecmis:renderG}[p]||function(){})();
+  ({dashboard:renderDash,musteriler:renderM,servisler:renderS,stok:renderStok,faturalar:renderF,gecmis:renderG,odemeler:renderOdemeler}[p]||function(){})();
 }
 function handleQuickAdd(){const M={dashboard:'m-modal',musteriler:'m-modal',servisler:'s-modal',stok:'p-modal',faturalar:'f-modal',gecmis:'g-modal'};openMod(M[curPage]||'m-modal');}
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlayBg').classList.toggle('open');}

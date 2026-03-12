@@ -415,7 +415,10 @@ tr:hover td{background:rgba(255,255,255,0.015);}
         </div>
 
       </div>
-      <div style="text-align:right;margin-bottom:12px;font-size:11px;color:var(--text3)" id="od-kur-bilgi"></div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text3)" id="od-kur-bilgi"></div>
+        <button onclick="fetchKurVeYenile()" id="od-kur-btn" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--accent);background:rgba(232,93,26,0.12);color:var(--accent);cursor:pointer;font-weight:600">🔄 Kuru Güncelle</button>
+      </div>
       <div id="odeme-listesi"></div>
     </div>
 
@@ -1303,6 +1306,8 @@ async function initFirebase(){
   ST.faturalar=dedupArr(ST.faturalar);
   renderDash();updateBadges();updatePTip('kompressor');
   await loadListeler();
+  // Uygulama yüklenince günlük kur çek (sessiz — yeni gün ise API'den, aynı günse cache'den)
+  fetchKur(true).then(()=>{ if(typeof renderOdemeler==='function')renderOdemeler(); });
 }
 
 async function manualSync(){
@@ -1310,51 +1315,90 @@ async function manualSync(){
   const text=document.getElementById('sync-text');
   const btn=document.getElementById('sync-btn');
   btn.disabled=true;
-  icon.textContent='⏳';text.textContent='Bağlanıyor...';
 
-  // Önce Firebase bağlantısını kur (yoksa)
-  if(!db||!_setDoc||!_doc){
-    try{
+  const resetBtn=()=>{
+    icon.textContent='🔄';text.textContent='Senkronize Et';
+    btn.disabled=false;btn.style.background='rgba(255,255,255,0.07)';btn.style.borderColor='var(--border)';
+  };
+
+  if(!navigator.onLine){
+    icon.textContent='📵';text.textContent='Çevrimdışı';
+    showToast('İnternet bağlantısı yok','error');
+    setTimeout(resetBtn,2500);return;
+  }
+
+  try{
+    // Firebase modüllerini bağla (yoksa)
+    if(!db||!_setDoc||!_doc){
+      icon.textContent='⏳';text.textContent='Bağlanıyor...';
       const m1=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
       const m2=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
       let app;
       try{app=m1.getApp();}catch(e){app=m1.initializeApp({apiKey:'AIzaSyAwkBB0nIKsOemalVGtHZWfsNjvUZTLLcs',authDomain:'ardem-servis.firebaseapp.com',projectId:'ardem-servis',storageBucket:'ardem-servis.firebasestorage.app',messagingSenderId:'50518080446',appId:'1:50518080446:web:edf217397d205b8d6c17ef'});}
       db=m2.getFirestore(app);
       _doc=m2.doc;_setDoc=m2.setDoc;
-    }catch(e){
-      icon.textContent='❌';text.textContent='Bağlantı Hatası';
-      showToast('Firebase bağlantısı kurulamadı: '+e.message,'error');
-      setTimeout(()=>{icon.textContent='🔄';text.textContent='Senkronize Et';btn.disabled=false;},3000);
-      return;
+      if(!_getDoc)_getDoc=m2.getDoc;
     }
-  }
 
-  // Mevcut veriyi Firebase'e gönder
-  try{
+    // 1. Firebase'den en güncel veriyi çek
+    icon.textContent='⬇️';text.textContent='Veriler çekiliyor...';
+    if(_getDoc){
+      const snap=await _getDoc(_doc(db,'ardem','data'));
+      if(snap.exists()){
+        const uzak=snap.data();
+        // Yerel ile uzak arasında en güncel olanı seç
+        const uzakZaman=uzak.guncelleme?new Date(uzak.guncelleme):new Date(0);
+        const yerelZaman=ST._guncelleme?new Date(ST._guncelleme):new Date(0);
+        if(uzakZaman>yerelZaman){
+          // Uzak daha yeni — yükle
+          if(uzak.musteriler)ST.musteriler=uzak.musteriler;
+          if(uzak.servisler)ST.servisler=uzak.servisler;
+          if(uzak.parcalar)ST.parcalar=uzak.parcalar;
+          if(uzak.faturalar)ST.faturalar=uzak.faturalar;
+          if(uzak.gecmis)ST.gecmis=uzak.gecmis;
+          if(uzak.aktiviteler)ST.aktiviteler=uzak.aktiviteler;
+          if(uzak.odemeler)ST.odemeler=uzak.odemeler;
+          if(uzak.siparisler)ST.siparisler=uzak.siparisler;
+          if(uzak.ogrenilen)Object.assign(OGRENILEN,uzak.ogrenilen);
+          if(uzak.muadilOgrenilen)Object.assign(MUADIL_OGRENILEN,uzak.muadilOgrenilen);
+          showToast('Firebase\'den güncel veriler yüklendi ✓','success');
+        }
+      }
+    }
+
+    // 2. Güncel veriyi Firebase'e gönder
     icon.textContent='⬆️';text.textContent='Gönderiliyor...';
-    const temizVeri2=cleanForFirebase({
+    ST._guncelleme=new Date().toISOString();
+    const temizVeri=cleanForFirebase({
       musteriler:ST.musteriler,servisler:ST.servisler,
       parcalar:ST.parcalar,faturalar:ST.faturalar,
       gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
-      odemeler:ST.odemeler||[],
-      siparisler:ST.siparisler||[],
-      ogrenilen:OGRENILEN,muadilOgrenilen:MUADIL_OGRENILEN,guncelleme:new Date().toISOString()
+      odemeler:ST.odemeler||[],siparisler:ST.siparisler||[],
+      ogrenilen:OGRENILEN,muadilOgrenilen:MUADIL_OGRENILEN,
+      guncelleme:ST._guncelleme
     });
-    await _setDoc(_doc(db,'ardem','data'),temizVeri2);
-    try{localStorage.setItem('ardem_v4',JSON.stringify(ST));localStorage.setItem('ardem_ogrenilen',JSON.stringify(OGRENILEN));localStorage.setItem('ardem_muadil_ogrenilen',JSON.stringify(MUADIL_OGRENILEN));}catch(e){}
+    await _setDoc(_doc(db,'ardem','data'),temizVeri);
+    try{localStorage.setItem('ardem_v4',JSON.stringify(ST));}catch(e){}
     _unsavedChanges=false;
-    _onlineBarShown=false;
-    const ob=document.getElementById('online-bar');if(ob)ob.style.display='none';
+
+    // 3. Ekranları yenile
     renderDash();updateBadges();
-    const aktifSayfa=document.querySelector('.page.active');
-    if(aktifSayfa&&aktifSayfa.id==='page-musteriler')renderM();
+    const aktif=document.querySelector('.page.active');
+    if(aktif){
+      const pid=aktif.id.replace('page-','');
+      ({dashboard:renderDash,musteriler:renderM,servisler:renderS,stok:renderStok,faturalar:renderF,gecmis:renderG,odemeler:renderOdemeler}[pid]||function(){})();
+    }
+
     icon.textContent='✅';text.textContent='Senkronize Edildi';
-    showToast('Veriler başarıyla senkronize edildi!','success');
-    setTimeout(()=>{icon.textContent='🔄';text.textContent='Senkronize Et';btn.disabled=false;},3000);
+    btn.style.background='rgba(74,222,128,0.15)';btn.style.borderColor='rgba(74,222,128,0.4)';
+    showToast('Senkronizasyon tamamlandı ✓','success');
+    setTimeout(resetBtn,3000);
+
   }catch(e){
     icon.textContent='❌';text.textContent='Hata!';
     showToast('Senkronizasyon hatası: '+e.message,'error');
-    setTimeout(()=>{icon.textContent='🔄';text.textContent='Senkronize Et';btn.disabled=false;},3000);
+    console.error('Sync hatası:',e);
+    setTimeout(resetBtn,3000);
   }
 }
 
@@ -2171,34 +2215,56 @@ async function fetchKur(sessiz=false){
   const btn=document.getElementById('kur-cek-btn');
   const lbl=document.getElementById('kur-tarih');
   try{
-    // Önce localStorage cache'e bak — aynı günse tekrar çekme
     const cache=JSON.parse(localStorage.getItem('ardem_kur_cache')||'{}');
     const bugun=new Date().toISOString().split('T')[0];
-    if(cache.tarih===bugun&&cache.kur>0){
-      document.getElementById('t-kur').value=cache.kur.toFixed(2);
-      if(lbl)lbl.textContent=`(${bugun} · önbellek)`;
+    // Aynı gün cache'de varsa tekrar çekme (API limitini koru)
+    if(cache.tarih===bugun&&cache.kur>1){
+      const inp=document.getElementById('t-kur');
+      if(inp)inp.value=cache.kur.toFixed(2);
+      if(lbl)lbl.textContent=`(${bugun} · güncel)`;
       hesaplaKur();
-      return;
+      return cache.kur;
     }
+    // Farklı gün → API'den taze çek
     if(btn){btn.textContent='⏳';btn.disabled=true;}
-    // exchangerate-api.com ücretsiz endpoint — key gerektirmez
     const res=await fetch('https://api.exchangerate-api.com/v4/latest/EUR');
     if(!res.ok)throw new Error('HTTP '+res.status);
     const data=await res.json();
     const kur=data.rates&&data.rates.TRY;
     if(!kur||kur<1)throw new Error('Kur alınamadı');
     const kurRounded=Math.round(kur*100)/100;
-    document.getElementById('t-kur').value=kurRounded.toFixed(2);
+    const inp=document.getElementById('t-kur');
+    if(inp)inp.value=kurRounded.toFixed(2);
     if(lbl)lbl.textContent=`(${bugun} · güncel)`;
     hesaplaKur();
-    // Cache'e yaz
     localStorage.setItem('ardem_kur_cache',JSON.stringify({tarih:bugun,kur:kurRounded}));
     if(!sessiz)showToast(`Güncel kur: ₺${kurRounded.toFixed(2)}/€ ✓`,'success');
+    return kurRounded;
   }catch(e){
     if(!sessiz)showToast('Kur çekilemedi, manuel girin','error');
     console.warn('Kur fetch hatası:',e);
+    return guncelKur();
   }finally{
     if(btn){btn.textContent='🔄 Güncel';btn.disabled=false;}
+  }
+}
+
+async function fetchKurVeYenile(){
+  // Ödemeler sayfasındaki kur güncelle butonu
+  const btn=document.getElementById('od-kur-btn');
+  if(btn){btn.textContent='⏳';btn.disabled=true;}
+  // Cache'i temizle — zorla taze çek
+  localStorage.removeItem('ardem_kur_cache');
+  try{
+    const kur=await fetchKur(false);
+    renderOdemeler();
+    if(btn){btn.textContent='✅ Güncellendi';btn.style.background='rgba(74,222,128,0.15)';btn.style.borderColor='rgba(74,222,128,0.4)';btn.style.color='#4ade80';}
+    setTimeout(()=>{
+      if(btn){btn.textContent='🔄 Kuru Güncelle';btn.disabled=false;btn.style.background='rgba(232,93,26,0.12)';btn.style.borderColor='var(--accent)';btn.style.color='var(--accent)';}
+    },3000);
+  }catch(e){
+    if(btn){btn.textContent='❌ Hata';btn.disabled=false;}
+    setTimeout(()=>{if(btn){btn.textContent='🔄 Kuru Güncelle';}},2000);
   }
 }
 
@@ -3176,7 +3242,7 @@ function guncelKur(){
     const cache=JSON.parse(localStorage.getItem('ardem_kur_cache')||'{}');
     if(cache.kur&&cache.kur>1)return cache.kur;
   }catch(e){}
-  return 38.5; // fallback
+  return 51.0; // fallback (güncel değil — uygulama açılışında API'den çekilir)
 }
 
 // Ödemenin TL tutarını hesapla

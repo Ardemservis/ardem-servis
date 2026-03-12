@@ -412,6 +412,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
             <div style="font-size:12px;color:var(--text2)" id="od-vadegecen-tl">₺0</div>
           </div>
         </div>
+        <div style="text-align:right;padding:4px 16px 10px;font-size:10px;color:var(--text3)" id="od-kur-bilgi"></div>
       </div>
       <div id="odeme-listesi"></div>
     </div>
@@ -681,8 +682,11 @@ tr:hover td{background:rgba(255,255,255,0.015);}
           <input class="finput" id="t-tutar-eur" type="number" min="0" step="0.01" placeholder="0.00" oninput="hesaplaKur()">
         </div>
         <div class="fgrp" id="t-kur-grp">
-          <label class="flbl">Döviz Kuru (₺/€)</label>
-          <input class="finput" id="t-kur" type="number" min="0" step="0.01" placeholder="38.50" oninput="hesaplaKur()" value="38.50">
+          <label class="flbl">Döviz Kuru (₺/€) <span id="kur-tarih" style="font-size:10px;color:var(--text3);margin-left:4px"></span></label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input class="finput" id="t-kur" type="number" min="0" step="0.01" placeholder="38.50" oninput="hesaplaKur()" value="38.50" style="flex:1">
+            <button type="button" id="kur-cek-btn" onclick="fetchKur()" style="white-space:nowrap;padding:8px 12px;border-radius:7px;border:1px solid var(--accent);background:rgba(232,93,26,0.12);color:var(--accent);font-size:12px;cursor:pointer;font-weight:600">🔄 Güncel</button>
+          </div>
         </div>
         <div class="fgrp" id="t-tl-grp">
           <label class="flbl" id="t-tl-label">Fatura Tutarı (₺)</label>
@@ -1181,37 +1185,7 @@ function updateSyncBtn(durum){
   }
 }
 
-async function manualSync(){
-  if(!navigator.onLine){updateSyncBtn('offline');showToast('Internet baglantisi yok!','error');return;}
-  updateSyncBtn('syncing');
-  try{
-    if(!db||!_setDoc||!_doc){
-      const m1=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-      const m2=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-      let _app2;try{_app2=m1.getApp();}catch(e){_app2=m1.initializeApp({apiKey:'AIzaSyAwkBB0nIKsOemalVGtHZWfsNjvUZTLLcs',authDomain:'ardem-servis.firebaseapp.com',projectId:'ardem-servis',storageBucket:'ardem-servis.firebasestorage.app',messagingSenderId:'50518080446',appId:'1:50518080446:web:edf217397d205b8d6c17ef'});}
-      db=m2.getFirestore(_app2);_doc=m2.doc;_setDoc=m2.setDoc;
-    }
-    // Mevcut veriyi Firebase'e yaz (üzerine yazma değil, gönderme)
-    const temizVeri2=cleanForFirebase({
-      musteriler:ST.musteriler,servisler:ST.servisler,
-      parcalar:ST.parcalar,faturalar:ST.faturalar,
-      gecmis:ST.gecmis,aktiviteler:ST.aktiviteler,
-      odemeler:ST.odemeler||[],
-      siparisler:ST.siparisler||[],
-      ogrenilen:OGRENILEN,muadilOgrenilen:MUADIL_OGRENILEN,guncelleme:new Date().toISOString()
-    });
-    await _setDoc(_doc(db,'ardem','data'),temizVeri2);
-    _unsavedChanges=false;
-    updateSyncBtn('ok');
-    const bar=document.getElementById('online-bar');if(bar)bar.style.display='none';
-    renderDash();updateBadges();
-    showToast('Senkronizasyon tamamlandi!','success');
-  }catch(e){
-    console.error('Sync hatasi:',e);
-    updateSyncBtn('hata');
-    showToast('Senkronizasyon hatasi: '+e.message,'error');
-  }
-}
+// manualSync: bkz. asagidaki tam implementasyon
 
 // Kaydedilmemiş değişiklik varsa refresh'e karşı uyar
 let _unsavedChanges=false;
@@ -1780,6 +1754,57 @@ function musteriDetay(id){
     }).join('');
     genelToplam+=ekToplam;
 
+    // En son tamamlanan servisi bul
+    const ekServisler=ST.servisler.filter(s=>
+      String(s.musteriId)===String(id)&&
+      String(s.ekipmanId)===String(ek.id)&&
+      s.durum==='tamamlandi'
+    ).sort((a,b)=>new Date(b.tamamlanmaTarih||b.tarih)-new Date(a.tamamlanmaTarih||a.tarih));
+    const sonServis=ekServisler[0]||null;
+
+    // Son bakım bilgisi satırı
+    let sonBakimHtml='';
+    if(sonServis){
+      // Bu servise ait ödemeyi bul
+      const odeme=ST.odemeler?ST.odemeler.find(o=>
+        (o.servisIds&&o.servisIds.includes(String(sonServis.id)))||
+        String(o.musteriId)===String(id)
+      ):null;
+      // Daha doğrusu: sadece bu servisi içeren ödemeyi bul
+      const sonOdeme=ST.odemeler?ST.odemeler.find(o=>
+        o.servisIds&&o.servisIds.includes(String(sonServis.id))
+      ):null;
+
+      const tarihStr=fmtDate(sonServis.tamamlanmaTarih||sonServis.tarih);
+      const saatStr=sonServis.calismaS?sonServis.calismaS+' saat':'—';
+      let fiyatStr='—';
+      if(sonOdeme){
+        if(sonOdeme.paraBirimi==='tl'){
+          fiyatStr='₺'+(sonOdeme.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2});
+        } else {
+          fiyatStr=fmtEur(sonOdeme.tutarEur||0);
+        }
+      }
+      sonBakimHtml='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:8px">'
+        +'<div style="display:flex;align-items:center;gap=5px;font-size:11px">'
+        +'<span style="color:var(--text2)">🔧 Son Bakım:</span> '
+        +'<strong style="color:#4ade80;margin-left:4px">'+tarihStr+'</strong>'
+        +'</div>'
+        +'<div style="font-size:11px;color:var(--text3)">·</div>'
+        +'<div style="font-size:11px">'
+        +'<span style="color:var(--text2)">⏱ Çalışma:</span> '
+        +'<strong style="color:var(--text)">'+saatStr+'</strong>'
+        +'</div>'
+        +'<div style="font-size:11px;color:var(--text3)">·</div>'
+        +'<div style="font-size:11px">'
+        +'<span style="color:var(--text2)">💰 Fatura:</span> '
+        +'<strong style="color:var(--accent)">'+fiyatStr+'</strong>'
+        +'</div>'
+        +'</div>';
+    } else {
+      sonBakimHtml='<div style="margin-top:10px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:11px;color:var(--text3)">Henüz tamamlanan bakım yok</div>';
+    }
+
     const parcaTablo=parcalar.length
       ?('<table style="width:100%;border-collapse:collapse;margin-top:8px">'
         +'<thead><tr style="background:rgba(255,255,255,0.04)">'
@@ -1805,6 +1830,7 @@ function musteriDetay(id){
       +'<div style="font-weight:600;font-size:14px">'+ek.tip+(ek.marka?' — '+ek.marka:'')+(ek.model?' '+ek.model:'')+'</div>'
       +'<div style="font-size:11px;color:var(--text2)">'+(ek.seri?'SN: '+ek.seri:'')+(ek.adet>1?' · '+ek.adet+' adet':'')+'</div>'
       +'</div></div>'
+      +sonBakimHtml
       +parcaTablo
       +'</div>';
   }).join('');
@@ -2091,7 +2117,44 @@ function tamamlaServisGrup(idsStr){
   const radios=document.querySelectorAll('input[name="t-para"]');
   radios.forEach(r=>r.value==='eur'?r.checked=true:r.checked=false);
   paraBirimiDegis();
+  fetchKur(true); // sessiz — hata toast çıkarmaz, sadece kuru günceller
   openMod('tamamla-modal');
+}
+
+// ===== GÜNCEL DÖVİZ KURU =====
+async function fetchKur(sessiz=false){
+  const btn=document.getElementById('kur-cek-btn');
+  const lbl=document.getElementById('kur-tarih');
+  try{
+    // Önce localStorage cache'e bak — aynı günse tekrar çekme
+    const cache=JSON.parse(localStorage.getItem('ardem_kur_cache')||'{}');
+    const bugun=new Date().toISOString().split('T')[0];
+    if(cache.tarih===bugun&&cache.kur>0){
+      document.getElementById('t-kur').value=cache.kur.toFixed(2);
+      if(lbl)lbl.textContent=`(${bugun} · önbellek)`;
+      hesaplaKur();
+      return;
+    }
+    if(btn){btn.textContent='⏳';btn.disabled=true;}
+    // exchangerate-api.com ücretsiz endpoint — key gerektirmez
+    const res=await fetch('https://api.exchangerate-api.com/v4/latest/EUR');
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    const kur=data.rates&&data.rates.TRY;
+    if(!kur||kur<1)throw new Error('Kur alınamadı');
+    const kurRounded=Math.round(kur*100)/100;
+    document.getElementById('t-kur').value=kurRounded.toFixed(2);
+    if(lbl)lbl.textContent=`(${bugun} · güncel)`;
+    hesaplaKur();
+    // Cache'e yaz
+    localStorage.setItem('ardem_kur_cache',JSON.stringify({tarih:bugun,kur:kurRounded}));
+    if(!sessiz)showToast(`Güncel kur: ₺${kurRounded.toFixed(2)}/€ ✓`,'success');
+  }catch(e){
+    if(!sessiz)showToast('Kur çekilemedi, manuel girin','error');
+    console.warn('Kur fetch hatası:',e);
+  }finally{
+    if(btn){btn.textContent='🔄 Güncel';btn.disabled=false;}
+  }
 }
 
 function paraBirimiDegis(){
@@ -3061,31 +3124,50 @@ function deleteGecmis(id){
 }
 
 
+// Anlık kuru al (cache'den veya localStorage'dan)
+function guncelKur(){
+  try{
+    const cache=JSON.parse(localStorage.getItem('ardem_kur_cache')||'{}');
+    if(cache.kur&&cache.kur>1)return cache.kur;
+  }catch(e){}
+  return 38.5; // fallback
+}
+
+// Ödemenin TL tutarını hesapla
+// EUR faturalar → her zaman güncel kurdan (tahsilat günündeki kur geçerli)
+// TL faturalar → kaydedilen TL tutar
+function odemeninTl(o){
+  if(o.paraBirimi==='tl')return o.tutarTl||0;
+  return (o.tutarEur||0)*guncelKur();
+}
+
 function renderOdemeler(){
   if(!ST.odemeler)ST.odemeler=[];
   const bugun=new Date();
   const bekleyenler=ST.odemeler.filter(o=>o.durum==='bekliyor');
   const tahsiledilen=ST.odemeler.filter(o=>o.durum==='odendi');
   const vadegecen=bekleyenler.filter(o=>new Date(o.vadeTarih)<bugun);
+  const kur=guncelKur();
 
-  const toplamEur=ST.odemeler.reduce((a,o)=>a+(o.tutarEur||0),0);
-  const toplamTl=ST.odemeler.reduce((a,o)=>a+(o.tutarTl||0),0);
-  const bekleyenEur=bekleyenler.reduce((a,o)=>a+(o.tutarEur||0),0);
-  const bekleyenTl=bekleyenler.reduce((a,o)=>a+(o.tutarTl||0),0);
-  const tahsilEur=tahsiledilen.reduce((a,o)=>a+(o.tutarEur||0),0);
-  const tahsilTl=tahsiledilen.reduce((a,o)=>a+(o.tutarTl||0),0);
-  const vadeEur=vadegecen.reduce((a,o)=>a+(o.tutarEur||0),0);
-  const vadeTl=vadegecen.reduce((a,o)=>a+(o.tutarTl||0),0);
+  const fmtTl=v=>'₺'+Number(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const toplamTl=ST.odemeler.reduce((a,o)=>a+odemeninTl(o),0);
+  const bekleyenTl=bekleyenler.reduce((a,o)=>a+odemeninTl(o),0);
+  const tahsilTl=tahsiledilen.reduce((a,o)=>a+odemeninTl(o),0);
+  const vadeTl=vadegecen.reduce((a,o)=>a+odemeninTl(o),0);
 
   const s=id=>document.getElementById(id);
-  if(s('od-toplam-eur'))s('od-toplam-eur').textContent=fmtEur(toplamEur);
-  if(s('od-toplam-tl'))s('od-toplam-tl').textContent='₺'+toplamTl.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  if(s('od-bekleyen-eur'))s('od-bekleyen-eur').textContent=fmtEur(bekleyenEur);
-  if(s('od-bekleyen-tl'))s('od-bekleyen-tl').textContent='₺'+bekleyenTl.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  if(s('od-tahsil-eur'))s('od-tahsil-eur').textContent=fmtEur(tahsilEur);
-  if(s('od-tahsil-tl'))s('od-tahsil-tl').textContent='₺'+tahsilTl.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  if(s('od-vadegecen-eur'))s('od-vadegecen-eur').textContent=fmtEur(vadeEur);
-  if(s('od-vadegecen-tl'))s('od-vadegecen-tl').textContent='₺'+vadeTl.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(s('od-toplam-eur'))s('od-toplam-eur').textContent=fmtTl(toplamTl);
+  if(s('od-toplam-tl'))s('od-toplam-tl').style.display='none';
+  if(s('od-bekleyen-eur'))s('od-bekleyen-eur').textContent=fmtTl(bekleyenTl);
+  if(s('od-bekleyen-tl'))s('od-bekleyen-tl').style.display='none';
+  if(s('od-tahsil-eur'))s('od-tahsil-eur').textContent=fmtTl(tahsilTl);
+  if(s('od-tahsil-tl'))s('od-tahsil-tl').style.display='none';
+  if(s('od-vadegecen-eur'))s('od-vadegecen-eur').textContent=fmtTl(vadeTl);
+  if(s('od-vadegecen-tl'))s('od-vadegecen-tl').style.display='none';
+
+  // Kur bilgisi göster
+  const kurLbl=s('od-kur-bilgi');
+  if(kurLbl)kurLbl.textContent=`Kur: ₺${kur.toFixed(2)}/€`;
 
   // Badge güncelle
   const bdg=document.getElementById('bdg-odeme');
@@ -3100,6 +3182,13 @@ function renderOdemeler(){
     const vadeGecti=o.durum==='bekliyor'&&new Date(o.vadeTarih)<bugun;
     const badge=o.durum==='odendi'?'<span class="badge bg">✅ Ödendi</span>':vadeGecti?'<span class="badge br">🔴 Vadesi Geçti</span>':'<span class="badge by">⏳ Bekliyor</span>';
     const makineler=(o.makineler||[]).map(m=>`${m.ekipmanAd||'—'} <span style="color:var(--text2);font-size:11px">(${m.calismaS||'?'} saat)</span>`).join(' · ');
+    const tlTutar=odemeninTl(o);
+    // Alt bilgi: EUR faturada orijinal EUR tutarı ve güncel kur göster
+    const isTl=o.paraBirimi==='tl';
+    let altBilgi='';
+    if(!isTl){
+      altBilgi=`${fmtEur(o.tutarEur||0)} × ₺${kur.toFixed(2)} (güncel kur)`;
+    }
     return`<div style="padding:14px 0;border-bottom:1px solid var(--border)">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
         <div>
@@ -3108,8 +3197,8 @@ function renderOdemeler(){
           <div style="font-size:12px;color:var(--text2);margin-top:2px">📅 Servis: ${fmtDate(o.tarih)} · Vade: ${fmtDate(o.vadeTarih)} (${o.vadeGun} gün)</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:18px;font-weight:700;color:var(--accent)">${o.paraBirimi==='tl'?'₺'+(o.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):fmtEur(o.tutarEur)}</div>
-          <div style="font-size:12px;color:var(--text2)">${o.paraBirimi==='tl'?'—':('₺'+(o.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2}))}</div>
+          <div style="font-size:18px;font-weight:700;color:var(--accent)">${fmtTl(tlTutar)}</div>
+          ${altBilgi?`<div style="font-size:11px;color:var(--text3)">${altBilgi}</div>`:''}
           <div style="margin-top:6px">${badge}</div>
         </div>
       </div>
@@ -3124,10 +3213,11 @@ function renderOdemeler(){
 function odemeAl(id){
   const o=ST.odemeler.find(x=>String(x.id)===String(id));
   if(!o)return;
-  if(!confirm(`${o.musteriAd} — ${fmtEur(o.tutarEur)} ödeme alındı olarak işaretlensin mi?`))return;
+  const tutarStr=o.paraBirimi==='tl'?('₺'+(o.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2})):fmtEur(o.tutarEur);
+  if(!confirm(`${o.musteriAd} — ${tutarStr} ödeme alındı olarak işaretlensin mi?`))return;
   o.durum='odendi';
   o.odemeTarih=today();
-  addAkt('💰',`Ödeme alındı: ${o.musteriAd} — ${fmtEur(o.tutarEur)}`);
+  addAkt('💰',`Ödeme alındı: ${o.musteriAd} — ${tutarStr}`);
   save();renderOdemeler();renderDash();showToast('Ödeme alındı olarak işaretlendi ✓','success');
 }
 
@@ -3233,18 +3323,19 @@ function renderDash(){
   document.getElementById('son-aktiv').innerHTML=!ST.aktiviteler.length?'<div class="empty-s"><div class="empty-i">📝</div><div class="empty-t">Henüz aktivite yok</div></div>':
     '<div class="tl">'+ST.aktiviteler.slice(0,10).map(a=>`<div class="tl-item"><div class="tl-dot">${a.icon}</div><div class="tl-cont"><div class="tl-title">${a.text}</div><div class="tl-date">${a.zaman}</div></div></div>`).join('')+'</div>';
 
-  // Ödeme özeti
+  // Ödeme özeti — tümü TL
   if(!ST.odemeler)ST.odemeler=[];
   const bugunD=new Date();
+  const fmtTlD=v=>'₺'+Number(v).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const bekleyenOd=ST.odemeler.filter(o=>o.durum==='bekliyor');
   const vadeGecenOd=bekleyenOd.filter(o=>new Date(o.vadeTarih)<bugunD);
   const tahsilOd=ST.odemeler.filter(o=>o.durum==='odendi');
   const elBek=document.getElementById('dash-od-bekleyen');
   const elVade=document.getElementById('dash-od-vade');
   const elTah=document.getElementById('dash-od-tahsil');
-  if(elBek)elBek.textContent=fmtEur(bekleyenOd.reduce((a,o)=>a+(o.tutarEur||0),0));
-  if(elVade)elVade.textContent=fmtEur(vadeGecenOd.reduce((a,o)=>a+(o.tutarEur||0),0));
-  if(elTah)elTah.textContent=fmtEur(tahsilOd.reduce((a,o)=>a+(o.tutarEur||0),0));
+  if(elBek)elBek.textContent=fmtTlD(bekleyenOd.reduce((a,o)=>a+odemeninTl(o),0));
+  if(elVade)elVade.textContent=fmtTlD(vadeGecenOd.reduce((a,o)=>a+odemeninTl(o),0));
+  if(elTah)elTah.textContent=fmtTlD(tahsilOd.reduce((a,o)=>a+odemeninTl(o),0));
   const dashListe=document.getElementById('dash-od-liste');
   if(dashListe){
     const son=bekleyenOd.slice(0,5);
@@ -3253,7 +3344,7 @@ function renderDash(){
       const vGecti=new Date(o.vadeTarih)<bugunD;
       return`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
         <div><span style="font-weight:500">${o.musteriAd}</span><span style="color:var(--text2);font-size:11px;margin-left:6px">· Vade: ${fmtDate(o.vadeTarih)}</span></div>
-        <div style="font-weight:600;color:${vGecti?'#f87171':'var(--text)'}">${fmtEur(o.tutarEur)}</div>
+        <div style="font-weight:600;color:${vGecti?'#f87171':'var(--text)'}">${fmtTlD(odemeninTl(o))}</div>
       </div>`;}).join('');}
   }
   updateBadges();

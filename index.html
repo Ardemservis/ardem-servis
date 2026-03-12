@@ -389,31 +389,48 @@ tr:hover td{background:rgba(255,255,255,0.015);}
     <!-- GEÇMİŞ -->
     <div class="page" id="page-odemeler">
       <div class="page-hd"><div class="page-title">💰 Ödemeler</div></div>
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-bd" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;padding:16px">
-          <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:14px;text-align:center">
-            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Toplam Tahsil Edilecek</div>
-            <div style="font-size:18px;font-weight:700;color:#4ade80" id="od-toplam-eur">€0</div>
-            <div style="font-size:12px;color:var(--text2)" id="od-toplam-tl">₺0</div>
-          </div>
-          <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px;text-align:center">
-            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Bekleyen Ödeme</div>
-            <div style="font-size:18px;font-weight:700;color:#f87171" id="od-bekleyen-eur">€0</div>
-            <div style="font-size:12px;color:var(--text2)" id="od-bekleyen-tl">₺0</div>
-          </div>
-          <div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:14px;text-align:center">
-            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Tahsil Edilen</div>
-            <div style="font-size:18px;font-weight:700;color:#60a5fa" id="od-tahsil-eur">€0</div>
-            <div style="font-size:12px;color:var(--text2)" id="od-tahsil-tl">₺0</div>
-          </div>
-          <div style="background:rgba(232,93,26,0.1);border:1px solid rgba(232,93,26,0.3);border-radius:10px;padding:14px;text-align:center">
-            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Vadesi Geçen</div>
-            <div style="font-size:18px;font-weight:700;color:var(--accent)" id="od-vadegecen-eur">€0</div>
-            <div style="font-size:12px;color:var(--text2)" id="od-vadegecen-tl">₺0</div>
+
+      <!-- Özet Kartlar -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px">
+
+        <div style="background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(34,197,94,0.05));border:1px solid rgba(34,197,94,0.3);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px">
+          <div style="font-size:28px;flex-shrink:0">📋</div>
+          <div>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Toplam Tahsil Edilecek</div>
+            <div style="font-size:22px;font-weight:800;color:#4ade80;font-family:'Syne',sans-serif" id="od-toplam-eur">₺0</div>
+            <div style="font-size:10px;color:var(--text3)" id="od-toplam-tl"></div>
           </div>
         </div>
-        <div style="text-align:right;padding:4px 16px 10px;font-size:10px;color:var(--text3)" id="od-kur-bilgi"></div>
+
+        <div style="background:linear-gradient(135deg,rgba(239,68,68,0.15),rgba(239,68,68,0.05));border:1px solid rgba(239,68,68,0.3);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px">
+          <div style="font-size:28px;flex-shrink:0">⏳</div>
+          <div>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Bekleyen Ödeme</div>
+            <div style="font-size:22px;font-weight:800;color:#f87171;font-family:'Syne',sans-serif" id="od-bekleyen-eur">₺0</div>
+            <div style="font-size:10px;color:var(--text3)" id="od-bekleyen-tl"></div>
+          </div>
+        </div>
+
+        <div style="background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(59,130,246,0.05));border:1px solid rgba(59,130,246,0.3);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px">
+          <div style="font-size:28px;flex-shrink:0">✅</div>
+          <div>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Tahsil Edilen</div>
+            <div style="font-size:22px;font-weight:800;color:#60a5fa;font-family:'Syne',sans-serif" id="od-tahsil-eur">₺0</div>
+            <div style="font-size:10px;color:var(--text3)" id="od-tahsil-tl"></div>
+          </div>
+        </div>
+
+        <div style="background:linear-gradient(135deg,rgba(251,146,60,0.15),rgba(251,146,60,0.05));border:1px solid rgba(251,146,60,0.3);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px">
+          <div style="font-size:28px;flex-shrink:0">🔴</div>
+          <div>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Vadesi Geçen</div>
+            <div style="font-size:22px;font-weight:800;color:#fb923c;font-family:'Syne',sans-serif" id="od-vadegecen-eur">₺0</div>
+            <div style="font-size:10px;color:var(--text3)" id="od-vadegecen-tl"></div>
+          </div>
+        </div>
+
       </div>
+      <div style="text-align:right;margin-bottom:10px;font-size:11px;color:var(--text3)" id="od-kur-bilgi"></div>
       <div id="odeme-listesi"></div>
     </div>
 
@@ -3157,17 +3174,17 @@ function renderOdemeler(){
 
   const s=id=>document.getElementById(id);
   if(s('od-toplam-eur'))s('od-toplam-eur').textContent=fmtTl(toplamTl);
-  if(s('od-toplam-tl'))s('od-toplam-tl').style.display='none';
+  if(s('od-toplam-tl'))s('od-toplam-tl').textContent=`${ST.odemeler.length} fatura`;
   if(s('od-bekleyen-eur'))s('od-bekleyen-eur').textContent=fmtTl(bekleyenTl);
-  if(s('od-bekleyen-tl'))s('od-bekleyen-tl').style.display='none';
+  if(s('od-bekleyen-tl'))s('od-bekleyen-tl').textContent=`${bekleyenler.length} bekleyen`;
   if(s('od-tahsil-eur'))s('od-tahsil-eur').textContent=fmtTl(tahsilTl);
-  if(s('od-tahsil-tl'))s('od-tahsil-tl').style.display='none';
+  if(s('od-tahsil-tl'))s('od-tahsil-tl').textContent=`${tahsiledilen.length} tahsil edildi`;
   if(s('od-vadegecen-eur'))s('od-vadegecen-eur').textContent=fmtTl(vadeTl);
-  if(s('od-vadegecen-tl'))s('od-vadegecen-tl').style.display='none';
+  if(s('od-vadegecen-tl'))s('od-vadegecen-tl').textContent=vadegecen.length?`${vadegecen.length} vadesi geçti`:'';
 
-  // Kur bilgisi göster
+  // Kur bilgisi
   const kurLbl=s('od-kur-bilgi');
-  if(kurLbl)kurLbl.textContent=`Kur: ₺${kur.toFixed(2)}/€`;
+  if(kurLbl)kurLbl.textContent=`🔄 Güncel kur: ₺${kur.toFixed(2)}/€ · EUR faturalar bu kurdan hesaplanıyor`;
 
   // Badge güncelle
   const bdg=document.getElementById('bdg-odeme');
@@ -3175,39 +3192,72 @@ function renderOdemeler(){
 
   const cont=document.getElementById('odeme-listesi');
   if(!cont)return;
-  if(!ST.odemeler.length){cont.innerHTML='<div class="card"><div class="card-bd"><div class="empty-s"><div class="empty-i">💰</div><div class="empty-t">Ödeme kaydı yok</div><div class="empty-d">Servisler tamamlandıkça burada görünür.</div></div></div></div>';return;}
+  if(!ST.odemeler.length){
+    cont.innerHTML=`<div style="text-align:center;padding:48px 20px;color:var(--text2)">
+      <div style="font-size:48px;margin-bottom:12px">💰</div>
+      <div style="font-size:16px;font-weight:600;color:var(--text1)">Ödeme kaydı yok</div>
+      <div style="font-size:13px;margin-top:6px">Servisler tamamlandıkça burada görünür.</div>
+    </div>`;
+    return;
+  }
 
   const sorted=[...ST.odemeler].sort((a,b)=>new Date(b.olusturma)-new Date(a.olusturma));
-  cont.innerHTML='<div class="card"><div class="card-bd">'+sorted.map(o=>{
+
+  // Bekleyenler önce, sonra ödenenler
+  const bekl=sorted.filter(o=>o.durum==='bekliyor');
+  const odnd=sorted.filter(o=>o.durum!=='bekliyor');
+
+  const renderKart=(o)=>{
     const vadeGecti=o.durum==='bekliyor'&&new Date(o.vadeTarih)<bugun;
-    const badge=o.durum==='odendi'?'<span class="badge bg">✅ Ödendi</span>':vadeGecti?'<span class="badge br">🔴 Vadesi Geçti</span>':'<span class="badge by">⏳ Bekliyor</span>';
-    const makineler=(o.makineler||[]).map(m=>`${m.ekipmanAd||'—'} <span style="color:var(--text2);font-size:11px">(${m.calismaS||'?'} saat)</span>`).join(' · ');
     const tlTutar=odemeninTl(o);
-    // Alt bilgi: EUR faturada orijinal EUR tutarı ve güncel kur göster
     const isTl=o.paraBirimi==='tl';
-    let altBilgi='';
-    if(!isTl){
-      altBilgi=`${fmtEur(o.tutarEur||0)} × ₺${kur.toFixed(2)} (güncel kur)`;
-    }
-    return`<div style="padding:14px 0;border-bottom:1px solid var(--border)">
+    const altBilgi=!isTl?`${fmtEur(o.tutarEur||0)} × ₺${kur.toFixed(2)}`:'';
+    const makineler=(o.makineler||[]).map(m=>`${m.ekipmanAd||'—'} (${m.calismaS||'?'} saat)`).join(' · ');
+    const durumRenk=o.durum==='odendi'?'rgba(34,197,94,0.08)':vadeGecti?'rgba(239,68,68,0.08)':'rgba(255,255,255,0.03)';
+    const durumBorder=o.durum==='odendi'?'rgba(34,197,94,0.2)':vadeGecti?'rgba(239,68,68,0.25)':'var(--border)';
+    const badge=o.durum==='odendi'
+      ?'<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(34,197,94,0.15);color:#4ade80;font-weight:600">✅ Ödendi</span>'
+      :vadeGecti
+      ?'<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(239,68,68,0.15);color:#f87171;font-weight:600">🔴 Vadesi Geçti</span>'
+      :'<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(251,191,36,0.15);color:#fbbf24;font-weight:600">⏳ Bekliyor</span>';
+
+    return`<div style="background:${durumRenk};border:1px solid ${durumBorder};border-radius:12px;padding:16px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-        <div>
-          <div style="font-weight:600;font-size:14px">${o.musteriAd}</div>
-          <div style="font-size:12px;color:var(--text2);margin-top:3px">${makineler}</div>
-          <div style="font-size:12px;color:var(--text2);margin-top:2px">📅 Servis: ${fmtDate(o.tarih)} · Vade: ${fmtDate(o.vadeTarih)} (${o.vadeGun} gün)</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+            <span style="font-weight:700;font-size:15px">${o.musteriAd}</span>
+            ${badge}
+          </div>
+          ${makineler?`<div style="font-size:12px;color:var(--text2);margin-bottom:3px">🔧 ${makineler}</div>`:''}
+          <div style="font-size:12px;color:var(--text2)">
+            📅 <span>${fmtDate(o.tarih)}</span>
+            <span style="margin:0 6px;color:var(--text3)">·</span>
+            ⌛ Vade: <span style="${vadeGecti?'color:#f87171;font-weight:600':''}">${fmtDate(o.vadeTarih)}</span>
+            <span style="color:var(--text3);font-size:11px">(${o.vadeGun} gün)</span>
+          </div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:18px;font-weight:700;color:var(--accent)">${fmtTl(tlTutar)}</div>
-          ${altBilgi?`<div style="font-size:11px;color:var(--text3)">${altBilgi}</div>`:''}
-          <div style="margin-top:6px">${badge}</div>
+          <div style="font-size:24px;font-weight:800;color:${o.durum==='odendi'?'#4ade80':vadeGecti?'#f87171':'var(--accent)'};font-family:'Syne',sans-serif">${fmtTl(tlTutar)}</div>
+          ${altBilgi?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${altBilgi}</div>`:''}
         </div>
       </div>
-      <div style="display:flex;gap:6px;margin-top:10px">
+      <div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid ${durumBorder}">
         ${o.durum==='bekliyor'?`<button class="btn btn-primary btn-sm" onclick="odemeAl('${o.id}')">💳 Ödeme Al</button>`:''}
-        <button class="btn btn-danger btn-sm" onclick="odemeKaydiniSil('${o.id}')">🗑️</button>
+        <button class="btn btn-danger btn-sm" onclick="odemeKaydiniSil('${o.id}')">🗑️ Sil</button>
       </div>
     </div>`;
-  }).join('')+'</div></div>';
+  };
+
+  let html='';
+  if(bekl.length){
+    html+=`<div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:8px;font-weight:600">⏳ Bekleyen (${bekl.length})</div>`;
+    html+=bekl.map(renderKart).join('');
+  }
+  if(odnd.length){
+    html+=`<div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin:16px 0 8px;font-weight:600">✅ Tahsil Edilenler (${odnd.length})</div>`;
+    html+=odnd.map(renderKart).join('');
+  }
+  cont.innerHTML=html;
 }
 
 function odemeAl(id){

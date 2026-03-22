@@ -200,6 +200,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
 @media(max-width:900px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.main{margin-left:0;}.menu-btn{display:flex;}.stats-row{grid-template-columns:1fr 1fr;}.grid2,.grid3{grid-template-columns:1fr;}.fg2,.fg3,.ek-add-grid{grid-template-columns:1fr;}}
 @media(max-width:560px){.stats-row{grid-template-columns:1fr;}.content{padding:14px;}.topbar{padding:0 14px;}}
 </style>
+<script src="docx.min.js"></script>
 </head>
 <body>
 <!-- GİRİŞ EKRANI -->
@@ -3348,14 +3349,7 @@ async function teklifDocxIndir(id){
 
 async function olusturTeklifDocx(teklif){
   // docx kütüphanesini CDN'den yükle
-  if(!window.docx){
-    await new Promise((res,rej)=>{
-      const s=document.createElement('script');
-      s.src='https://cdnjs.cloudflare.com/ajax/libs/docx/9.0.2/docx.umd.min.js';
-      s.onload=res;s.onerror=rej;
-      document.head.appendChild(s);
-    });
-  }
+  // docx inline - CDN gerekmez
   const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,
     AlignmentType,BorderStyle,WidthType,ShadingType,VerticalAlign}=window.docx;
 

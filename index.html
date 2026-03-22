@@ -3463,8 +3463,8 @@ async function olusturTeklifDocx(teklif){
       ]
     }]
   });
-  const buf=await Packer.toBuffer(doc);
-  return new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  const blob=await Packer.toBlob(doc);
+  return blob;
 }
 
 // ===== GEÇMİŞ =====

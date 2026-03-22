@@ -622,25 +622,23 @@ tr:hover td{background:rgba(255,255,255,0.015);}
         <div class="fgrp sp2"><label class="flbl">Açıklama</label><input class="finput" id="f-aciklama" placeholder="Periyodik bakım hizmeti..."></div>
         <div class="fgrp"><label class="flbl">Toplam Tutar *</label><input class="finput" id="f-tutar" type="number" min="0" step="0.01" placeholder="0.00"></div>
         <div class="fgrp"><label class="flbl">Para Birimi</label>
-          <select class="fsel" id="f-para">
-            <option value="eur">€ Euro</option>
-            <option value="tl">₺ TL</option>
-          </select>
+          <select class="fsel" id="f-para"><option value="eur">€ Euro</option><option value="tl">₺ TL</option></select>
         </div>
         <div class="fgrp"><label class="flbl">Tarih</label><input class="finput" id="f-tarih" type="date"></div>
         <div class="fgrp"><label class="flbl">Vade (gün)</label><input class="finput" id="f-vade-gun" type="number" min="0" placeholder="45" value="45"></div>
         <div class="fgrp"><label class="flbl">Durum</label><select class="fsel" id="f-durum"><option value="bekliyor">Bekliyor</option><option value="odendi">Ödendi</option><option value="iptal">İptal</option></select></div>
       </div>
 
-      <!-- Teklif alanları (sadece Teklif tipinde görünür) -->
+      <!-- Teklif alanları -->
       <div id="f-teklif-alanlari" style="margin-top:16px">
-        <div class="sec-div">Makineler (Tablo-1)</div>
-        <div id="f-makine-listesi" style="margin-bottom:8px"></div>
-        <button type="button" class="btn btn-ghost btn-sm" onclick="fMakineEkle()" style="margin-bottom:16px">＋ Makine Ekle</button>
 
-        <div class="sec-div">Parçalar / Yapılacak İşler (Tablo-2)</div>
-        <div id="f-parca-listesi" style="margin-bottom:8px"></div>
-        <button type="button" class="btn btn-ghost btn-sm" onclick="fParcaEkle()">＋ Parça Ekle</button>
+        <!-- MAKİNELER -->
+        <div class="sec-div">Makineler — Teklif Verilecekleri Seçin</div>
+        <div id="f-makine-listesi" style="margin-bottom:8px"></div>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="fMakineEkle()" style="margin-bottom:16px">＋ Manuel Makine Ekle</button>
+
+        <!-- PARÇALAR — her seçili makine için ayrı -->
+        <div id="f-parca-bolumu"></div>
 
         <div class="fg fg2" style="margin-top:16px">
           <div class="fgrp"><label class="flbl">Geçerlilik Başlangıç</label><input class="finput" id="f-gec-bas" type="date"></div>
@@ -3121,13 +3119,27 @@ function renderStok(){
 }
 
 // ===== FATURA / TEKLİF =====
+const BAKIM_PLANLARI=['A BAKIM','B BAKIM','GENEL REVİZYON','2000h BAKIMI','4000h BAKIMI','8000h BAKIMI','24000h BAKIMI','YILLIK BAKIM','ARIZA SERVİSİ'];
+const PARCA_SECENEKLERI=[
+  {id:'hava_filtresi',   ad:'Hava Filtresi'},
+  {id:'yag_filtresi',    ad:'Yağ Filtresi'},
+  {id:'separator',       ad:'Seperatör'},
+  {id:'toz_tutucu',      ad:'Toz Tutucu Filtre'},
+  {id:'yari_mineral',    ad:'Yarı Mineral Yağ'},
+  {id:'sentetik_yag',    ad:'Sentetik Yağ'},
+  {id:'iscilik',         ad:'İşçilik'},
+  {id:'genel_temizlik',  ad:'Kompresör Genel Temizliği'},
+  {id:'rulman_gresleme', ad:'Motor Rulman Gressleme'},
+  {id:'rulman_degisim',  ad:'Motor Rulman Değişimi'},
+];
 let _fMakineler=[];
 let _fParcalar=[];
 
 function openFModal(){
   populateSels();
   _fMakineler=[];_fParcalar=[];
-  renderFMakineler();renderFParcalar();
+  renderFMakineler();
+  document.getElementById('f-parca-bolumu').innerHTML='';
   document.getElementById('f-teklif-alanlari').style.display='';
   openMod('f-modal');
 }
@@ -3138,69 +3150,98 @@ function fTipDegis(){
 }
 
 function fMusteriDegis(musteriId){
-  // Müşteri seçince ekipmanlarını makine listesine öner
   _fMakineler=[];
   const m=ST.musteriler.find(x=>String(x.id)===String(musteriId));
   if(m&&m.ekipmanlar&&m.ekipmanlar.length){
     m.ekipmanlar.forEach(e=>{
-      _fMakineler.push({uid:String(Date.now()+Math.random()),ad:(e.marka?e.marka+' ':'')+e.tip+(e.model?' '+e.model:''),seriNo:e.seriNo||'',bakimPlani:'B BAKIM',calismaS:'',fiyat:0});
+      _fMakineler.push({uid:'m_'+e.id,ekId:e.id,ad:(e.marka?e.marka+' ':'')+e.tip+(e.model?' '+e.model:''),seriNo:e.seriNo||'',bakimPlani:'B BAKIM',fiyat:0,secili:false,parcalar:[]});
     });
   }
   renderFMakineler();
+  renderFParcaBolumu();
 }
 
 function renderFMakineler(){
   const cont=document.getElementById('f-makine-listesi');
-  if(!_fMakineler.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">Henüz makine eklenmedi.</div>';return;}
+  if(!_fMakineler.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">Müşteri seçince makineler burada görünür.</div>';return;}
   cont.innerHTML=_fMakineler.map((m,i)=>`
-    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px">
-      <div style="display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr auto;gap:8px;align-items:center">
-        <input class="finput" value="${m.ad}" placeholder="Makine adı" oninput="_fMakineler[${i}].ad=this.value" style="font-size:12px">
-        <input class="finput" value="${m.seriNo}" placeholder="Seri no" oninput="_fMakineler[${i}].seriNo=this.value" style="font-size:12px">
-        <input class="finput" value="${m.bakimPlani}" placeholder="Bakım planı" oninput="_fMakineler[${i}].bakimPlani=this.value" style="font-size:12px">
-        <input class="finput" value="${m.fiyat||''}" placeholder="Fiyat" type="number" oninput="_fMakineler[${i}].fiyat=parseFloat(this.value)||0;fToplamHesapla()" style="font-size:12px">
-        <button class="btn btn-danger btn-sm" onclick="_fMakineler.splice(${i},1);renderFMakineler()">🗑️</button>
+    <div style="background:var(--bg3);border:1px solid ${m.secili?'var(--accent)':'var(--border)'};border-radius:10px;padding:12px;margin-bottom:8px;transition:border 0.2s">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:${m.secili?'10':'0'}px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1">
+          <input type="checkbox" ${m.secili?'checked':''} onchange="_fMakineler[${i}].secili=this.checked;renderFMakineler();renderFParcaBolumu()" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+          <div>
+            <div style="font-weight:600;font-size:13px">${m.ad||'<span style=color:var(--text3)>İsimsiz makine</span>'}</div>
+            <div style="font-size:11px;color:var(--text2)">${m.seriNo?'Seri No: '+m.seriNo:'Seri no yok'}</div>
+          </div>
+        </label>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <span style="font-size:12px;color:var(--text2)">Fiyat:</span>
+          <input class="finput" value="${m.fiyat||''}" placeholder="0.00" type="number" oninput="_fMakineler[${i}].fiyat=parseFloat(this.value)||0;fToplamHesapla()" style="width:90px;font-size:12px;padding:5px 8px">
+        </div>
+        ${!m.ekId?`<button class="btn btn-danger btn-sm" onclick="_fMakineler.splice(${i},1);renderFMakineler();renderFParcaBolumu()">🗑️</button>`:''}
       </div>
+      ${m.secili?`<div style="display:flex;gap:8px;align-items:center;padding-top:8px;border-top:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--text2);flex-shrink:0">Bakım Planı:</span>
+        <select class="fsel" onchange="_fMakineler[${i}].bakimPlani=this.value" style="font-size:12px;padding:5px 8px">
+          ${BAKIM_PLANLARI.map(bp=>`<option value="${bp}" ${m.bakimPlani===bp?'selected':''}>${bp}</option>`).join('')}
+        </select>
+      </div>`:''}
     </div>`).join('');
 }
 
 function fMakineEkle(){
-  _fMakineler.push({uid:String(Date.now()),ad:'',seriNo:'',bakimPlani:'B BAKIM',calismaS:'',fiyat:0});
+  _fMakineler.push({uid:'manuel_'+Date.now(),ekId:null,ad:'',seriNo:'',bakimPlani:'B BAKIM',fiyat:0,secili:true,parcalar:[]});
   renderFMakineler();
+  renderFParcaBolumu();
 }
 
-function renderFParcalar(){
-  const cont=document.getElementById('f-parca-listesi');
-  if(!_fParcalar.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">Henüz parça/işlem eklenmedi.</div>';return;}
-  cont.innerHTML=_fParcalar.map((p,i)=>`
-    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px">
-      <div style="display:grid;grid-template-columns:1.5fr 1.5fr 2fr 0.6fr auto;gap:8px;align-items:center">
-        <input class="finput" value="${p.makine||''}" placeholder="Makine" oninput="_fParcalar[${i}].makine=this.value" style="font-size:12px">
-        <input class="finput" value="${p.bakimTipi||''}" placeholder="Bakım tipi" oninput="_fParcalar[${i}].bakimTipi=this.value" style="font-size:12px">
-        <input class="finput" value="${p.ad||''}" placeholder="Parça / İşlem adı" oninput="_fParcalar[${i}].ad=this.value" style="font-size:12px">
-        <input class="finput" value="${p.adet||1}" placeholder="Adet" type="number" min="1" oninput="_fParcalar[${i}].adet=parseInt(this.value)||1" style="font-size:12px">
-        <button class="btn btn-danger btn-sm" onclick="_fParcalar.splice(${i},1);renderFParcalar()">🗑️</button>
+function renderFParcaBolumu(){
+  const cont=document.getElementById('f-parca-bolumu');
+  const secili=_fMakineler.filter(m=>m.secili);
+  if(!secili.length){cont.innerHTML='';return;}
+  cont.innerHTML='<div class="sec-div" style="margin-top:8px">Parçalar / Yapılacak İşler (Tablo-2)</div>'+
+  secili.map(m=>{
+    const mIdx=_fMakineler.indexOf(m);
+    return`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:10px;color:var(--accent)">🔧 ${m.ad||'Manuel Makine'} ${m.seriNo?'('+m.seriNo+')':''}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        ${PARCA_SECENEKLERI.map(p=>{
+          const mevcut=m.parcalar.find(x=>x.id===p.id);
+          const seciliP=!!mevcut;
+          const adet=mevcut?mevcut.adet:1;
+          return`<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:7px 10px;border-radius:7px;border:1px solid ${seciliP?'var(--accent)':'var(--border)'};background:${seciliP?'rgba(232,93,26,0.08)':'transparent'}">
+            <input type="checkbox" ${seciliP?'checked':''} onchange="fParcaTik(${mIdx},'${p.id}','${p.ad}',this.checked)" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer;flex-shrink:0">
+            <span style="font-size:12px;flex:1">${p.ad}</span>
+            ${seciliP?`<input type="number" value="${adet}" min="1" max="99" oninput="fParcaAdet(${mIdx},'${p.id}',this.value)" onclick="event.stopPropagation()" style="width:40px;font-size:12px;padding:2px 4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);text-align:center">`:''}
+          </label>`;
+        }).join('')}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-function fParcaEkle(){
-  _fParcalar.push({makine:'',bakimTipi:'YILLIK BAKIM',ad:'',adet:1});
-  renderFParcalar();
+function fParcaTik(mIdx,parcaId,parcaAd,secili){
+  if(!_fMakineler[mIdx])return;
+  if(secili){if(!_fMakineler[mIdx].parcalar.find(p=>p.id===parcaId))_fMakineler[mIdx].parcalar.push({id:parcaId,ad:parcaAd,adet:1});}
+  else{_fMakineler[mIdx].parcalar=_fMakineler[mIdx].parcalar.filter(p=>p.id!==parcaId);}
+  renderFParcaBolumu();
+}
+
+function fParcaAdet(mIdx,parcaId,val){
+  if(!_fMakineler[mIdx])return;
+  const p=_fMakineler[mIdx].parcalar.find(x=>x.id===parcaId);
+  if(p)p.adet=parseInt(val)||1;
 }
 
 function fToplamHesapla(){
-  const toplam=_fMakineler.reduce((a,m)=>a+(parseFloat(m.fiyat)||0),0);
+  const toplam=_fMakineler.filter(m=>m.secili).reduce((a,m)=>a+(parseFloat(m.fiyat)||0),0);
   if(toplam>0)document.getElementById('f-tutar').value=toplam.toFixed(2);
 }
 
 function teklifNoOlustur(){
   const yil=new Date().getFullYear();
   const teklifler=ST.faturalar.filter(f=>f.tip==='Teklif'&&f.no&&f.no.startsWith('TKF-'+yil));
-  const sonNo=teklifler.reduce((max,f)=>{
-    const n=parseInt(f.no.split('-')[2]||0);
-    return n>max?n:max;
-  },0);
+  const sonNo=teklifler.reduce((max,f)=>{const n=parseInt((f.no.split('-')[2])||0);return n>max?n:max;},0);
   return `TKF-${yil}-${String(sonNo+1).padStart(3,'0')}`;
 }
 
@@ -3213,25 +3254,23 @@ function saveF(){
   const isTeklif=tip==='Teklif';
   const no=isTeklif?teklifNoOlustur():'F-'+String(ST.faturalar.length+1).padStart(4,'0');
   const paraBirimi=document.getElementById('f-para')?document.getElementById('f-para').value:'eur';
+  const seciliMakineler=_fMakineler.filter(m=>m.secili).map(m=>({ad:m.ad,seriNo:m.seriNo,bakimPlani:m.bakimPlani,fiyat:m.fiyat,calismaS:'',parcalar:m.parcalar||[]}));
+  const teklifParcalar=[];
+  seciliMakineler.forEach(m=>{(m.parcalar||[]).forEach(p=>{teklifParcalar.push({makine:m.ad,bakimTipi:m.bakimPlani,ad:p.ad,adet:p.adet||1});});});
   const f={
-    id:String(Date.now()),
-    no,
-    musteriId:String(musteriId),
-    musteriAd:m?m.ad:'',
-    tip,
+    id:String(Date.now()),no,musteriId:String(musteriId),musteriAd:m?m.ad:'',tip,
     aciklama:document.getElementById('f-aciklama').value,
-    tutar:parseFloat(tutar),
-    paraBirimi,
+    tutar:parseFloat(tutar),paraBirimi,
     tarih:document.getElementById('f-tarih').value,
     durum:document.getElementById('f-durum').value,
     notlar:document.getElementById('f-notlar').value,
     olusturma:new Date().toISOString(),
-    teklifDurum: isTeklif?'hazirlandi':undefined,
-    teklifMakineler: isTeklif?[..._fMakineler]:undefined,
-    teklifParcalar: isTeklif?[..._fParcalar]:undefined,
-    vadeGun: parseInt(document.getElementById('f-vade-gun')?.value)||45,
-    gecerlilikBaslangic: document.getElementById('f-gec-bas')?.value||'',
-    gecerlilikBitis: document.getElementById('f-gec-bit')?.value||'',
+    teklifDurum:isTeklif?'hazirlandi':undefined,
+    teklifMakineler:isTeklif?seciliMakineler:undefined,
+    teklifParcalar:isTeklif?teklifParcalar:undefined,
+    vadeGun:parseInt(document.getElementById('f-vade-gun')?.value)||45,
+    gecerlilikBaslangic:document.getElementById('f-gec-bas')?.value||'',
+    gecerlilikBitis:document.getElementById('f-gec-bit')?.value||'',
   };
   ST.faturalar.push(f);addAkt('🧾',`${f.tip}: ${f.musteriAd} — ${fmtEur(f.tutar)}`);
   save();closeM('f-modal');renderF();updateBadges();showToast(`${f.tip} kaydedildi ✓`,'success');

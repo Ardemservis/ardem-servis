@@ -3146,7 +3146,8 @@ const PARCA_SECENEKLERI=[
   {id:'iscilik',         ad:'İşçilik'},
   {id:'genel_temizlik',  ad:'Kompresör Genel Temizliği'},
   {id:'rulman_gresleme', ad:'Motor Rulman Gressleme'},
-  {id:'rulman_degisim',  ad:'Motor Rulman Değişimi'},
+  {id:'rulman_degisim',    ad:'Motor Rulman Değişimi'},
+  {id:'giris_filter',      ad:'Giriş/Çıkış Filtre Değişimi'},
 ];
 let _fMakineler=[];
 let _fParcalar=[];
@@ -3577,7 +3578,7 @@ async function teklifDocxIndir(id){
 
 async function olusturTeklifDocx(teklif){
   const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,
-    AlignmentType,BorderStyle,WidthType,ShadingType,VerticalAlign}=window.docx;
+    AlignmentType,BorderStyle,WidthType,ShadingType,VerticalAlign,ImageRun}=window.docx;
 
   const MAVI='1B5EA6',KOYU='1F1F1F',GRI_BG='F2F2F2',BEYAZ='FFFFFF',CIZGI='2E75B6';
   const b0={style:BorderStyle.NONE,size:0,color:'FFFFFF'};
@@ -3589,6 +3590,11 @@ async function olusturTeklifDocx(teklif){
   const cell=(children,w,bg=BEYAZ,align=AlignmentType.LEFT)=>new TableCell({borders:bordersL,width:{size:w,type:WidthType.DXA},shading:{fill:bg,type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},verticalAlign:VerticalAlign.CENTER,children:[P(children,align)]});
   const hcell=(text,w)=>cell([T(text,18,BEYAZ,true)],w,MAVI,AlignmentType.CENTER);
 
+
+
+  // Ardem Logo
+  const LOGO_B64='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';
+  const logoBytes=Uint8Array.from(atob(LOGO_B64),c=>c.charCodeAt(0));
 
   // Tablo-1: NO | MAKİNE | SERİ NO | BAKIM PLANI | FİYAT  (ÇALIŞMA SAATİ kaldırıldı)
   const makineRows=[
@@ -3629,8 +3635,7 @@ async function olusturTeklifDocx(teklif){
           borders:{top:b0,bottom:{style:BorderStyle.SINGLE,size:8,color:CIZGI},left:b0,right:b0,insideH:b0,insideV:b0},
           rows:[new TableRow({children:[
             new TableCell({borders:borders0,width:{size:4500,type:WidthType.DXA},margins:{top:80,bottom:120,left:0,right:200},children:[
-              P([T('ARDEM',32,MAVI,true)]),
-              P([T('BASINÇLI HAVA VE GAZ ÇÖZÜMLERİ',14,MAVI,false)]),
+              new Paragraph({children:[new ImageRun({data:logoBytes,transformation:{width:200,height:67},type:'gif'})]}),
             ]}),
             new TableCell({borders:borders0,width:{size:4860,type:WidthType.DXA},margins:{top:80,bottom:120,left:200,right:0},verticalAlign:VerticalAlign.BOTTOM,children:[
               P([T('BAKIM TEKLİFİ',40,MAVI,true)],AlignmentType.RIGHT),
@@ -3671,7 +3676,14 @@ async function olusturTeklifDocx(teklif){
         P([T('TEKLİF ŞARTLARI:',22,KOYU,true)],AlignmentType.LEFT,160,160),
         madde('2',`Tablo-1'de belirtilen bakım planına göre ürünlerin bulunduğu işletme ziyaret edilerek ürünlerin gerekli bakım ve kontrolü yapılacaktır.`),
         madde('3',`Periyodik bakımlarda Tablo-2'deki tablolar dışında değiştirilmesi gereken herhangi bir parça olursa, müşteri yazılı onayına sunularak ayrıca fatura edilecektir.`),
-        madde('4',`Tablo-1'deki tüm makinelerin rutin bakım bedeli yol, yağ, işçilik ve yedek parçalar dahil toplam bedel ${Number(teklif.toplamFiyat).toLocaleString('tr-TR',{minimumFractionDigits:2})} ${teklif.paraBirimi} Tablo-1'deki gibidir. Bu bedel ${teklif.musteriAd} firması tarafından faturalama sonrası ${teklif.vadeSuresi||45} Gün içerisinde PEŞİN olarak ödenecektir.`),
+        new Paragraph({spacing:{before:80,after:80},children:[
+          T('4- ',18,KOYU,true),
+          T(`Tablo-1'deki tüm makinelerin rutin bakım bedeli yol, yağ, işçilik ve yedek parçalar dahil toplam bedel `,18),
+          T(`${Number(teklif.toplamFiyat).toLocaleString('tr-TR',{minimumFractionDigits:2})} ${teklif.paraBirimi}`,18,MAVI,true),
+          T(` Tablo-1'deki gibidir. Bu bedel ${teklif.musteriAd} firması tarafından faturalama sonrası `,18),
+          T(`${teklif.vadeSuresi||45} Gün`,18,MAVI,true),
+          T(` içerisinde PEŞİN olarak ödenecektir.`,18),
+        ]}),
         madde('5','ARDEM mesai saatleri (8:30 – 18:00) dışındaki bakım ve arıza tespit talepleri için servis ücretleri (KDV Hariç) aşağıdaki gibi ayrıca faturalandırılacaktır.'),
         new Paragraph({spacing:{before:60,after:40},indent:{left:600},children:[T('- Arıza Servis Bedeli                              : 40 Euro / Adam.Saat',18)]}),
         new Paragraph({spacing:{before:40,after:40},indent:{left:600},children:[T('- Mesai saati dışındaki ekstra servis bedeli : 50 Euro / Adam.Saat',18)]}),

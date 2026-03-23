@@ -829,6 +829,13 @@ const PARCA_TIPLERI={
   azot:['Ekipman']
 };
 const KAT_LABEL={kompressor:'Kompresör',kurutucu:'Kurutucu',filtre:'Basınçlı Hat Filtresi',azot:'Azot Jeneratörü'};
+// Azot ve Kurutucu aynı parçaları kullanabilir — cross-kategori eşleşme
+function katEsles(x, kat){
+  if(x.kategori===kat) return true;
+  if(kat==='azot'&&x.kategori==='kurutucu') return true;
+  if(kat==='kurutucu'&&x.kategori==='azot') return true;
+  return false;
+}
 
 // ===== KULLANICI & GİRİŞ =====
 // Şifreler sadece burada — localStorage kullanılmıyor
@@ -1771,7 +1778,7 @@ function saveM(){
     
       const zatenVar=ST.parcalar.some(sp=>
         (p.orijinal&&sp.orijinal&&sp.orijinal===p.orijinal)||
-        (p.yansanayi&&sp.yansanayi&&sp.yansanayi===p.yansanayi&&sp.kategori===kat&&sp.tip===p.tip)
+        (p.yansanayi&&sp.yansanayi&&sp.yansanayi===p.yansanayi&&katEsles(sp,kat)&&sp.tip===p.tip)
       );
       if(!zatenVar){
         const yeniP={
@@ -2040,12 +2047,15 @@ function loadServisParçalar(){
     ek.parcalar.forEach((p,pi)=>{
       const uid=`sp_${ekId}_${pi}`;
       const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':ek.tip==='Azot Jeneratörü'?'azot':'filtre';
+      // Azot & Kurutucu aynı parçaları kullanabilir — her iki kategoride ara
+      const katlar=kat==='azot'?['azot','kurutucu']:kat==='kurutucu'?['kurutucu','azot']:[kat];
+      const findStok=(fn)=>{ for(const k of katlar){const s=ST.parcalar.find(x=>fn(x,k));if(s)return s;} return null; };
     
       // OEM stok: parcaTuru==='oem' veya eski kayıtlar (parcaTuru yok)
-      const spOem=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.orijinal&&x.orijinal===p.orijinal&&(!x.parcaTuru||x.parcaTuru==='oem'));
+      const spOem=findStok((x,k)=>x.kategori===k&&x.tip===p.tip&&p.orijinal&&x.orijinal===p.orijinal&&(!x.parcaTuru||x.parcaTuru==='oem'));
       // Muadil stok: parcaTuru==='muadil'
-      const spYs1=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.yansanayi&&x.yansanayi===p.yansanayi&&x.parcaTuru==='muadil');
-      const spYs2=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&p.yansanayi2&&x.yansanayi===p.yansanayi2&&x.parcaTuru==='muadil');
+      const spYs1=findStok((x,k)=>x.kategori===k&&x.tip===p.tip&&p.yansanayi&&x.yansanayi===p.yansanayi&&x.parcaTuru==='muadil');
+      const spYs2=findStok((x,k)=>x.kategori===k&&x.tip===p.tip&&p.yansanayi2&&x.yansanayi===p.yansanayi2&&x.parcaTuru==='muadil');
 
       const stokBadge=(sp)=>{
         if(!sp)return'<span style="font-size:10px;color:var(--text3)">stok kaydı yok</span>';
@@ -2421,11 +2431,11 @@ function tamamlaKaydet(){
       const tercih=t.tercih||'oem';
       let stokKaydi=null;
       if(tercih==='oem'){
-        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.orijinal===p.orijinal&&(!x.parcaTuru||x.parcaTuru==='oem'));
+        stokKaydi=ST.parcalar.find(x=>katEsles(x,kat)&&x.orijinal===p.orijinal&&(!x.parcaTuru||x.parcaTuru==='oem'));
       } else if(tercih==='ys1'){
-        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.yansanayi===p.yansanayi&&x.parcaTuru==='muadil');
+        stokKaydi=ST.parcalar.find(x=>katEsles(x,kat)&&x.yansanayi===p.yansanayi&&x.parcaTuru==='muadil');
       } else if(tercih==='ys2'){
-        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.yansanayi===p.yansanayi2&&x.parcaTuru==='muadil');
+        stokKaydi=ST.parcalar.find(x=>katEsles(x,kat)&&x.yansanayi===p.yansanayi2&&x.parcaTuru==='muadil');
       }
       if(stokKaydi&&stokKaydi.stok>0){
         const adet=t.adet||1;
@@ -2541,9 +2551,9 @@ function kontolEksikParca(servisIds,musteriAd){
       // Stok kaydında bu kodu ara (OEM mi muadil mi olduğuna göre)
       let stokKaydi=null;
       if(tercih==='oem'){
-        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.orijinal===arananKod&&(!x.parcaTuru||x.parcaTuru==='oem'));
+        stokKaydi=ST.parcalar.find(x=>katEsles(x,kat)&&x.orijinal===arananKod&&(!x.parcaTuru||x.parcaTuru==='oem'));
       } else {
-        stokKaydi=ST.parcalar.find(x=>x.kategori===kat&&x.yansanayi===arananKod&&x.parcaTuru==='muadil');
+        stokKaydi=ST.parcalar.find(x=>katEsles(x,kat)&&x.yansanayi===arananKod&&x.parcaTuru==='muadil');
       }
 
       // Stok kaydı yok veya stok yetersizse sipariş listesine ekle
@@ -3680,7 +3690,7 @@ async function olusturTeklifDocx(teklif){
           T('4- ',18,KOYU,true),
           T(`Tablo-1'deki tüm makinelerin rutin bakım bedeli yol, yağ, işçilik ve yedek parçalar dahil toplam bedel `,18),
           T(`${Number(teklif.toplamFiyat).toLocaleString('tr-TR',{minimumFractionDigits:2})} ${teklif.paraBirimi}`,18,MAVI,true),
-          T(` Tablo-1'deki gibidir. Bu bedel ${teklif.musteriAd} firması tarafından faturalama sonrası `,18),
+          T(` (KDV Hariç) Tablo-1'deki gibidir. Bu bedel ${teklif.musteriAd} firması tarafından faturalama sonrası `,18),
           T(`${teklif.vadeSuresi||45} Gün`,18,MAVI,true),
           T(` içerisinde PEŞİN olarak ödenecektir.`,18),
         ]}),
@@ -3723,7 +3733,7 @@ function renderGParcalar(musteriId,ekipmanId){
   if(!ek||!ek.parcalar||!ek.parcalar.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3)">Bu ekipmana parça tanımlanmamış.</div>';return;}
   const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':ek.tip==='Azot Jeneratörü'?'azot':'filtre';
   cont.innerHTML=ek.parcalar.map((p,i)=>{
-    const sp=ST.parcalar.find(x=>x.kategori===kat&&x.tip===p.tip&&((p.orijinal&&x.orijinal===p.orijinal)||(p.yansanayi&&x.yansanayi===p.yansanayi)));
+    const sp=ST.parcalar.find(x=>katEsles(x,kat)&&x.tip===p.tip&&((p.orijinal&&x.orijinal===p.orijinal)||(p.yansanayi&&x.yansanayi===p.yansanayi)));
     const stok=sp?(sp.stok||0):0;
     const min=sp?(sp.minstok||2):2;
     const sc=stok===0?'empty':stok<=min?'warn':'ok';

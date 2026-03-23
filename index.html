@@ -3170,7 +3170,7 @@ function fMusteriDegis(musteriId){
   const m=ST.musteriler.find(x=>String(x.id)===String(musteriId));
   if(m&&m.ekipmanlar&&m.ekipmanlar.length){
     m.ekipmanlar.forEach(e=>{
-      _fMakineler.push({uid:'m_'+e.id,ekId:e.id,ad:(e.marka?e.marka+' ':'')+e.tip+(e.model?' '+e.model:''),seriNo:e.seriNo||'',bakimPlani:'B BAKIM',fiyat:0,secili:false,parcalar:[]});
+      _fMakineler.push({uid:'m_'+e.id,ekId:e.id,ad:(e.marka?e.marka+' ':'')+e.tip+(e.model?' '+e.model:''),seriNo:e.seri||e.seriNo||'',bakimPlani:'B BAKIM',fiyat:0,secili:false,parcalar:[]});
     });
   }
   renderFMakineler();
@@ -3449,7 +3449,7 @@ function teklifDuzenle(id){
       _fMakineler.push({
         uid:'m_'+e.id,ekId:e.id,
         ad:(e.marka?e.marka+' ':'')+e.tip+(e.model?' '+e.model:''),
-        seriNo:e.seriNo||'',
+        seriNo:e.seri||e.seriNo||'',
         bakimPlani:mevcut?mevcut.bakimPlani:'B BAKIM',
         fiyat:mevcut?mevcut.fiyat:0,
         secili:!!mevcut,

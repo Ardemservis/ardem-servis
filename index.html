@@ -1220,7 +1220,7 @@ let tempEk=[]; // geçici ekipman listesi
 let epEkipmanId=null; // şu an düzenlenen ekipman id
 
 // ===== FİREBASE =====
-let db=null,_setDoc=null,_doc=null;
+let db=null,_setDoc=null,_doc=null,_getDoc=null;
 
 // Bağlantı durumu göstergesi
 let _onlineBarShown=false;
@@ -1315,7 +1315,7 @@ async function initFirebase(){
         });
       }
       db=m2.getFirestore(app);
-      _doc=m2.doc; _setDoc=m2.setDoc;
+      _doc=m2.doc; _setDoc=m2.setDoc; _getDoc=m2.getDoc;
       const snap=await m2.getDoc(m2.doc(db,'ardem','data'));
       if(snap.exists()){
         const d=snap.data();

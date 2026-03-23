@@ -1778,7 +1778,7 @@ function saveM(){
     
       const zatenVar=ST.parcalar.some(sp=>
         (p.orijinal&&sp.orijinal&&sp.orijinal===p.orijinal)||
-        (p.yansanayi&&sp.yansanayi&&sp.yansanayi===p.yansanayi&&katEsles(sp,kat)&&sp.tip===p.tip)
+        (p.yansanayi&&sp.yansanayi&&sp.yansanayi===p.yansanayi&&katEsles(sp,kat))
       );
       if(!zatenVar){
         const yeniP={
@@ -2051,11 +2051,11 @@ function loadServisParçalar(){
       const katlar=kat==='azot'?['azot','kurutucu']:kat==='kurutucu'?['kurutucu','azot']:[kat];
       const findStok=(fn)=>{ for(const k of katlar){const s=ST.parcalar.find(x=>fn(x,k));if(s)return s;} return null; };
     
-      // OEM stok: parcaTuru==='oem' veya eski kayıtlar (parcaTuru yok)
-      const spOem=findStok((x,k)=>x.kategori===k&&x.tip===p.tip&&p.orijinal&&x.orijinal===p.orijinal&&(!x.parcaTuru||x.parcaTuru==='oem'));
-      // Muadil stok: parcaTuru==='muadil'
-      const spYs1=findStok((x,k)=>x.kategori===k&&x.tip===p.tip&&p.yansanayi&&x.yansanayi===p.yansanayi&&x.parcaTuru==='muadil');
-      const spYs2=findStok((x,k)=>x.kategori===k&&x.tip===p.tip&&p.yansanayi2&&x.yansanayi===p.yansanayi2&&x.parcaTuru==='muadil');
+      // OEM stok: OEM kodu eşleşiyorsa tip kontrolü yapma (azot/kurutucu farklı tip adı kullanabilir)
+      const spOem=findStok((x,k)=>katEsles(x,k)&&p.orijinal&&x.orijinal===p.orijinal&&(!x.parcaTuru||x.parcaTuru==='oem'));
+      // Muadil stok: OEM kodu yoksa tip+muadil kodu ile eşleş
+      const spYs1=findStok((x,k)=>katEsles(x,k)&&p.yansanayi&&x.yansanayi===p.yansanayi&&x.parcaTuru==='muadil');
+      const spYs2=findStok((x,k)=>katEsles(x,k)&&p.yansanayi2&&x.yansanayi===p.yansanayi2&&x.parcaTuru==='muadil');
 
       const stokBadge=(sp)=>{
         if(!sp)return'<span style="font-size:10px;color:var(--text3)">stok kaydı yok</span>';
@@ -3733,7 +3733,7 @@ function renderGParcalar(musteriId,ekipmanId){
   if(!ek||!ek.parcalar||!ek.parcalar.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3)">Bu ekipmana parça tanımlanmamış.</div>';return;}
   const kat=ek.tip==='Kompresör'?'kompressor':ek.tip==='Kurutucu'?'kurutucu':ek.tip==='Azot Jeneratörü'?'azot':'filtre';
   cont.innerHTML=ek.parcalar.map((p,i)=>{
-    const sp=ST.parcalar.find(x=>katEsles(x,kat)&&x.tip===p.tip&&((p.orijinal&&x.orijinal===p.orijinal)||(p.yansanayi&&x.yansanayi===p.yansanayi)));
+    const sp=ST.parcalar.find(x=>katEsles(x,kat)&&((p.orijinal&&x.orijinal===p.orijinal)||(p.yansanayi&&x.yansanayi===p.yansanayi)));
     const stok=sp?(sp.stok||0):0;
     const min=sp?(sp.minstok||2):2;
     const sc=stok===0?'empty':stok<=min?'warn':'ok';

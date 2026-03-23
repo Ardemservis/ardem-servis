@@ -652,6 +652,22 @@ tr:hover td{background:rgba(255,255,255,0.015);}
   </div>
 </div>
 
+<!-- MODAL: TEKLİF ÖNİZLEME -->
+<div class="mo" id="teklif-onizle-modal">
+  <div class="modal modal-lg">
+    <div class="mhd">
+      <div class="mtitle">📋 Teklif Özeti</div>
+      <button class="mclose" onclick="closeM('teklif-onizle-modal')">✕</button>
+    </div>
+    <div class="mbody" id="teklif-onizle-icerik"></div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeM('teklif-onizle-modal')">Kapat</button>
+      <button class="btn btn-ghost" id="teklif-onizle-duzenle-btn">✏️ Düzenle</button>
+      <button class="btn btn-primary" id="teklif-onizle-word-btn">📄 Word İndir</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: GEÇMİŞ -->
 <div class="mo" id="g-modal">
   <div class="modal">
@@ -3307,7 +3323,7 @@ function renderF(){
     } else {
       durumHtml=durumBadge(f.durum);
     }
-    return`<tr>
+    return`<tr style="cursor:pointer" onclick="teklifOnizle('${f.id}')">
       <td style="font-size:12px;font-weight:700;color:var(--accent)">${f.no}</td>
       <td style="font-weight:500;font-size:13px">${f.musteriAd}</td>
       <td style="font-size:12px;color:var(--text2)">${f.aciklama||'—'}</td>
@@ -3315,8 +3331,9 @@ function renderF(){
       <td style="font-size:12px">${fmtDate(f.tarih)}</td>
       <td><span class="badge bo">${f.tip}</span></td>
       <td>${durumHtml}</td>
-      <td><div style="display:flex;gap:5px;flex-wrap:wrap">
+      <td onclick="event.stopPropagation()"><div style="display:flex;gap:5px;flex-wrap:wrap">
         ${isTeklif?`<button class="btn btn-ghost btn-sm" onclick="teklifDurumDegis('${f.id}')" title="Durumu Değiştir">🔄</button>`:''}
+        ${isTeklif?`<button class="btn btn-ghost btn-sm" onclick="teklifDuzenle('${f.id}')" title="Düzenle">✏️</button>`:''}
         ${isTeklif?`<button class="btn btn-primary btn-sm" onclick="teklifDocxIndir('${f.id}')" title="Word İndir">📄 Word</button>`:''}
         ${!isTeklif&&f.durum==='bekliyor'?`<button class="btn btn-success btn-sm" onclick="odendiFatura('${f.id}')">✅</button>`:''}
         <button class="btn btn-danger btn-sm" onclick="deleteFatura('${f.id}')">🗑️</button>
@@ -3329,6 +3346,178 @@ function renderF(){
   const teklifler=ST.faturalar.filter(f=>f.tip==='Teklif');
   const onaylanan=teklifler.filter(f=>f.teklifDurum==='onaylandi').length;
   document.getElementById('f-ozet').innerHTML=`Toplam: <b>${fmtEur(toplam)}</b> · <span style="color:var(--green)">Ödenen: <b>${fmtEur(odenen)}</b></span> · <span style="color:var(--yellow)">Bekleyen: <b>${fmtEur(bekleyen)}</b></span>${teklifler.length?` · Teklif: <b>${teklifler.length}</b> (${onaylanan} onaylı)`:''}`; 
+}
+
+function teklifOnizle(id){
+  const f=ST.faturalar.find(x=>String(x.id)===String(id));
+  if(!f||f.tip!=='Teklif')return;
+  const durumMap={hazirlandi:'📝 Hazırlandı',gonderildi:'📤 Gönderildi',onaylandi:'✅ Onaylandı',reddedildi:'❌ Reddedildi'};
+  const para=f.paraBirimi==='tl'?'₺':'€';
+  const tutar=f.paraBirimi==='tl'?'₺'+(f.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):fmtEur(f.tutar||0);
+
+  let makineHtml='';
+  if(f.teklifMakineler&&f.teklifMakineler.length){
+    makineHtml=`<table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px">
+      <thead><tr style="background:rgba(27,94,166,0.15)">
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid rgba(27,94,166,0.3)">#</th>
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid rgba(27,94,166,0.3)">Makine</th>
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid rgba(27,94,166,0.3)">Seri No</th>
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid rgba(27,94,166,0.3)">Bakım Planı</th>
+        <th style="padding:8px 10px;text-align:right;border-bottom:2px solid rgba(27,94,166,0.3)">Fiyat</th>
+      </tr></thead><tbody>
+      ${f.teklifMakineler.map((m,i)=>`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:7px 10px;color:var(--text2)">${i+1}</td>
+        <td style="padding:7px 10px;font-weight:500">${m.ad}</td>
+        <td style="padding:7px 10px;color:var(--text2)">${m.seriNo||'—'}</td>
+        <td style="padding:7px 10px"><span class="badge bo" style="font-size:11px">${m.bakimPlani}</span></td>
+        <td style="padding:7px 10px;text-align:right;font-weight:600">${para}${Number(m.fiyat).toLocaleString('tr-TR',{minimumFractionDigits:2})}</td>
+      </tr>`).join('')}
+      <tr style="background:rgba(27,94,166,0.1)">
+        <td colspan="4" style="padding:8px 10px;font-weight:700;text-align:right">TOPLAM</td>
+        <td style="padding:8px 10px;text-align:right;font-weight:700;color:#60a5fa">${tutar}</td>
+      </tr></tbody></table>`;
+  }
+
+  let parcaHtml='';
+  if(f.teklifParcalar&&f.teklifParcalar.length){
+    parcaHtml=`<div style="margin-top:16px">
+      <div class="sec-div">Tablo-2: Yapılacak Değişimler</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px">
+        <thead><tr style="background:rgba(27,94,166,0.15)">
+          <th style="padding:7px 10px;text-align:left;border-bottom:2px solid rgba(27,94,166,0.3)">Makine</th>
+          <th style="padding:7px 10px;text-align:left;border-bottom:2px solid rgba(27,94,166,0.3)">Bakım</th>
+          <th style="padding:7px 10px;text-align:left;border-bottom:2px solid rgba(27,94,166,0.3)">Parça</th>
+          <th style="padding:7px 10px;text-align:center;border-bottom:2px solid rgba(27,94,166,0.3)">Adet</th>
+        </tr></thead><tbody>
+        ${f.teklifParcalar.map((p,i)=>`<tr style="border-bottom:1px solid var(--border);background:${i%2?'rgba(255,255,255,0.02)':''}">
+          <td style="padding:6px 10px;font-size:12px;color:var(--text2)">${p.makine}</td>
+          <td style="padding:6px 10px;font-size:12px">${p.bakimTipi}</td>
+          <td style="padding:6px 10px">${p.ad}</td>
+          <td style="padding:6px 10px;text-align:center;font-weight:600">${p.adet}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }
+
+  document.getElementById('teklif-onizle-icerik').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">MÜŞTERİ</div>
+        <div style="font-weight:600;font-size:15px">${f.musteriAd}</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">TEKLİF NO / TARİH</div>
+        <div style="font-weight:600">${f.no}</div>
+        <div style="font-size:12px;color:var(--text2)">${fmtDate(f.tarih)}</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">TOPLAM TUTAR</div>
+        <div style="font-weight:800;font-size:20px;color:#60a5fa">${tutar}</div>
+        <div style="font-size:11px;color:var(--text2)">Vade: ${f.vadeGun||45} gün</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">DURUM</div>
+        <div>${durumMap[f.teklifDurum||'hazirlandi']}</div>
+        ${f.aciklama?`<div style="font-size:12px;color:var(--text2);margin-top:4px">${f.aciklama}</div>`:''}
+      </div>
+    </div>
+    <div class="sec-div">Tablo-1: Makineler</div>
+    ${makineHtml}
+    ${parcaHtml}`;
+
+  document.getElementById('teklif-onizle-duzenle-btn').onclick=()=>{closeM('teklif-onizle-modal');teklifDuzenle(id);};
+  document.getElementById('teklif-onizle-word-btn').onclick=()=>teklifDocxIndir(id);
+  openMod('teklif-onizle-modal');
+}
+
+function teklifDuzenle(id){
+  const f=ST.faturalar.find(x=>String(x.id)===String(id));
+  if(!f||f.tip!=='Teklif'){showToast('Teklif bulunamadı','error');return;}
+
+  populateSels();
+  // Modal alanlarını doldur
+  const musteriSel=document.getElementById('f-musteri');
+  musteriSel.value=f.musteriId||'';
+
+  // Müşteriyi seçince makineleri yükle, sonra mevcut seçimleri işaretle
+  _fMakineler=[];_fParcalar=[];
+  const m=ST.musteriler.find(x=>String(x.id)===String(f.musteriId));
+  if(m&&m.ekipmanlar){
+    m.ekipmanlar.forEach(e=>{
+      const mevcut=(f.teklifMakineler||[]).find(tm=>tm.ad.includes(e.tip)||tm.seriNo===e.seriNo);
+      _fMakineler.push({
+        uid:'m_'+e.id,ekId:e.id,
+        ad:(e.marka?e.marka+' ':'')+e.tip+(e.model?' '+e.model:''),
+        seriNo:e.seriNo||'',
+        bakimPlani:mevcut?mevcut.bakimPlani:'B BAKIM',
+        fiyat:mevcut?mevcut.fiyat:0,
+        secili:!!mevcut,
+        parcalar:mevcut?(mevcut.parcalar||[]):[]
+      });
+    });
+  }
+  // Listede olmayan manuel makineler
+  (f.teklifMakineler||[]).forEach(tm=>{
+    const zaten=_fMakineler.find(x=>x.seriNo===tm.seriNo&&tm.seriNo);
+    if(!zaten){
+      _fMakineler.push({uid:'manuel_'+Date.now()+Math.random(),ekId:null,ad:tm.ad,seriNo:tm.seriNo||'',bakimPlani:tm.bakimPlani||'B BAKIM',fiyat:tm.fiyat||0,secili:true,parcalar:tm.parcalar||[]});
+    }
+  });
+
+  document.getElementById('f-tip').value='Teklif';
+  document.getElementById('f-aciklama').value=f.aciklama||'';
+  document.getElementById('f-tutar').value=f.tutar||'';
+  document.getElementById('f-para').value=f.paraBirimi||'eur';
+  document.getElementById('f-tarih').value=f.tarih||'';
+  document.getElementById('f-vade-gun').value=f.vadeGun||45;
+  document.getElementById('f-durum').value=f.durum||'bekliyor';
+  document.getElementById('f-notlar').value=f.notlar||'';
+  if(document.getElementById('f-gec-bas'))document.getElementById('f-gec-bas').value=f.gecerlilikBaslangic||'';
+  if(document.getElementById('f-gec-bit'))document.getElementById('f-gec-bit').value=f.gecerlilikBitis||'';
+
+  renderFMakineler();renderFParcaBolumu();
+  document.getElementById('f-teklif-alanlari').style.display='';
+
+  // Kaydet butonunu güncelleme moduna al
+  const kaydetBtn=document.querySelector('#f-modal .btn-primary');
+  if(kaydetBtn){
+    kaydetBtn.textContent='💾 Güncelle';
+    kaydetBtn.onclick=()=>teklifGuncelle(id);
+  }
+  document.getElementById('f-modal').querySelector('.mtitle').textContent='✏️ Teklif Düzenle';
+  document.getElementById('f-modal').classList.add('open');
+}
+
+function teklifGuncelle(id){
+  const f=ST.faturalar.find(x=>String(x.id)===String(id));
+  if(!f){showToast('Teklif bulunamadı','error');return;}
+  const tutar=document.getElementById('f-tutar').value;
+  if(!tutar){showToast('Tutar zorunludur!','error');return;}
+
+  const seciliMakineler=_fMakineler.filter(m=>m.secili).map(m=>({ad:m.ad,seriNo:m.seriNo,bakimPlani:m.bakimPlani,fiyat:m.fiyat,calismaS:'',parcalar:m.parcalar||[]}));
+  const teklifParcalar=[];
+  seciliMakineler.forEach(m=>{(m.parcalar||[]).forEach(p=>{teklifParcalar.push({makine:m.ad,bakimTipi:m.bakimPlani,ad:p.ad,adet:p.adet||1});});});
+
+  f.aciklama=document.getElementById('f-aciklama').value;
+  f.tutar=parseFloat(tutar);
+  f.paraBirimi=document.getElementById('f-para').value;
+  f.tarih=document.getElementById('f-tarih').value;
+  f.durum=document.getElementById('f-durum').value;
+  f.notlar=document.getElementById('f-notlar').value;
+  f.vadeGun=parseInt(document.getElementById('f-vade-gun')?.value)||45;
+  f.gecerlilikBaslangic=document.getElementById('f-gec-bas')?.value||'';
+  f.gecerlilikBitis=document.getElementById('f-gec-bit')?.value||'';
+  f.teklifMakineler=seciliMakineler;
+  f.teklifParcalar=teklifParcalar;
+  f.guncelleme=new Date().toISOString();
+
+  // Butonu sıfırla
+  const kaydetBtn=document.querySelector('#f-modal .btn-primary');
+  if(kaydetBtn){kaydetBtn.textContent='💾 Kaydet';kaydetBtn.onclick=saveF;}
+  document.getElementById('f-modal').querySelector('.mtitle').textContent='🧾 Teklif / Fatura';
+
+  save();closeM('f-modal');renderF();showToast(`${f.no} güncellendi ✓`,'success');
 }
 
 function teklifDurumDegis(id){
@@ -3387,12 +3576,10 @@ async function teklifDocxIndir(id){
 }
 
 async function olusturTeklifDocx(teklif){
-  // docx kütüphanesini CDN'den yükle
-  // docx inline - CDN gerekmez
   const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,
     AlignmentType,BorderStyle,WidthType,ShadingType,VerticalAlign}=window.docx;
 
-  const TURUNCU='E8580C',KOYU='1F1F1F',GRI_BG='F2F2F2',BEYAZ='FFFFFF';
+  const MAVI='1B5EA6',KOYU='1F1F1F',GRI_BG='F2F2F2',BEYAZ='FFFFFF',CIZGI='2E75B6';
   const b0={style:BorderStyle.NONE,size:0,color:'FFFFFF'};
   const borders0={top:b0,bottom:b0,left:b0,right:b0};
   const bL={style:BorderStyle.SINGLE,size:1,color:'CCCCCC'};
@@ -3400,26 +3587,26 @@ async function olusturTeklifDocx(teklif){
   const T=(text,size=20,color=KOYU,bold=false)=>new TextRun({text,size,color,bold,font:'Arial'});
   const P=(children,align=AlignmentType.LEFT,before=0,after=0)=>new Paragraph({alignment:align,spacing:{before,after},children});
   const cell=(children,w,bg=BEYAZ,align=AlignmentType.LEFT)=>new TableCell({borders:bordersL,width:{size:w,type:WidthType.DXA},shading:{fill:bg,type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},verticalAlign:VerticalAlign.CENTER,children:[P(children,align)]});
-  const hcell=(text,w)=>cell([T(text,18,BEYAZ,true)],w,TURUNCU,AlignmentType.CENTER);
+  const hcell=(text,w)=>cell([T(text,18,BEYAZ,true)],w,MAVI,AlignmentType.CENTER);
 
-  // Makine tablosu
+
+  // Tablo-1: NO | MAKİNE | SERİ NO | BAKIM PLANI | FİYAT  (ÇALIŞMA SAATİ kaldırıldı)
   const makineRows=[
-    new TableRow({tableHeader:true,children:[hcell('NO',500),hcell('MAKİNE',2800),hcell('SERİ NO',1500),hcell('BAKIM PLANI',1800),hcell('ÇALIŞMA SAATİ/YIL',1360),hcell('FİYAT',1400)]}),
+    new TableRow({tableHeader:true,children:[hcell('NO',500),hcell('MAKİNE',3000),hcell('SERİ NO',1800),hcell('BAKIM PLANI',2160),hcell('FİYAT',1900)]}),
     ...(teklif.makineler||[]).map((m,i)=>new TableRow({children:[
-      cell([T(String(m.no),18)],500,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
-      cell([T(m.ad,18)],2800,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
-      cell([T(m.seriNo||'',18)],1500,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
-      cell([T(m.bakimPlani,18)],1800,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
-      cell([T(m.calismaS||'',18)],1360,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
-      cell([T(`${m.paraBirimi} ${Number(m.fiyat).toLocaleString('tr-TR',{minimumFractionDigits:2})}`,18)],1400,i%2?GRI_BG:BEYAZ,AlignmentType.RIGHT),
+      cell([T(String(m.no||i+1),18)],500,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
+      cell([T(m.ad,18)],3000,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
+      cell([T(m.seriNo||'',18)],1800,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
+      cell([T(m.bakimPlani||'',18)],2160,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
+      cell([T(`${teklif.paraBirimi} ${Number(m.fiyat).toLocaleString('tr-TR',{minimumFractionDigits:2})}`,18)],1900,i%2?GRI_BG:BEYAZ,AlignmentType.RIGHT),
     ]})),
     new TableRow({children:[
-      new TableCell({borders:bordersL,width:{size:7960,type:WidthType.DXA},columnSpan:5,shading:{fill:GRI_BG,type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},children:[P([T('TOPLAM',20,KOYU,true)],AlignmentType.RIGHT)]}),
-      cell([T(`${teklif.paraBirimi} ${Number(teklif.toplamFiyat).toLocaleString('tr-TR',{minimumFractionDigits:2})}`,20,BEYAZ,true)],1400,TURUNCU,AlignmentType.RIGHT),
+      new TableCell({borders:bordersL,width:{size:7460,type:WidthType.DXA},columnSpan:4,shading:{fill:GRI_BG,type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},children:[P([T('TOPLAM',20,KOYU,true)],AlignmentType.RIGHT)]}),
+      cell([T(`${teklif.paraBirimi} ${Number(teklif.toplamFiyat).toLocaleString('tr-TR',{minimumFractionDigits:2})}`,20,BEYAZ,true)],1900,MAVI,AlignmentType.RIGHT),
     ]}),
   ];
 
-  // Parça tablosu
+  // Tablo-2: Parçalar
   const parcaRows=[
     new TableRow({tableHeader:true,children:[hcell('MAKİNE',2500),hcell('YAPILACAK BAKIM',2000),hcell('PARÇA',3860),hcell('ADET',1000)]}),
     ...(teklif.parcalar||[]).map((p,i)=>new TableRow({children:[
@@ -3437,24 +3624,24 @@ async function olusturTeklifDocx(teklif){
     sections:[{
       properties:{page:{size:{width:11906,height:16838},margin:{top:1000,right:1000,bottom:1000,left:1000}}},
       children:[
-        // Başlık tablosu
-        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[5500,3860],
-          borders:{top:b0,bottom:{style:BorderStyle.SINGLE,size:6,color:TURUNCU},left:b0,right:b0,insideH:b0,insideV:b0},
+        // Başlık: Logo sol | Teklif bilgisi sağ
+        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[4500,4860],
+          borders:{top:b0,bottom:{style:BorderStyle.SINGLE,size:8,color:CIZGI},left:b0,right:b0,insideH:b0,insideV:b0},
           rows:[new TableRow({children:[
-            new TableCell({borders:borders0,width:{size:5500,type:WidthType.DXA},margins:{top:80,bottom:160,left:0,right:200},children:[
-              P([T('ARDEM BASINÇLI HAVA VE GAZ ÇÖZÜMLERİ',24,TURUNCU,true)]),
-              P([T('SAN. TİC. A.Ş.',24,TURUNCU,true)]),P([]),
-              P([T('Telefon : 0 232 375 67 79',18)]),
-              P([T('Faks     : 0 232 375 67 80',18)]),
-              P([T('Web      : www.ardemendustri.com',18)]),
+            new TableCell({borders:borders0,width:{size:4500,type:WidthType.DXA},margins:{top:80,bottom:120,left:0,right:200},children:[
+              P([T('ARDEM',32,MAVI,true)]),
+              P([T('BASINÇLI HAVA VE GAZ ÇÖZÜMLERİ',14,MAVI,false)]),
             ]}),
-            new TableCell({borders:borders0,width:{size:3860,type:WidthType.DXA},margins:{top:80,bottom:160,left:200,right:0},verticalAlign:VerticalAlign.BOTTOM,children:[
-              P([T('BAKIM TEKLİFİ',36,TURUNCU,true)],AlignmentType.RIGHT),
+            new TableCell({borders:borders0,width:{size:4860,type:WidthType.DXA},margins:{top:80,bottom:120,left:200,right:0},verticalAlign:VerticalAlign.BOTTOM,children:[
+              P([T('BAKIM TEKLİFİ',40,MAVI,true)],AlignmentType.RIGHT),
               P([T(`Teklif No : ${teklif.no}`,18)],AlignmentType.RIGHT),
               P([T(`Tarih       : ${teklif.tarih}`,18)],AlignmentType.RIGHT),
             ]}),
           ]})]
         }),
+        P([],AlignmentType.LEFT,100,0),
+        new Paragraph({spacing:{before:60,after:20},children:[T('ARDEM BASINÇLI HAVA VE GAZ ÇÖZÜMLERİ SAN. TİC. A.Ş.',18,MAVI,true)]}),
+        new Paragraph({spacing:{before:0,after:4},children:[T('Telefon : 0 232 375 67 79   |   Faks : 0 232 375 67 80   |   www.ardemendustri.com',16,'555555')]}),
         P([],AlignmentType.LEFT,200,0),
         // Müşteri
         new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2200,7160],
@@ -3474,7 +3661,7 @@ async function olusturTeklifDocx(teklif){
         P([T('TARAFLAR ve ÜRÜNLER:',22,KOYU,true)],AlignmentType.LEFT,200,100),
         new Paragraph({spacing:{before:80,after:200},children:[T('1- ',18,KOYU,true),T(`Bu teklif yukarıdaki unvanları ve adresleri belirtilen ARDEM ve ${teklif.musteriAd} firmaları arasında hazırlanmış olup Tablo-1'de belirtilen ürünlerin periyodik/önleyici bakımları için düzenlenmiştir.`,18)]}),
         P([T('Tablo-1: Sözleşme Kapsamındaki Ürünler',20,KOYU,true)],AlignmentType.CENTER,100,160),
-        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[500,2800,1500,1800,1360,1400],rows:makineRows}),
+        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[500,3000,1800,2160,1900],rows:makineRows}),
         P([],AlignmentType.LEFT,320,0),
         ...(teklif.parcalar&&teklif.parcalar.length?[
           P([T('Tablo-2: Yapılacak Değişimler',20,KOYU,true)],AlignmentType.CENTER,100,160),
@@ -3498,7 +3685,7 @@ async function olusturTeklifDocx(teklif){
         madde('10',`EK-1 de belirtilen fiyatlar ${teklif.gecerlilikBaslangic||''} ile ${teklif.gecerlilikBitis||''} tarihleri arasında geçerlidir.`),
         madde('11','Fatura EURO olarak düzenlenecek ve ödeme, ödeme günündeki Merkez Bankası Satış Kuru ile TL olarak yapılacaktır. İhtilaf vukuunda İzmir Mahkemeleri yetkilidir.'),
         P([],AlignmentType.LEFT,400,0),
-        new Paragraph({alignment:AlignmentType.CENTER,border:{top:{style:BorderStyle.SINGLE,size:4,color:TURUNCU,space:8}},spacing:{before:160,after:0},children:[T('ARDEM BASINÇLI HAVA VE GAZ ÇÖZÜMLERİ SAN. TİC. A.Ş.  |  Tel: 0 232 375 67 79  |  www.ardemendustri.com',16,'666666')]}),
+        new Paragraph({alignment:AlignmentType.CENTER,border:{top:{style:BorderStyle.SINGLE,size:6,color:MAVI,space:8}},spacing:{before:160,after:0},children:[T('ARDEM BASINÇLI HAVA VE GAZ ÇÖZÜMLERİ SAN. TİC. A.Ş.  |  Tel: 0 232 375 67 79  |  www.ardemendustri.com',16,'666666')]}),
       ]
     }]
   });

@@ -2743,6 +2743,59 @@ function erteleServisGrup(idsStr){
   showToast(`Servisler ${fmtDate(iso)} tarihine alındı ✓`,'success');
 }
 
+function servisTeklifOlustur(idsStr){
+  const ids=idsStr.split(',');
+  const servisler=ids.map(id=>ST.servisler.find(x=>String(x.id)===String(id))).filter(Boolean);
+  if(!servisler.length)return;
+  const ilk=servisler[0];
+  const musteri=ST.musteriler.find(m=>String(m.id)===String(ilk.musteriId));
+
+  // Faturalar sayfasına geç
+  goPage('faturalar', document.querySelector('[onclick*="faturalar"]'));
+
+  // Modalı aç ve doldur
+  setTimeout(()=>{
+    populateSels();
+    _fMakineler=[];_fParcalar=[];
+
+    // Müşteriyi seç
+    document.getElementById('f-musteri').value=ilk.musteriId;
+
+    // Servis planındaki makineleri ekle — seçili ve fiyatsız
+    servisler.forEach(s=>{
+      const ek=musteri&&musteri.ekipmanlar?musteri.ekipmanlar.find(e=>String(e.id)===String(s.ekipmanId)):null;
+      _fMakineler.push({
+        uid:'s_'+s.id,
+        ekId:s.ekipmanId,
+        ad:s.ekipmanAd||'',
+        seriNo:ek?ek.seri||ek.seriNo||'':'',
+        bakimPlani:s.tip==='Periyodik Bakım'?'B BAKIM':s.tip||'B BAKIM',
+        fiyat:0,
+        secili:true,
+        parcalar:[],
+        _servisId:s.id
+      });
+    });
+
+    // Tarih olarak servis tarihi gelsin
+    document.getElementById('f-tarih').value=ilk.tarih||today();
+    document.getElementById('f-tip').value='Teklif';
+    document.getElementById('f-aciklama').value=`${ilk.tip||'Periyodik Bakım'} — ${fmtDate(ilk.tarih)}`;
+    document.getElementById('f-teklif-alanlari').style.display='';
+
+    renderFMakineler();
+    renderFParcaBolumu();
+
+    // Modal başlığını güncelle
+    document.querySelector('#f-modal .mtitle').textContent='📄 Servis Teklifi Oluştur';
+
+    // servisId bağlantısını sakla
+    document.getElementById('f-modal').dataset.servisIds=idsStr;
+
+    document.getElementById('f-modal').classList.add('open');
+  },150);
+}
+
 function servisDuzenle(idsStr){
   const ids=idsStr.split(',');
   const ilk=ST.servisler.find(s=>String(s.id)===String(ids[0]));
@@ -2855,6 +2908,7 @@ function renderS(){
       <td><div style="display:flex;gap:5px;flex-wrap:wrap">
         ${!hepsiTamamlandi&&hepsiOnaylandi?`<button class="btn btn-success btn-sm" onclick="tamamlaServisGrup('${ids}')">✅ Tamamla</button>`:''}
         ${!hepsiTamamlandi&&!hepsiOnaylandi?`<button class="btn btn-primary btn-sm" onclick="onaylaServisGrup('${ids}')" style="background:rgba(251,191,36,0.2);border:1px solid #fbbf24;color:#fbbf24">👍 Müşteri Onayı</button>`:''}
+        <button class="btn btn-ghost btn-sm" onclick="servisTeklifOlustur('${ids}')" style="background:rgba(59,130,246,0.15);border:1px solid #3b82f6;color:#60a5fa">📄 Teklif</button>
         ${!hepsiTamamlandi?`<button class="btn btn-ghost btn-sm" onclick="erteleServisGrup('${ids}')">📅 Ertele</button>`:''}
         <button class="btn btn-ghost btn-sm" onclick="servisDuzenle('${ids}')">✏️</button>
         <button class="btn btn-danger btn-sm" onclick="deleteServisGrup('${ids}')">🗑️</button>
@@ -3484,6 +3538,8 @@ function saveF(){
   const seciliMakineler=_fMakineler.filter(m=>m.secili).map(m=>({ad:m.ad,seriNo:m.seriNo,bakimPlani:m.bakimPlani,fiyat:m.fiyat,calismaS:'',parcalar:m.parcalar||[]}));
   const teklifParcalar=[];
   seciliMakineler.forEach(m=>{(m.parcalar||[]).forEach(p=>{teklifParcalar.push({makine:m.ad,bakimTipi:m.bakimPlani,ad:p.ad,adet:p.adet||1});});});
+  // Servis planından oluşturulduysa bağlantıyı kaydet
+  const servisIdsStr=document.getElementById('f-modal').dataset.servisIds||'';
   const f={
     id:String(Date.now()),no,musteriId:String(musteriId),musteriAd:m?m.ad:'',tip,
     aciklama:document.getElementById('f-aciklama').value,
@@ -3498,7 +3554,12 @@ function saveF(){
     vadeGun:parseInt(document.getElementById('f-vade-gun')?.value)||45,
     gecerlilikBaslangic:document.getElementById('f-gec-bas')?.value||'',
     gecerlilikBitis:document.getElementById('f-gec-bit')?.value||'',
+    servisIds:servisIdsStr?servisIdsStr.split(','):undefined,
   };
+  // Modal başlığını sıfırla
+  document.querySelector('#f-modal .mtitle').textContent='🧾 Teklif / Fatura';
+  delete document.getElementById('f-modal').dataset.servisIds;
+
   ST.faturalar.push(f);addAkt('🧾',`${f.tip}: ${f.musteriAd} — ${fmtEur(f.tutar)}`);
   save();closeM('f-modal');renderF();updateBadges();showToast(`${f.tip} kaydedildi ✓`,'success');
 }
@@ -3535,7 +3596,7 @@ function renderF(){
       durumHtml=durumBadge(f.durum);
     }
     return`<tr style="cursor:pointer" onclick="teklifOnizle('${f.id}')">
-      <td style="font-size:12px;font-weight:700;color:var(--accent)">${f.no}</td>
+      <td style="font-size:12px;font-weight:700;color:var(--accent)">${f.no}${f.servisIds&&f.servisIds.length?'<br><span style="font-size:10px;color:#60a5fa;font-weight:400">🔧 Servis bağlı</span>':''}</td>
       <td style="font-weight:500;font-size:13px">${f.musteriAd}</td>
       <td style="font-size:12px;color:var(--text2)">${f.aciklama||'—'}</td>
       <td style="font-weight:600">${f.paraBirimi==='tl'?'₺'+(f.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):fmtEur(f.tutar||0)}</td>
@@ -3737,12 +3798,24 @@ function teklifDurumDegis(id){
   const sirali=['hazirlandi','gonderildi','onaylandi','reddedildi'];
   const etiket={'hazirlandi':'📝 Hazırlandı','gonderildi':'📤 Gönderildi','onaylandi':'✅ Onaylandı','reddedildi':'❌ Reddedildi'};
   const mevcut=f.teklifDurum||'hazirlandi';
-  const secenekler=sirali.map(d=>`${etiket[d]}${d===mevcut?' (mevcut)':''}`).join('\n');
   const secim=prompt(`Teklif No: ${f.no}\nMüşteri: ${f.musteriAd}\n\nYeni durum seçin (1-4):\n1. 📝 Hazırlandı\n2. 📤 Gönderildi\n3. ✅ Onaylandı\n4. ❌ Reddedildi\n\nMevcut: ${etiket[mevcut]}`);
   if(!secim)return;
   const idx=parseInt(secim)-1;
   if(idx<0||idx>3)return;
-  f.teklifDurum=sirali[idx];
+  const yeniDurum=sirali[idx];
+  f.teklifDurum=yeniDurum;
+
+  // Teklif onaylandıysa bağlı servis planlarını da "onaylandi" yap
+  if(yeniDurum==='onaylandi'&&f.servisIds&&f.servisIds.length){
+    f.servisIds.forEach(sid=>{
+      const s=ST.servisler.find(x=>String(x.id)===String(sid));
+      if(s&&s.durum!=='tamamlandi')s.durum='onaylandi';
+    });
+    showToast(`Teklif onaylandı — ${f.servisIds.length} servis planı güncellendi ✓`,'success');
+    renderS();
+  } else {
+    showToast(`Teklif durumu: ${etiket[yeniDurum]} ✓`,'success');
+  }
   save();renderF();
   showToast(`Teklif durumu: ${etiket[sirali[idx]]} ✓`,'success');
 }

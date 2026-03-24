@@ -2500,6 +2500,12 @@ function tamamlaKaydet(){
 
 
 
+function siparisVerGrupStr(idsStr){
+  // onclick attribute'den string olarak gelir, array'e çevir
+  const ids=idsStr.split(',').map(x=>x.trim()).filter(Boolean);
+  siparisVerGrup(ids);
+}
+
 function siparisVer(id){
   if(!ST.siparisler)ST.siparisler=[];
   const s=ST.siparisler.find(x=>String(x.id)===String(id));
@@ -4236,7 +4242,7 @@ function renderDash(){
           </div>
           <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
             <span class="badge by">⏳ Sipariş Gerek</span>
-            <button class="btn btn-success btn-sm" onclick="siparisVerGrup(${JSON.stringify(g.ids)})" title="Teslim Al & Stoka Ekle">📦 Teslim</button>
+            <button class="btn btn-success btn-sm" onclick="siparisVerGrupStr('${g.ids.join(',')}')" title="Teslim Al & Stoka Ekle">📦 Teslim</button>
           </div>
         </div>`).join('');
     }

@@ -652,6 +652,28 @@ tr:hover td{background:rgba(255,255,255,0.015);}
   </div>
 </div>
 
+<!-- MODAL: SİPARİŞ TESLİM -->
+<div class="mo" id="siparis-teslim-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="mhd"><div class="mtitle">📦 Sipariş Teslim Alındı</div><button class="mclose" onclick="closeM('siparis-teslim-modal')">✕</button></div>
+    <div class="mbody">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600" id="st-parca-ad"></div>
+        <div style="font-size:12px;color:var(--text2);font-family:monospace;margin-top:4px" id="st-parca-kod"></div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl">Teslim Alınan Adet *</label>
+        <input class="finput" id="st-adet" type="number" min="1" max="9999" style="font-size:18px;font-weight:700;text-align:center">
+        <div class="fhint">Bu adet stok kaydına otomatik eklenecek</div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeM('siparis-teslim-modal')">İptal</button>
+      <button class="btn btn-success" onclick="siparisTeslimKaydet()">📦 Teslim Al & Stoka Ekle</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: TEKLİF ÖNİZLEME -->
 <div class="mo" id="teklif-onizle-modal">
   <div class="modal modal-lg">
@@ -2482,27 +2504,92 @@ function siparisVer(id){
   if(!ST.siparisler)ST.siparisler=[];
   const s=ST.siparisler.find(x=>String(x.id)===String(id));
   if(!s)return;
-  s.durum='siparis_verildi';
-  s.siparisT=new Date().toISOString();
-  addAkt('🛒',`Sipariş verildi: ${s.parcaAd}`);
-  save();renderDash();showToast('Sipariş verildi olarak işaretlendi ✓','success');
+  siparisVerGrup([id]);
 }
 
 function siparisVerGrup(ids){
   if(!ST.siparisler)return;
-  let parcaAd='';
-  let toplamAdet=0;
+  // Grup bilgisini topla
+  let parcaAd='', arananKod='', kodTipi='OEM', toplamAdet=0;
+  ids.forEach(id=>{
+    const s=ST.siparisler.find(x=>String(x.id)===String(id));
+    if(!s)return;
+    parcaAd=s.parcaAd||parcaAd;
+    arananKod=s.arananKod||arananKod;
+    kodTipi=s.kodTipi||kodTipi;
+    toplamAdet+=(s.adet||1);
+  });
+
+  // Modal aç
+  const modal=document.getElementById('siparis-teslim-modal');
+  if(modal){
+    document.getElementById('st-parca-ad').textContent=parcaAd;
+    document.getElementById('st-parca-kod').textContent=arananKod;
+    document.getElementById('st-adet').value=toplamAdet;
+    document.getElementById('st-adet').placeholder=toplamAdet;
+    document.getElementById('siparis-teslim-modal').dataset.ids=JSON.stringify(ids);
+    modal.classList.add('open');
+  } else {
+    // Modal yoksa eski prompt yöntemi
+    const girilen=prompt(`"${parcaAd}" teslim alındı.\nKaç adet stoka girecek?`, toplamAdet);
+    if(girilen===null)return;
+    const adet=parseInt(girilen)||toplamAdet;
+    siparisOnayla(ids, adet, parcaAd, arananKod, kodTipi, toplamAdet);
+  }
+}
+
+function siparisOnayla(ids, stokAdet, parcaAd, arananKod, kodTipi, siparisAdet){
+  // Siparişleri kapat
   ids.forEach(id=>{
     const s=ST.siparisler.find(x=>String(x.id)===String(id));
     if(!s)return;
     s.durum='siparis_verildi';
     s.siparisT=new Date().toISOString();
-    parcaAd=s.parcaAd;
-    toplamAdet+=(s.adet||1);
+    s.teslimAdet=stokAdet;
   });
-  if(parcaAd)addAkt('🛒',`Sipariş verildi: ${parcaAd} ×${toplamAdet} adet`);
-  save();renderDash();showToast(`Sipariş verildi ✓ — ${parcaAd} ×${toplamAdet} adet`,'success');
+
+  // Stoka ekle — OEM koduna göre eşleşen stok kaydını bul
+  let stokEklendi=false;
+  if(stokAdet>0 && arananKod && arananKod!=='—'){
+    const stokKaydi=ST.parcalar.find(x=>{
+      if(kodTipi==='OEM'||kodTipi==='oem') return x.orijinal===arananKod;
+      return x.yansanayi===arananKod||x.orijinal===arananKod;
+    });
+    if(stokKaydi){
+      const eskiStok=stokKaydi.stok||0;
+      stokKaydi.stok=eskiStok+stokAdet;
+      addAkt('📦',`Stok güncellendi: ${parcaAd} — ${eskiStok}→${stokKaydi.stok} adet`);
+      stokEklendi=true;
+    }
+  }
+
+  addAkt('🛒',`Sipariş teslim: ${parcaAd} ×${stokAdet} adet${stokEklendi?' (stoka eklendi)':''}`);
+  save();renderDash();renderStok();
+  showToast(`✅ Sipariş teslim alındı — ${parcaAd} ×${stokAdet} adet${stokEklendi?' stoka eklendi':''}`, 'success');
 }
+
+function siparisTeslimKaydet(){
+  const modal=document.getElementById('siparis-teslim-modal');
+  if(!modal)return;
+  const ids=JSON.parse(modal.dataset.ids||'[]');
+  const stokAdet=parseInt(document.getElementById('st-adet').value)||0;
+  if(stokAdet<1){showToast('Adet 0\'dan büyük olmalı!','error');return;}
+
+  // Grup bilgisini ids'den topla
+  let parcaAd='',arananKod='',kodTipi='OEM',siparisAdet=0;
+  ids.forEach(id=>{
+    const s=ST.siparisler.find(x=>String(x.id)===String(id));
+    if(!s)return;
+    parcaAd=s.parcaAd||parcaAd;
+    arananKod=s.arananKod||arananKod;
+    kodTipi=s.kodTipi||kodTipi;
+    siparisAdet+=(s.adet||1);
+  });
+
+  modal.classList.remove('open');
+  siparisOnayla(ids, stokAdet, parcaAd, arananKod, kodTipi, siparisAdet);
+}
+
 
 function onaylaServisGrup(idsStr){
   const ids=idsStr.split(',');
@@ -4149,7 +4236,7 @@ function renderDash(){
           </div>
           <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
             <span class="badge by">⏳ Sipariş Gerek</span>
-            <button class="btn btn-success btn-sm" onclick="siparisVerGrup(${JSON.stringify(g.ids)})" title="Sipariş Verildi">✓</button>
+            <button class="btn btn-success btn-sm" onclick="siparisVerGrup(${JSON.stringify(g.ids)})" title="Teslim Al & Stoka Ekle">📦 Teslim</button>
           </div>
         </div>`).join('');
     }

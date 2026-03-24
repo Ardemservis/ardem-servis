@@ -1548,6 +1548,11 @@ function openMod(id){
 function closeM(id){
   document.getElementById(id).classList.remove('open');
   if(id==='ep-modal'){epEkleButonuSifirla();}
+  if(id==='s-modal'){
+    const btn=document.querySelector('#s-modal .btn-primary');
+    if(btn){btn.textContent='💾 Kaydet';btn.onclick=saveS;}
+    document.querySelector('#s-modal .mtitle').textContent='🔧 Servis Planı';
+  }
   if(id==='p-modal'){
     // Düzenle modundan çıkınca butonu ve başlığı sıfırla
     const btn=document.getElementById('p-kaydet-btn');
@@ -2608,6 +2613,71 @@ function erteleServisGrup(idsStr){
   showToast(`Servisler ${fmtDate(iso)} tarihine alındı ✓`,'success');
 }
 
+function servisDuzenle(idsStr){
+  const ids=idsStr.split(',');
+  const ilk=ST.servisler.find(s=>String(s.id)===String(ids[0]));
+  if(!ilk){showToast('Servis bulunamadı','error');return;}
+
+  populateSels();
+
+  // Müşteriyi seç ve ekipmanları yükle
+  document.getElementById('s-musteri').value=ilk.musteriId;
+  loadSEkipman(ilk.musteriId);
+
+  // Grup'taki tüm ekipmanların checkbox'larını işaretle
+  setTimeout(()=>{
+    ids.forEach(id=>{
+      const s=ST.servisler.find(x=>String(x.id)===String(id));
+      if(!s||!s.ekipmanId)return;
+      const cb=document.querySelector(`.s-ek-cb[value="${s.ekipmanId}"]`);
+      if(cb){cb.checked=true;}
+    });
+    loadServisParçalar();
+  },50);
+
+  // Diğer alanları doldur
+  document.getElementById('s-tarih').value=ilk.tarih||'';
+  document.getElementById('s-periyot').value=ilk.periyot||'';
+  document.getElementById('s-tip').value=ilk.tip||'Periyodik Bakım';
+  document.getElementById('s-notlar').value=ilk.notlar||'';
+
+  // Modal başlığını ve kaydet butonunu güncelle
+  document.querySelector('#s-modal .mtitle').textContent='✏️ Servis Planı Düzenle';
+  const kaydetBtn=document.querySelector('#s-modal .btn-primary');
+  kaydetBtn.textContent='💾 Güncelle';
+  kaydetBtn.onclick=()=>servisGuncelle(ids);
+
+  document.getElementById('s-modal').classList.add('open');
+}
+
+function servisGuncelle(ids){
+  const tarih=document.getElementById('s-tarih').value;
+  if(!tarih){showToast('Tarih zorunludur!','error');return;}
+  const periyot=document.getElementById('s-periyot').value;
+  const tip=document.getElementById('s-tip').value;
+  const notlar=document.getElementById('s-notlar').value;
+
+  ids.forEach(id=>{
+    const s=ST.servisler.find(x=>String(x.id)===String(id));
+    if(!s)return;
+    s.tarih=tarih;
+    s.tip=tip;
+    s.periyot=periyot;
+    s.notlar=notlar;
+    s.durum=daysDiff(tarih)<0?'gecikti':s.durum==='onaylandi'?'onaylandi':'bekliyor';
+    if(periyot)s.sonrakiTarih=addMonths(tarih,periyot);
+  });
+
+  // Butonu sıfırla
+  const kaydetBtn=document.querySelector('#s-modal .btn-primary');
+  kaydetBtn.textContent='💾 Kaydet';
+  kaydetBtn.onclick=saveS;
+  document.querySelector('#s-modal .mtitle').textContent='🔧 Servis Planı';
+
+  save();closeM('s-modal');renderS();renderDash();
+  showToast('Servis planı güncellendi ✓','success');
+}
+
 function deleteServisGrup(idsStr){
   if(!confirm('Bu servis grubunu silmek istediğinizden emin misiniz?'))return;
   const ids=idsStr.split(',');
@@ -2656,6 +2726,7 @@ function renderS(){
         ${!hepsiTamamlandi&&hepsiOnaylandi?`<button class="btn btn-success btn-sm" onclick="tamamlaServisGrup('${ids}')">✅ Tamamla</button>`:''}
         ${!hepsiTamamlandi&&!hepsiOnaylandi?`<button class="btn btn-primary btn-sm" onclick="onaylaServisGrup('${ids}')" style="background:rgba(251,191,36,0.2);border:1px solid #fbbf24;color:#fbbf24">👍 Müşteri Onayı</button>`:''}
         ${!hepsiTamamlandi?`<button class="btn btn-ghost btn-sm" onclick="erteleServisGrup('${ids}')">📅 Ertele</button>`:''}
+        <button class="btn btn-ghost btn-sm" onclick="servisDuzenle('${ids}')">✏️</button>
         <button class="btn btn-danger btn-sm" onclick="deleteServisGrup('${ids}')">🗑️</button>
       </div></td>
     </tr>`;

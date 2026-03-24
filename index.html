@@ -3622,7 +3622,7 @@ function renderF(){
       <td><span class="badge bo">${f.tip}</span></td>
       <td>${durumHtml}</td>
       <td onclick="event.stopPropagation()"><div style="display:flex;gap:5px;flex-wrap:wrap">
-        ${isTeklif?`<button class="btn btn-ghost btn-sm" onclick="teklifDurumDegis('${f.id}')" title="Durumu Değiştir">🔄</button>`:''}
+        ${isTeklif?`<button class="btn btn-ghost btn-sm" onclick="teklifDurumDegis('${f.id}')" style="padding:5px 10px;font-size:12px">🔄 Durum</button>`:''}
         ${isTeklif?`<button class="btn btn-ghost btn-sm" onclick="teklifDuzenle('${f.id}')" title="Düzenle">✏️</button>`:''}
         ${isTeklif?`<button class="btn btn-primary btn-sm" onclick="teklifDocxIndir('${f.id}')" title="Word İndir">📄 Word</button>`:''}
         ${!isTeklif&&f.durum==='bekliyor'?`<button class="btn btn-success btn-sm" onclick="odendiFatura('${f.id}')">✅</button>`:''}

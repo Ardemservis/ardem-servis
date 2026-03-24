@@ -204,30 +204,24 @@ tr:hover td{background:rgba(255,255,255,0.015);}
 </head>
 <body>
 <!-- GİRİŞ EKRANI -->
-<div id="login-screen" style="position:fixed;inset:0;background:#0f1117;display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;">
+<div id="login-screen" style="position:fixed;inset:0;background:#0f1117;display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;">
   <div style="background:#161a24;border:1px solid #2a3045;border-radius:16px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
-    <div style="text-align:center;margin-bottom:28px;">
+    <div style="text-align:center;margin-bottom:32px;">
       <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#e85d1a,#b03d0d);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px;">🔧</div>
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#e8eaf0;">ARDEM ENDÜSTRİ</div>
       <div style="font-size:12px;color:#8892a4;margin-top:4px;">Servis Takip Sistemi</div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:13px;">
-      <div>
-        <label style="font-size:11px;font-weight:600;color:#8892a4;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:5px;">Kullanıcı Adı</label>
-        <input id="login-user" class="finput" placeholder="Kullanıcı adı" autocomplete="username" style="width:100%" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:600;color:#8892a4;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:5px;">Şifre</label>
-        <input id="login-pass" class="finput" type="password" placeholder="Şifre" autocomplete="current-password" style="width:100%" onkeydown="if(event.key==='Enter')doLogin()">
-      </div>
-      <div id="login-err" style="font-size:12px;color:#ef4444;display:none;text-align:center;">❌ Kullanıcı adı veya şifre hatalı!</div>
-      <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px;font-size:14px;" onclick="doLogin()">Giriş Yap →</button>
-    </div>
+    <div id="login-err" style="font-size:12px;color:#ef4444;display:none;text-align:center;margin-bottom:12px;padding:8px;background:rgba(239,68,68,0.1);border-radius:8px;">❌ Giriş başarısız. Lütfen tekrar deneyin.</div>
+    <button onclick="googleIleGiris()" style="width:100%;padding:12px;border-radius:10px;border:1px solid #2a3045;background:#fff;color:#1f1f1f;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.3)'" onmouseout="this.style.boxShadow='none'">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 29.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.1 19.2 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 16.3 2 9.7 7.4 6.3 14.7z"/><path fill="#FBBC05" d="M24 46c5.5 0 10.5-1.9 14.3-5l-6.6-5.4C29.6 37.3 26.9 38 24 38c-5.1 0-9.4-3.1-11.4-7.5l-7 5.4C9.5 43.1 16.3 46 24 46z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.3-2.3 4.3-4.3 5.7l6.6 5.4c3.8-3.6 6.4-8.9 6.4-15.6 0-1.3-.2-2.7-.5-4z"/></svg>
+      Google ile Giriş Yap
+    </button>
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:#4a5568;">Sadece yetkili Google hesabı giriş yapabilir</div>
   </div>
 </div>
 
 <!-- SPLASH / YÜKLENİYOR -->
-<div id="splash" style="position:fixed;inset:0;background:#0f1117;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9998;display:none">
+<div id="splash" style="position:fixed;inset:0;background:#0f1117;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9998">
   <div style="font-size:40px;margin-bottom:16px">🔧</div>
   <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#e8eaf0;margin-bottom:8px">ARDEM ENDÜSTRİ</div>
   <div style="font-size:13px;color:#8892a4;margin-bottom:24px">Servis Takip Sistemi</div>
@@ -859,72 +853,115 @@ function katEsles(x, kat){
   return false;
 }
 
-// ===== KULLANICI & GİRİŞ =====
-// Şifreler sadece burada — localStorage kullanılmıyor
-const USERS_DEFAULT={
-  admin:{sifre:'Thomisus1',rol:'admin'},
-  ardem:{sifre:'112233',rol:'kullanici'}
-};
+// ===== KULLANICI & GİRİŞ — Firebase Authentication =====
 let currentUser=null;
+let _fbAuth=null;
+let _googleProvider=null;
 
 const OTURUM_KEY='ardem_oturum';
-const OTURUM_SURE=30; // gün
 
-function oturumKaydet(u){
-  const vade=new Date();
-  vade.setDate(vade.getDate()+OTURUM_SURE);
-  localStorage.setItem(OTURUM_KEY,JSON.stringify({kullanici:u,vade:vade.toISOString()}));
-}
+// İzin verilen Google hesapları — sadece bu email giriş yapabilir
+const IZINLI_EMAILLER=['tolga@ardemendustri.com','ipek@ardemendustri.com'];
 
-function oturumKontrol(){
+async function authBaslat(){
   try{
-    const kayit=JSON.parse(localStorage.getItem(OTURUM_KEY)||'null');
-    if(!kayit)return null;
-    if(new Date(kayit.vade)<new Date()){
-      localStorage.removeItem(OTURUM_KEY);
-      return null;
+    const m1=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const m2=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    let app;
+    try{app=m1.getApp();}catch(e){
+      app=m1.initializeApp({
+        apiKey:'AIzaSyAwkBB0nIKsOemalVGtHZWfsNjvUZTLLcs',
+        authDomain:'ardem-servis.firebaseapp.com',
+        projectId:'ardem-servis',
+        storageBucket:'ardem-servis.firebasestorage.app',
+        messagingSenderId:'50518080446',
+        appId:'1:50518080446:web:edf217397d205b8d6c17ef'
+      });
     }
-    if(!USERS_DEFAULT[kayit.kullanici])return null;
-    return kayit.kullanici;
-  }catch(e){return null;}
-}
+    _fbAuth=m2.getAuth(app);
+    _googleProvider=new m2.GoogleAuthProvider();
+    _fbAuth.languageCode='tr';
 
-function oturumAc(u){
-  currentUser={ad:u,rol:USERS_DEFAULT[u].rol};
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('splash').style.display='flex';
-  const adminMenu=document.getElementById('admin-menu-item');
-  if(adminMenu)adminMenu.style.display=currentUser.rol==='admin'?'flex':'none';
-  document.querySelector('.u-name').textContent=u==='admin'?'Admin':'Ardem Kullanıcı';
-  initFirebase();
-}
+    // Kalıcı oturum — tarayıcı kapansa bile hatırla
+    await m2.setPersistence(_fbAuth, m2.browserLocalPersistence);
 
-function getPass(user){
-  return USERS_DEFAULT[user]?.sifre||'';
-}
-
-function doLogin(){
-  const u=document.getElementById('login-user').value.trim().toLowerCase();
-  const p=document.getElementById('login-pass').value;
-  const err=document.getElementById('login-err');
-  if(!USERS_DEFAULT[u]){err.style.display='block';return;}
-  if(getPass(u)!==p){err.style.display='block';return;}
-  err.style.display='none';
-  oturumKaydet(u);
-  oturumAc(u);
-}
-
-// Sayfa yüklenince otomatik oturum kontrolü
-(function(){
-  const u=oturumKontrol();
-  if(u){
-    // Kayıtlı oturum var — şifre sormadan aç
-    oturumAc(u);
-    // Vadeyi yenile (her girişte 30 gün uzat)
-    oturumKaydet(u);
+    // Oturum dinle
+    m2.onAuthStateChanged(_fbAuth, async (user)=>{
+      if(user){
+        // Email kontrolü
+        if(IZINLI_EMAILLER.length>0 && !IZINLI_EMAILLER.includes(user.email)){
+          await m2.signOut(_fbAuth);
+          document.getElementById('splash').style.display='none';
+          document.getElementById('login-screen').style.display='flex';
+          const err=document.getElementById('login-err');
+          if(err){err.textContent='❌ Bu hesabın erişim izni yok: '+user.email;err.style.display='block';}
+          return;
+        }
+        // Başarılı giriş
+        currentUser={ad:user.displayName||user.email, email:user.email, rol:'admin'};
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('splash').style.display='flex';
+        const adminMenu=document.getElementById('admin-menu-item');
+        if(adminMenu)adminMenu.style.display='flex';
+        document.querySelector('.u-name').textContent=user.displayName||user.email;
+        document.querySelector('.u-role').textContent=user.email;
+        initFirebase();
+      } else {
+        // Oturum yok — giriş ekranını göster
+        document.getElementById('splash').style.display='none';
+        document.getElementById('login-screen').style.display='flex';
+      }
+    });
+  }catch(e){
+    console.error('Auth başlatma hatası:',e);
+    // Hata olursa giriş ekranını göster
+    document.getElementById('splash').style.display='none';
+    document.getElementById('login-screen').style.display='flex';
   }
-  // Yoksa login ekranı zaten görünür (display:flex default)
-})();
+}
+
+async function googleIleGiris(){
+  const btn=document.querySelector('#login-screen button');
+  const err=document.getElementById('login-err');
+  if(btn){btn.disabled=true;btn.innerHTML='⏳ Giriş yapılıyor...';}
+  err.style.display='none';
+  try{
+    if(!_fbAuth||!_googleProvider){await authBaslat();await new Promise(r=>setTimeout(r,500));}
+    const m2=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    await m2.signInWithPopup(_fbAuth,_googleProvider);
+  }catch(e){
+    err.style.display='block';
+    if(e.code==='auth/popup-closed-by-user'){
+      err.textContent='Giriş penceresi kapatıldı. Tekrar deneyin.';
+    } else {
+      err.textContent='❌ Giriş hatası: '+e.message;
+    }
+    if(btn){btn.disabled=false;btn.innerHTML='<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 29.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.1 19.2 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 16.3 2 9.7 7.4 6.3 14.7z"/><path fill="#FBBC05" d="M24 46c5.5 0 10.5-1.9 14.3-5l-6.6-5.4C29.6 37.3 26.9 38 24 38c-5.1 0-9.4-3.1-11.4-7.5l-7 5.4C9.5 43.1 16.3 46 24 46z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.3-2.3 4.3-4.3 5.7l6.6 5.4c3.8-3.6 6.4-8.9 6.4-15.6 0-1.3-.2-2.7-.5-4z"/></svg> Google ile Giriş Yap';}
+  }
+}
+
+async function cikisYap(){
+  if(!confirm('Çıkış yapmak istediğinize emin misiniz?'))return;
+  try{
+    if(_fbAuth){
+      const m2=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+      await m2.signOut(_fbAuth);
+    }
+  }catch(e){}
+  localStorage.removeItem(OTURUM_KEY);
+  location.reload();
+}
+
+// Sayfa yüklenince auth başlat
+authBaslat();
+
+// Eski fonksiyonlar — artık kullanılmıyor ama referans hatası vermesin
+function doLogin(){}
+function oturumKaydet(){}
+function oturumKontrol(){return null;}
+function oturumAc(){}
+function getPass(){return '';}
+
 
 function savePw(){
   const u=document.getElementById('pw-user').value;

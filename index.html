@@ -377,7 +377,6 @@ tr:hover td{background:rgba(255,255,255,0.015);}
         <button onclick="fTipFiltre('tumu')" id="ff-tumu" class="btn btn-ghost btn-sm" style="border-color:var(--accent);color:var(--accent)">📋 Tümü</button>
         <button onclick="fTipFiltre('satis')" id="ff-satis" class="btn btn-ghost btn-sm">🛒 Satış Teklifleri</button>
         <button onclick="fTipFiltre('servis')" id="ff-servis" class="btn btn-ghost btn-sm">🔧 Servis Teklifleri</button>
-        <button onclick="fTipFiltre('diger')" id="ff-diger" class="btn btn-ghost btn-sm">🧾 Diğer</button>
       </div>
       <div class="card mb18">
         <div class="card-hd"><div class="card-title">💶 Finansal Özet</div><div id="f-ozet" style="font-size:12px;color:var(--text2)"></div></div>
@@ -618,11 +617,11 @@ tr:hover td{background:rgba(255,255,255,0.015);}
 <!-- MODAL: FATURA -->
 <div class="mo" id="f-modal">
   <div class="modal modal-lg">
-    <div class="mhd"><div class="mtitle">🧾 Teklif / Fatura</div><button class="mclose" onclick="closeM('f-modal')">✕</button></div>
+    <div class="mhd"><div class="mtitle">🧾 Yeni Teklif</div><button class="mclose" onclick="closeM('f-modal')">✕</button></div>
     <div class="mbody">
       <div class="fg fg2">
         <div class="fgrp"><label class="flbl">Müşteri *</label><select class="fsel" id="f-musteri" onchange="fMusteriDegis(this.value)"><option value="">Seçin...</option></select></div>
-        <div class="fgrp"><label class="flbl">Tip</label><select class="fsel" id="f-tip" onchange="fTipDegis()"><option>Teklif</option><option>Satış Teklifi</option><option>Fatura</option><option>İş Emri</option></select></div>
+        <div class="fgrp"><label class="flbl">Tip</label><select class="fsel" id="f-tip" onchange="fTipDegis()"><option value="Servis Teklifi">Servis Teklifi</option><option value="Satış Teklifi">Satış Teklifi</option></select></div>
         <div class="fgrp sp2" id="f-aciklama-wrap"><label class="flbl">Açıklama</label><input class="finput" id="f-aciklama" placeholder="Periyodik bakım hizmeti..."></div>
         <div class="fgrp" id="f-tutar-wrap"><label class="flbl">Toplam Tutar *</label><input class="finput" id="f-tutar" type="number" min="0" step="0.01" placeholder="0.00"></div>
         <div class="fgrp"><label class="flbl">Para Birimi</label>
@@ -3507,7 +3506,7 @@ function openFModal(){
 
 function fTipDegis(){
   const tip=document.getElementById('f-tip').value;
-  const isBakim=tip==='Teklif'||tip==='Servis Teklifi';
+  const isBakim=tip==='Servis Teklifi';
   const isSatis=tip==='Satış Teklifi';
   const isAny=isBakim||isSatis;
 
@@ -3762,7 +3761,7 @@ function saveF(){
   if(!musteriId||!tutar){showToast('Müşteri ve tutar zorunludur!','error');return;}
   const m=ST.musteriler.find(x=>x.id==musteriId);
   const tip=document.getElementById('f-tip').value;
-  const isTeklif=tip==='Teklif';
+  const isTeklif=tip==='Servis Teklifi';
   const isSatisTeklif=tip==='Satış Teklifi';
   const no=isTeklif?teklifNoOlustur():isSatisTeklif?satisTeklifNoOlustur():'F-'+String(ST.faturalar.length+1).padStart(4,'0');
   const paraBirimi=document.getElementById('f-para')?document.getElementById('f-para').value:'eur';
@@ -3837,14 +3836,14 @@ function renderF(){
     if(q&&!f.musteriAd.toLowerCase().includes(q)&&!(f.aciklama&&f.aciklama.toLowerCase().includes(q)))return false;
     // Tip filtresi
     if(fTipF==='satis') return f.tip==='Satış Teklifi';
-    if(fTipF==='servis') return f.tip==='Teklif'||f.tip==='Servis Teklifi';
+    if(fTipF==='servis') return f.tip==='Servis Teklifi';
     if(fTipF==='diger') return f.tip==='Fatura'||f.tip==='İş Emri';
     return true; // tumu
   }).sort((a,b)=>new Date(b.olusturma)-new Date(a.olusturma));
   const tbody=document.getElementById('f-tbody');
   if(!list.length){tbody.innerHTML=emptyRow(8,'🧾','Kayıt yok','Yeni teklif/fatura eklemek için butona tıklayın.');}
   else tbody.innerHTML=list.map(f=>{
-    const isTeklif=f.tip==='Teklif'||f.tip==='Servis Teklifi';
+    const isTeklif=f.tip==='Servis Teklifi';
     const isSatisTeklif=f.tip==='Satış Teklifi';
     const isTeklifTuru=isTeklif||isSatisTeklif;
     // Teklif durumu badge
@@ -3860,7 +3859,7 @@ function renderF(){
       durumHtml=durumBadge(f.durum);
     }
     // Tip etiketi — eski "Teklif" kayıtları "Servis Teklifi" olarak göster
-    const tipLabel=f.tip==='Teklif'?'Servis Teklifi':f.tip;
+    const tipLabel=f.tip==='Teklif'?'Servis Teklifi':f.tip||'Teklif';
     return`<tr style="cursor:pointer" onclick="teklifOnizle('${f.id}')">
       <td style="font-size:12px;font-weight:700;color:var(--accent)">${f.no}${f.servisIds&&f.servisIds.length?'<br><span style="font-size:10px;color:#60a5fa;font-weight:400">🔧 Servis bağlı</span>':''}</td>
       <td style="font-weight:500;font-size:13px">${f.musteriAd}</td>
@@ -3889,7 +3888,7 @@ function renderF(){
 function teklifOnizle(id){
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
   if(!f||f.tip!=='Teklif')return;
-  const tipLabel=f.tip==='Teklif'?'Servis Teklifi':f.tip;
+  const tipLabel=f.tip==='Teklif'?'Servis Teklifi':f.tip||'Teklif';
   const durumMap={hazirlandi:'📝 Hazırlandı',gonderildi:'📤 Gönderildi',onaylandi:'✅ Onaylandı',reddedildi:'❌ Reddedildi'};
   const para=f.paraBirimi==='tl'?'₺':'€';
   const tutar=f.paraBirimi==='tl'?'₺'+(f.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):fmtEur(f.tutar||0);
@@ -4061,7 +4060,7 @@ function teklifGuncelle(id){
 
 function teklifDurumDegis(id){
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
-  if(!f||(f.tip!=='Teklif'&&f.tip!=='Satış Teklifi'&&f.tip!=='Servis Teklifi'))return;
+  if(!f||(f.tip!=='Servis Teklifi'&&f.tip!=='Satış Teklifi'))return;
   const sirali=['hazirlandi','gonderildi','onaylandi','reddedildi'];
   const renkler={
     hazirlandi: {bg:'rgba(148,163,184,0.15)',border:'rgba(148,163,184,0.3)',renk:'#94a3b8'},

@@ -636,19 +636,32 @@ tr:hover td{background:rgba(255,255,255,0.015);}
 
         <!-- SATIŞ TEKLİFİ ÜRÜNLERİ -->
         <div id="f-satis-alanlari" style="display:none">
+          <!-- Önce bilgi alanları -->
+          <div class="sec-div">Teklif Bilgileri</div>
+          <div class="fg fg2" style="margin-bottom:8px">
+            <div class="fgrp"><label class="flbl">İlgili Kişi *</label><input class="finput" id="f-yetkili" placeholder="Müşteri yetkilisi"></div>
+            <div class="fgrp"><label class="flbl">Proje Adı</label><input class="finput" id="f-proje-adi" placeholder="Proje / referans adı"></div>
+            <div class="fgrp"><label class="flbl">Teslim Süresi</label><input class="finput" id="f-teslim-suresi" placeholder="4-6 Hafta" value="4-6 Hafta"></div>
+            <div class="fgrp"><label class="flbl">Ödeme Şartı</label><input class="finput" id="f-odeme-sarti" placeholder="Siparişte Peşin Ödeme" value="Siparişte Peşin Ödeme"></div>
+            <div class="fgrp"><label class="flbl">Teslim Yeri</label><input class="finput" id="f-teslim-yeri" placeholder="İzmir / Müşteri fabrikası"></div>
+            <div class="fgrp"><label class="flbl">Opsiyon (gün)</label><input class="finput" id="f-opsiyon" type="number" placeholder="30" value="30"></div>
+          </div>
+
+          <!-- Sonra ürünler -->
           <div class="sec-div">Ürünler</div>
-          <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;margin-bottom:6px;padding:0 4px">
-            <span style="font-size:11px;color:var(--text2);font-weight:600">ÜRÜN ADI</span>
-            <span style="font-size:11px;color:var(--text2);font-weight:600;text-align:center;width:60px">ADET</span>
-            <span style="font-size:11px;color:var(--text2);font-weight:600;text-align:right;width:110px">BİRİM FİYAT</span>
-            <span style="font-size:11px;color:var(--text2);font-weight:600;text-align:right;width:110px">TOPLAM</span>
+          <div style="display:grid;grid-template-columns:1fr 60px 110px 110px 28px;gap:6px;align-items:center;margin-bottom:6px;padding:0 4px">
+            <span style="font-size:11px;color:var(--text2);font-weight:600">ÜRÜN ADI / KOD</span>
+            <span style="font-size:11px;color:var(--text2);font-weight:600;text-align:center">ADET</span>
+            <span style="font-size:11px;color:var(--text2);font-weight:600;text-align:right">BİRİM FİYAT</span>
+            <span style="font-size:11px;color:var(--text2);font-weight:600;text-align:right">TOPLAM</span>
+            <span></span>
           </div>
           <div id="f-urun-listesi"></div>
           <button type="button" class="btn btn-ghost btn-sm" onclick="fUrunEkle()" style="margin:8px 0">＋ Ürün Ekle</button>
           
           <!-- Toplam -->
           <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:13px;color:var(--text2)">İskonto (%)</label>
                 <input class="finput" id="f-iskonto" type="number" min="0" max="100" placeholder="0" value="0" oninput="fSatisToplamHesapla()" style="width:70px;font-size:13px">
@@ -656,21 +669,10 @@ tr:hover td{background:rgba(255,255,255,0.015);}
               <div style="text-align:right">
                 <div style="font-size:12px;color:var(--text2)" id="f-ara-toplam-satir"></div>
                 <div style="font-size:12px;color:var(--text2)" id="f-iskonto-satir"></div>
-                <div style="font-size:16px;font-weight:800;color:var(--accent)" id="f-genel-toplam">€0,00</div>
+                <div style="font-size:18px;font-weight:800;color:var(--accent)" id="f-genel-toplam">€0,00</div>
                 <div style="font-size:11px;color:var(--text2)">KDV Hariç</div>
               </div>
             </div>
-          </div>
-
-          <!-- Ticari Şartlar -->
-          <div class="sec-div" style="margin-top:8px">Ticari Şartlar</div>
-          <div class="fg fg2">
-            <div class="fgrp"><label class="flbl">Proje Adı</label><input class="finput" id="f-proje-adi" placeholder="Proje / referans adı"></div>
-            <div class="fgrp"><label class="flbl">Yetkili Kişi</label><input class="finput" id="f-yetkili" placeholder="Müşteri yetkilisi"></div>
-            <div class="fgrp"><label class="flbl">Teslim Yeri</label><input class="finput" id="f-teslim-yeri" placeholder="İzmir / Müşteri fabrikası"></div>
-            <div class="fgrp"><label class="flbl">Teslim Süresi</label><input class="finput" id="f-teslim-suresi" placeholder="4-6 Hafta"></div>
-            <div class="fgrp"><label class="flbl">Ödeme Şartı</label><input class="finput" id="f-odeme-sarti" placeholder="Siparişte Peşin Ödeme" value="Siparişte Peşin Ödeme"></div>
-            <div class="fgrp"><label class="flbl">Opsiyon (gün)</label><input class="finput" id="f-opsiyon" type="number" placeholder="30" value="30"></div>
           </div>
         </div>
 
@@ -3535,8 +3537,7 @@ function renderFUrunler(){
         style="font-size:12px;text-align:center">
       <input class="finput" value="${u.birimFiyat||''}" type="number" min="0" step="0.01" placeholder="0.00"
         oninput="_fUrunler[${i}].birimFiyat=parseFloat(this.value)||0;fSatisToplamHesapla();renderFUrunler()"
-        style="font-size:12px;text-align:right">
-      <div style="font-size:12px;font-weight:600;text-align:right;padding:0 8px;color:var(--text1)">
+        style="font-size:12px;text-align:right">      <div style="font-size:12px;font-weight:600;text-align:right;padding:0 8px;color:var(--text1)">
         ${simge}${toplam.toLocaleString('tr-TR',{minimumFractionDigits:2})}
       </div>
       <button class="btn btn-danger btn-sm" onclick="_fUrunler.splice(${i},1);renderFUrunler();fSatisToplamHesapla()" 
@@ -3735,10 +3736,12 @@ function renderF(){
   const tbody=document.getElementById('f-tbody');
   if(!list.length){tbody.innerHTML=emptyRow(8,'🧾','Kayıt yok','Yeni teklif/fatura eklemek için butona tıklayın.');}
   else tbody.innerHTML=list.map(f=>{
-    const isTeklif=f.tip==='Teklif';
+    const isTeklif=f.tip==='Teklif'||f.tip==='Servis Teklifi';
+    const isSatisTeklif=f.tip==='Satış Teklifi';
+    const isTeklifTuru=isTeklif||isSatisTeklif;
     // Teklif durumu badge
     let durumHtml='';
-    if(isTeklif){
+    if(isTeklifTuru){
       const d=f.teklifDurum||'hazirlandi';
       const durumMap={hazirlandi:'<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(148,163,184,0.15);color:#94a3b8;font-weight:600">📝 Hazırlandı</span>',
         gonderildi:'<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(59,130,246,0.15);color:#60a5fa;font-weight:600">📤 Gönderildi</span>',
@@ -3748,19 +3751,21 @@ function renderF(){
     } else {
       durumHtml=durumBadge(f.durum);
     }
+    // Tip etiketi — eski "Teklif" kayıtları "Servis Teklifi" olarak göster
+    const tipLabel=f.tip==='Teklif'?'Servis Teklifi':f.tip;
     return`<tr style="cursor:pointer" onclick="teklifOnizle('${f.id}')">
       <td style="font-size:12px;font-weight:700;color:var(--accent)">${f.no}${f.servisIds&&f.servisIds.length?'<br><span style="font-size:10px;color:#60a5fa;font-weight:400">🔧 Servis bağlı</span>':''}</td>
       <td style="font-weight:500;font-size:13px">${f.musteriAd}</td>
       <td style="font-size:12px;color:var(--text2)">${f.aciklama||'—'}</td>
       <td style="font-weight:600">${f.paraBirimi==='tl'?'₺'+(f.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):fmtEur(f.tutar||0)}</td>
       <td style="font-size:12px">${fmtDate(f.tarih)}</td>
-      <td><span class="badge bo">${f.tip}</span></td>
+      <td><span class="badge bo">${tipLabel}</span></td>
       <td>${durumHtml}</td>
       <td onclick="event.stopPropagation()"><div style="display:flex;gap:5px;flex-wrap:wrap">
-        ${isTeklif?`<button class="btn btn-ghost btn-sm" onclick="teklifDurumDegis('${f.id}')" style="padding:5px 10px;font-size:12px">🔄 Durum</button>`:''}
-        ${isTeklif?`<button class="btn btn-ghost btn-sm" onclick="teklifDuzenle('${f.id}')" title="Düzenle">✏️</button>`:''}
-        ${isTeklif?`<button class="btn btn-primary btn-sm" onclick="teklifDocxIndir('${f.id}')" title="Word İndir">📄 Word</button>`:''}
-        ${!isTeklif&&f.durum==='bekliyor'?`<button class="btn btn-success btn-sm" onclick="odendiFatura('${f.id}')">✅</button>`:''}
+        ${isTeklifTuru?`<button class="btn btn-ghost btn-sm" onclick="teklifDurumDegis('${f.id}')" style="padding:5px 10px;font-size:12px">🔄 Durum</button>`:''}
+        ${isTeklifTuru?`<button class="btn btn-ghost btn-sm" onclick="teklifDuzenle('${f.id}')" title="Düzenle">✏️</button>`:''}
+        ${isTeklifTuru?`<button class="btn btn-primary btn-sm" onclick="teklifDocxIndir('${f.id}')" title="Word İndir">📄 Word</button>`:''}
+        ${!isTeklifTuru&&f.durum==='bekliyor'?`<button class="btn btn-success btn-sm" onclick="odendiFatura('${f.id}')">✅</button>`:''}
         <button class="btn btn-danger btn-sm" onclick="deleteFatura('${f.id}')">🗑️</button>
       </div></td>
     </tr>`;
@@ -3776,6 +3781,7 @@ function renderF(){
 function teklifOnizle(id){
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
   if(!f||f.tip!=='Teklif')return;
+  const tipLabel=f.tip==='Teklif'?'Servis Teklifi':f.tip;
   const durumMap={hazirlandi:'📝 Hazırlandı',gonderildi:'📤 Gönderildi',onaylandi:'✅ Onaylandı',reddedildi:'❌ Reddedildi'};
   const para=f.paraBirimi==='tl'?'₺':'€';
   const tutar=f.paraBirimi==='tl'?'₺'+(f.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):fmtEur(f.tutar||0);
@@ -3947,7 +3953,7 @@ function teklifGuncelle(id){
 
 function teklifDurumDegis(id){
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
-  if(!f)return;
+  if(!f||(f.tip!=='Teklif'&&f.tip!=='Satış Teklifi'&&f.tip!=='Servis Teklifi'))return;
   const sirali=['hazirlandi','gonderildi','onaylandi','reddedildi'];
   const renkler={
     hazirlandi: {bg:'rgba(148,163,184,0.15)',border:'rgba(148,163,184,0.3)',renk:'#94a3b8'},

@@ -3566,19 +3566,19 @@ function renderFUrunler(){
         <div>
           <div style="font-size:10px;color:var(--text2);margin-bottom:2px">ADET</div>
           <input class="finput" value="${u.adet}" type="number" min="1"
-            oninput="_fUrunler[${i}].adet=parseFloat(this.value)||0;fSatisToplamHesapla();renderFUrunler()"
+            oninput="_fUrunler[${i}].adet=parseFloat(this.value)||0;fSatisToplamHesapla()" onchange="renderFUrunler()"
             style="font-size:12px;text-align:center;-moz-appearance:textfield;appearance:textfield">
         </div>
         <div>
           <div style="font-size:10px;color:var(--text2);margin-bottom:2px">ALIŞ (${simge})</div>
           <input class="finput" value="${u.alisFiyat||''}" type="number" min="0" step="0.01" placeholder="0.00"
-            oninput="_fUrunler[${i}].alisFiyat=parseFloat(this.value)||0;fSatisToplamHesapla();renderFUrunler()"
+            oninput="_fUrunler[${i}].alisFiyat=parseFloat(this.value)||0;fSatisToplamHesapla()" onchange="renderFUrunler()"
             style="font-size:12px;text-align:right;-moz-appearance:textfield;appearance:textfield">
         </div>
         <div>
           <div style="font-size:10px;color:var(--text2);margin-bottom:2px">SATIŞ (${simge})</div>
           <input class="finput" value="${u.birimFiyat||''}" type="number" min="0" step="0.01" placeholder="0.00"
-            oninput="_fUrunler[${i}].birimFiyat=parseFloat(this.value)||0;fSatisToplamHesapla();renderFUrunler()"
+            oninput="_fUrunler[${i}].birimFiyat=parseFloat(this.value)||0;fSatisToplamHesapla()" onchange="renderFUrunler()"
             style="font-size:12px;text-align:right;-moz-appearance:textfield;appearance:textfield">
         </div>
         <div style="text-align:right">

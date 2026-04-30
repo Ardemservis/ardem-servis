@@ -199,6 +199,9 @@ tr:hover td{background:rgba(255,255,255,0.015);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 @media(max-width:900px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.main{margin-left:0;}.menu-btn{display:flex;}.stats-row{grid-template-columns:1fr 1fr;}.grid2,.grid3{grid-template-columns:1fr;}.fg2,.fg3,.ek-add-grid{grid-template-columns:1fr;}}
 @media(max-width:560px){.stats-row{grid-template-columns:1fr;}.content{padding:14px;}.topbar{padding:0 14px;}}
+#f-urun-listesi input[type=number]::-webkit-inner-spin-button,
+#f-urun-listesi input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#f-urun-listesi input[type=number]{-moz-appearance:textfield;appearance:textfield}
 </style>
 <script src="docx.min.js"></script>
 </head>
@@ -249,7 +252,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
     <div class="nav-item" onclick="goPage('musteriler',this)"><span class="nav-icon">🏭</span>Müşteriler <span class="nav-badge nb-blue" id="bdg-m">0</span></div>
     <div class="nav-item" onclick="goPage('servisler',this)"><span class="nav-icon">🔧</span>Servis Planları <span class="nav-badge" id="bdg-s">0</span></div>
     <div class="nav-item" onclick="goPage('stok',this)"><span class="nav-icon">📦</span>Yedek Parça Stok <span class="nav-badge nb-red" id="bdg-stok">0</span></div>
-    <div class="nav-item" onclick="goPage('faturalar',this)"><span class="nav-icon">🧾</span>Teklifler / Faturalar <span class="nav-badge nb-green" id="bdg-f">0</span></div>
+    <div class="nav-item" onclick="goPage('faturalar',this)"><span class="nav-icon">🧾</span>Teklifler <span class="nav-badge nb-green" id="bdg-f">0</span></div>
     <div class="nav-item" onclick="goPage('gecmis',this)"><span class="nav-icon">📋</span>Servis Geçmişi</div>
     <div class="nav-item" onclick="goPage('odemeler',this)"><span class="nav-icon">💰</span>Ödemeler <span class="nav-badge nb-red" id="bdg-odeme">0</span></div>
   </nav>
@@ -366,8 +369,15 @@ tr:hover td{background:rgba(255,255,255,0.015);}
     <!-- FATURALAR -->
     <div class="page" id="page-faturalar">
       <div class="search-bar">
-        <div class="si-wrap"><span class="si-icon">🔍</span><input type="text" placeholder="Teklif/Fatura ara..." oninput="fSearch=this.value;renderF()"></div>
-        <button class="btn btn-primary" onclick="openFModal()">＋ Yeni Teklif/Fatura</button>
+        <div class="si-wrap"><span class="si-icon">🔍</span><input type="text" placeholder="Teklif ara..." oninput="fSearch=this.value;renderF()"></div>
+        <button class="btn btn-primary" onclick="openFModal()">＋ Yeni Teklif</button>
+      </div>
+      <!-- Tip filtre sekmeleri -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button onclick="fTipFiltre('tumu')" id="ff-tumu" class="btn btn-ghost btn-sm" style="border-color:var(--accent);color:var(--accent)">📋 Tümü</button>
+        <button onclick="fTipFiltre('satis')" id="ff-satis" class="btn btn-ghost btn-sm">🛒 Satış Teklifleri</button>
+        <button onclick="fTipFiltre('servis')" id="ff-servis" class="btn btn-ghost btn-sm">🔧 Servis Teklifleri</button>
+        <button onclick="fTipFiltre('diger')" id="ff-diger" class="btn btn-ghost btn-sm">🧾 Diğer</button>
       </div>
       <div class="card mb18">
         <div class="card-hd"><div class="card-title">💶 Finansal Özet</div><div id="f-ozet" style="font-size:12px;color:var(--text2)"></div></div>
@@ -613,14 +623,14 @@ tr:hover td{background:rgba(255,255,255,0.015);}
       <div class="fg fg2">
         <div class="fgrp"><label class="flbl">Müşteri *</label><select class="fsel" id="f-musteri" onchange="fMusteriDegis(this.value)"><option value="">Seçin...</option></select></div>
         <div class="fgrp"><label class="flbl">Tip</label><select class="fsel" id="f-tip" onchange="fTipDegis()"><option>Teklif</option><option>Satış Teklifi</option><option>Fatura</option><option>İş Emri</option></select></div>
-        <div class="fgrp sp2"><label class="flbl">Açıklama</label><input class="finput" id="f-aciklama" placeholder="Periyodik bakım hizmeti..."></div>
-        <div class="fgrp"><label class="flbl">Toplam Tutar *</label><input class="finput" id="f-tutar" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="fgrp sp2" id="f-aciklama-wrap"><label class="flbl">Açıklama</label><input class="finput" id="f-aciklama" placeholder="Periyodik bakım hizmeti..."></div>
+        <div class="fgrp" id="f-tutar-wrap"><label class="flbl">Toplam Tutar *</label><input class="finput" id="f-tutar" type="number" min="0" step="0.01" placeholder="0.00"></div>
         <div class="fgrp"><label class="flbl">Para Birimi</label>
-          <select class="fsel" id="f-para"><option value="eur">€ Euro</option><option value="tl">₺ TL</option></select>
+          <select class="fsel" id="f-para"><option value="eur">€ Euro</option><option value="usd">$ Dolar</option><option value="tl">₺ TL</option></select>
         </div>
         <div class="fgrp"><label class="flbl">Tarih</label><input class="finput" id="f-tarih" type="date"></div>
-        <div class="fgrp"><label class="flbl">Vade (gün)</label><input class="finput" id="f-vade-gun" type="number" min="0" placeholder="45" value="45"></div>
-        <div class="fgrp"><label class="flbl">Durum</label><select class="fsel" id="f-durum"><option value="bekliyor">Bekliyor</option><option value="odendi">Ödendi</option><option value="iptal">İptal</option></select></div>
+        <div class="fgrp" id="f-vade-wrap"><label class="flbl">Vade (gün)</label><input class="finput" id="f-vade-gun" type="number" min="0" placeholder="45" value="45"></div>
+        <div class="fgrp" id="f-durum-wrap"><label class="flbl">Durum</label><select class="fsel" id="f-durum"><option value="bekliyor">Bekliyor</option><option value="odendi">Ödendi</option><option value="iptal">İptal</option></select></div>
       </div>
 
       <!-- Teklif alanları -->
@@ -673,6 +683,8 @@ tr:hover td{background:rgba(255,255,255,0.015);}
                 <div style="font-size:11px;color:var(--text2)">KDV Hariç</div>
               </div>
             </div>
+            <!-- Kâr özeti — sadece alış fiyatı girilmişse görünür -->
+            <div id="f-kar-satir" style="display:none;margin-top:10px;padding:8px 12px;background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:8px;font-size:12px;justify-content:space-between;align-items:center"></div>
           </div>
         </div>
 
@@ -1334,7 +1346,7 @@ let ST={musteriler:[],servisler:[],parcalar:[],faturalar:[],gecmis:[],aktivitele
 // Öğrenilen OEM→muadil eşleşmeleri (Firebase'e ayrıca kaydedilir)
 let OGRENILEN={}; // {orijinalKod: {muadil, muadil2, ad, fiyat, para, kayit}}
 let MUADIL_OGRENILEN={}; // {muadilKod: {ad, fiyat, tip, kayit}}
-let editId=null,curPage='dashboard',sDurumF='',sSearch='',mSearch='',pSearch='',fSearch='',stokTab='kompressor';
+let editId=null,curPage='dashboard',sDurumF='',sSearch='',mSearch='',pSearch='',fSearch='',fTipF='tumu',stokTab='kompressor';
 let tempEk=[]; // geçici ekipman listesi
 let epEkipmanId=null; // şu an düzenlenen ekipman id
 
@@ -1648,7 +1660,7 @@ function goPage(p,el){
   document.getElementById('page-'+p).classList.add('active');
   if(el)el.classList.add('active');
   curPage=p;
-  const T={dashboard:'Gösterge Paneli',musteriler:'Müşteriler',servisler:'Servis Planları',stok:'Yedek Parça Stok',faturalar:'Teklifler / Faturalar',gecmis:'Servis Geçmişi'};
+  const T={dashboard:'Gösterge Paneli',musteriler:'Müşteriler',servisler:'Servis Planları',stok:'Yedek Parça Stok',faturalar:'Teklifler',gecmis:'Servis Geçmişi'};
   document.getElementById('pageTitle').textContent=T[p]||p;
   closeSidebar();
   ({dashboard:renderDash,musteriler:renderM,servisler:renderS,stok:renderStok,faturalar:renderF,gecmis:renderG,odemeler:renderOdemeler}[p]||function(){})();
@@ -3495,7 +3507,7 @@ function openFModal(){
 
 function fTipDegis(){
   const tip=document.getElementById('f-tip').value;
-  const isBakim=tip==='Teklif';
+  const isBakim=tip==='Teklif'||tip==='Servis Teklifi';
   const isSatis=tip==='Satış Teklifi';
   const isAny=isBakim||isSatis;
 
@@ -3507,14 +3519,24 @@ function fTipDegis(){
   document.getElementById('f-satis-alanlari').style.display=isSatis?'':'none';
   document.getElementById('f-gecerlilik-alani').style.display=isBakim?'':'none';
 
+  // Satış teklifinde gereksiz alanları gizle
+  const gizliAlanlar=['f-aciklama-wrap','f-vade-wrap','f-durum-wrap'];
+  gizliAlanlar.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.style.display=isSatis?'none':'';
+  });
+  // Toplam tutar satışta otomatik hesaplanıyor, sadece görüntüle
+  const tutarWrap=document.getElementById('f-tutar-wrap');
+  if(tutarWrap)tutarWrap.style.display=isSatis?'none':'';
+
   if(isSatis && !_fUrunler.length) fUrunEkle();
 }
 
 // ── SATIŞ TEKLİFİ ÜRÜN SİSTEMİ ──────────────────────────────────────────
-let _fUrunler=[]; // [{uid, ad, adet, birimFiyat}]
+let _fUrunler=[]; // [{uid, ad, adet, alisFiyat, birimFiyat}]
 
 function fUrunEkle(){
-  _fUrunler.push({uid:'u_'+Date.now(),ad:'',adet:1,birimFiyat:0});
+  _fUrunler.push({uid:'u_'+Date.now(),ad:'',adet:1,alisFiyat:0,birimFiyat:0});
   renderFUrunler();
 }
 
@@ -3525,23 +3547,55 @@ function renderFUrunler(){
     cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">Ürün eklemek için butona tıklayın.</div>';
     return;
   }
+  const para=document.getElementById('f-para')?.value||'eur';
+  const simge=para==='tl'?'₺':para==='usd'?'$':'€';
+
   cont.innerHTML=_fUrunler.map((u,i)=>{
-    const toplam=(u.adet||0)*(u.birimFiyat||0);
-    const para=document.getElementById('f-para')?.value||'eur';
-    const simge=para==='tl'?'₺':'€';
-    return`<div style="display:grid;grid-template-columns:1fr 60px 110px 110px 28px;gap:6px;align-items:center;margin-bottom:6px">
-      <input class="finput" value="${u.ad}" placeholder="Ürün adı / kod" 
-        oninput="_fUrunler[${i}].ad=this.value" style="font-size:12px">
-      <input class="finput" value="${u.adet}" type="number" min="1" 
-        oninput="_fUrunler[${i}].adet=parseFloat(this.value)||0;fSatisToplamHesapla();renderFUrunler()" 
-        style="font-size:12px;text-align:center">
-      <input class="finput" value="${u.birimFiyat||''}" type="number" min="0" step="0.01" placeholder="0.00"
-        oninput="_fUrunler[${i}].birimFiyat=parseFloat(this.value)||0;fSatisToplamHesapla();renderFUrunler()"
-        style="font-size:12px;text-align:right">      <div style="font-size:12px;font-weight:600;text-align:right;padding:0 8px;color:var(--text1)">
-        ${simge}${toplam.toLocaleString('tr-TR',{minimumFractionDigits:2})}
+    const satisToplam=(u.adet||0)*(u.birimFiyat||0);
+    const alisToplam=(u.adet||0)*(u.alisFiyat||0);
+    const kar=satisToplam-alisToplam;
+    const karPct=alisToplam>0?((kar/alisToplam)*100).toFixed(1):null;
+    const karRenk=kar>0?'#4ade80':kar<0?'#f87171':'var(--text2)';
+
+    return`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px">
+      <!-- Satır 1: Ürün adı -->
+      <input class="finput" value="${u.ad}" placeholder="Ürün adı / kod"
+        oninput="_fUrunler[${i}].ad=this.value" style="font-size:12px;margin-bottom:6px;width:100%">
+      <!-- Satır 2: Adet | Alış | Satış | Toplam | Sil -->
+      <div style="display:grid;grid-template-columns:55px 1fr 1fr 1fr 28px;gap:6px;align-items:center">
+        <div>
+          <div style="font-size:10px;color:var(--text2);margin-bottom:2px">ADET</div>
+          <input class="finput" value="${u.adet}" type="number" min="1"
+            oninput="_fUrunler[${i}].adet=parseFloat(this.value)||0;fSatisToplamHesapla();renderFUrunler()"
+            style="font-size:12px;text-align:center;-moz-appearance:textfield;appearance:textfield">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text2);margin-bottom:2px">ALIŞ (${simge})</div>
+          <input class="finput" value="${u.alisFiyat||''}" type="number" min="0" step="0.01" placeholder="0.00"
+            oninput="_fUrunler[${i}].alisFiyat=parseFloat(this.value)||0;fSatisToplamHesapla();renderFUrunler()"
+            style="font-size:12px;text-align:right;-moz-appearance:textfield;appearance:textfield">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text2);margin-bottom:2px">SATIŞ (${simge})</div>
+          <input class="finput" value="${u.birimFiyat||''}" type="number" min="0" step="0.01" placeholder="0.00"
+            oninput="_fUrunler[${i}].birimFiyat=parseFloat(this.value)||0;fSatisToplamHesapla();renderFUrunler()"
+            style="font-size:12px;text-align:right;-moz-appearance:textfield;appearance:textfield">
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:2px">TOPLAM</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text1);padding:7px 0">
+            ${simge}${satisToplam.toLocaleString('tr-TR',{minimumFractionDigits:2})}
+          </div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="_fUrunler.splice(${i},1);renderFUrunler();fSatisToplamHesapla()"
+          style="padding:4px 6px;margin-top:16px">🗑️</button>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="_fUrunler.splice(${i},1);renderFUrunler();fSatisToplamHesapla()" 
-        style="padding:4px 6px">🗑️</button>
+      <!-- Satır 3: Kar göstergesi (sadece alış girilmişse) -->
+      ${u.alisFiyat>0?`<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:12px;font-size:11px">
+        <span style="color:var(--text2)">Alış Toplamı: ${simge}${alisToplam.toLocaleString('tr-TR',{minimumFractionDigits:2})}</span>
+        <span style="font-weight:700;color:${karRenk}">Kâr: ${simge}${kar.toLocaleString('tr-TR',{minimumFractionDigits:2})}${karPct?` (%${karPct})`:''}
+        </span>
+      </div>`:''}
     </div>`;
   }).join('');
   fSatisToplamHesapla();
@@ -3549,28 +3603,57 @@ function renderFUrunler(){
 
 function fSatisToplamHesapla(){
   const para=document.getElementById('f-para')?.value||'eur';
-  const simge=para==='tl'?'₺':'€';
+  const simge=para==='tl'?'₺':para==='usd'?'$':'€';
   const araToplam=_fUrunler.reduce((a,u)=>a+(u.adet||0)*(u.birimFiyat||0),0);
+  const toplamAlis=_fUrunler.reduce((a,u)=>a+(u.adet||0)*(u.alisFiyat||0),0);
   const iskonto=parseFloat(document.getElementById('f-iskonto')?.value)||0;
   const iskontoTutar=araToplam*iskonto/100;
   const genelToplam=araToplam-iskontoTutar;
+  const toplamKar=genelToplam-toplamAlis;
+  const karPct=toplamAlis>0?((toplamKar/toplamAlis)*100).toFixed(1):null;
 
   const at=document.getElementById('f-ara-toplam-satir');
   const is=document.getElementById('f-iskonto-satir');
   const gt=document.getElementById('f-genel-toplam');
   const tf=document.getElementById('f-tutar');
+  const kt=document.getElementById('f-kar-satir');
 
   if(at)at.textContent=iskonto>0?`Ara Toplam: ${simge}${araToplam.toLocaleString('tr-TR',{minimumFractionDigits:2})}`:'';
   if(is)is.textContent=iskonto>0?`İskonto (%${iskonto}): -${simge}${iskontoTutar.toLocaleString('tr-TR',{minimumFractionDigits:2})}`:'';
   if(gt)gt.textContent=`${simge}${genelToplam.toLocaleString('tr-TR',{minimumFractionDigits:2})}`;
   if(tf)tf.value=genelToplam.toFixed(2);
+  // Kâr özeti
+  if(kt&&toplamAlis>0){
+    const karRenk=toplamKar>0?'#4ade80':'#f87171';
+    kt.innerHTML=`<span style="color:var(--text2)">Toplam Alış: ${simge}${toplamAlis.toLocaleString('tr-TR',{minimumFractionDigits:2})}</span>
+      <span style="font-weight:700;color:${karRenk};margin-left:12px">Toplam Kâr: ${simge}${toplamKar.toLocaleString('tr-TR',{minimumFractionDigits:2})}${karPct?` (%${karPct})`:''}</span>`;
+    kt.style.display='flex';
+  } else if(kt){kt.style.display='none';}
+}
+
+// Kullanıcı bilgileri — email'e göre
+const KULLANICI_BILGILERI={
+  'tolga@ardemendustri.com':{
+    prefix:'TB', ad:'Tolga BAYDERE',
+    tel:'0532 367 68 86', mail:'tolga@ardemendustri.com'
+  },
+  'ipek@ardemendustri.com':{
+    prefix:'IK', ad:'İpek KAPLAN',
+    tel:'0530 257 79 56', mail:'ipek@ardemendustri.com'
+  },
+};
+
+function mevcutKullanici(){
+  const email=currentUser?.email||'';
+  return KULLANICI_BILGILERI[email]||{prefix:'TB',ad:'Tolga BAYDERE',tel:'0532 367 68 86',mail:'tolga@ardemendustri.com'};
 }
 
 function satisTeklifNoOlustur(){
   const yil=new Date().getFullYear();
-  const teklifler=ST.faturalar.filter(f=>f.tip==='Satış Teklifi'&&f.no&&f.no.startsWith('TB-'+yil));
+  const prefix=mevcutKullanici().prefix;
+  const teklifler=ST.faturalar.filter(f=>f.tip==='Satış Teklifi'&&f.no&&f.no.startsWith(prefix+'-'+yil));
   const sonNo=teklifler.reduce((max,f)=>{const n=parseInt((f.no.split('-')[2])||0);return n>max?n:max;},0);
-  return `TB-${yil}-${String(sonNo+1).padStart(6,'0')}`;
+  return `${prefix}-${yil}-${String(sonNo+1).padStart(6,'0')}`;
 }
 
 
@@ -3582,6 +3665,9 @@ function fMusteriDegis(musteriId){
       _fMakineler.push({uid:'m_'+e.id,ekId:e.id,ad:(e.marka?e.marka+' ':'')+e.tip+(e.model?' '+e.model:''),seriNo:e.seri||e.seriNo||'',bakimPlani:'B BAKIM',fiyat:0,secili:false,parcalar:[]});
     });
   }
+  // Yetkili kişiyi otomatik doldur
+  const yetkiliEl=document.getElementById('f-yetkili');
+  if(yetkiliEl&&m&&m.yetkili)yetkiliEl.value=m.yetkili;
   renderFMakineler();
   renderFParcaBolumu();
 }
@@ -3697,7 +3783,7 @@ function saveF(){
     teklifMakineler:isTeklif?seciliMakineler:undefined,
     teklifParcalar:isTeklif?teklifParcalar:undefined,
     // Satış teklifi alanları
-    satisUrunler:isSatisTeklif?[..._fUrunler]:undefined,
+    satisUrunler:isSatisTeklif?_fUrunler.map(u=>({uid:u.uid,ad:u.ad,adet:u.adet,alisFiyat:u.alisFiyat||0,birimFiyat:u.birimFiyat})):undefined,
     projeAdi:isSatisTeklif?document.getElementById('f-proje-adi')?.value||'':undefined,
     yetkiliKisi:isSatisTeklif?document.getElementById('f-yetkili')?.value||'':undefined,
     teslimYeri:isSatisTeklif?document.getElementById('f-teslim-yeri')?.value||'':undefined,
@@ -3705,6 +3791,7 @@ function saveF(){
     odemeSarti:isSatisTeklif?document.getElementById('f-odeme-sarti')?.value||'':undefined,
     opsiyon:isSatisTeklif?document.getElementById('f-opsiyon')?.value||'30':undefined,
     iskonto:isSatisTeklif?parseFloat(document.getElementById('f-iskonto')?.value)||0:undefined,
+    olusturanKullanici:isSatisTeklif?mevcutKullanici():undefined,
     vadeGun:parseInt(document.getElementById('f-vade-gun')?.value)||45,
     gecerlilikBaslangic:document.getElementById('f-gec-bas')?.value||'',
     gecerlilikBitis:document.getElementById('f-gec-bit')?.value||'',
@@ -3730,9 +3817,30 @@ function deleteFatura(id){
   save();renderF();updateBadges();showToast('Kayıt silindi','info');
 }
 
+function fTipFiltre(tip){
+  fTipF=tip;
+  // Sekme stillerini güncelle
+  ['tumu','satis','servis','diger'].forEach(t=>{
+    const btn=document.getElementById('ff-'+t);
+    if(!btn)return;
+    btn.style.borderColor=t===tip?'var(--accent)':'var(--border)';
+    btn.style.color=t===tip?'var(--accent)':'var(--text2)';
+    btn.style.background=t===tip?'rgba(232,93,26,0.1)':'';
+  });
+  renderF();
+}
+
 function renderF(){
   const q=fSearch.toLowerCase();
-  const list=ST.faturalar.filter(f=>!q||f.musteriAd.toLowerCase().includes(q)||(f.aciklama&&f.aciklama.toLowerCase().includes(q))).sort((a,b)=>new Date(b.olusturma)-new Date(a.olusturma));
+  let list=ST.faturalar.filter(f=>{
+    // Metin filtresi
+    if(q&&!f.musteriAd.toLowerCase().includes(q)&&!(f.aciklama&&f.aciklama.toLowerCase().includes(q)))return false;
+    // Tip filtresi
+    if(fTipF==='satis') return f.tip==='Satış Teklifi';
+    if(fTipF==='servis') return f.tip==='Teklif'||f.tip==='Servis Teklifi';
+    if(fTipF==='diger') return f.tip==='Fatura'||f.tip==='İş Emri';
+    return true; // tumu
+  }).sort((a,b)=>new Date(b.olusturma)-new Date(a.olusturma));
   const tbody=document.getElementById('f-tbody');
   if(!list.length){tbody.innerHTML=emptyRow(8,'🧾','Kayıt yok','Yeni teklif/fatura eklemek için butona tıklayın.');}
   else tbody.innerHTML=list.map(f=>{
@@ -4016,6 +4124,9 @@ async function teklifDocxIndir(id){
     const tarihStr=f.tarih?f.tarih.split('-').reverse().join('.'):'';
     if(f.tip==='Satış Teklifi'){
       // Satış teklifi formatı
+      const kullanici=f.olusturanKullanici||mevcutKullanici();
+      const paraSembol=f.paraBirimi==='tl'?'₺':f.paraBirimi==='usd'?'$':'€';
+      const paraKod=f.paraBirimi==='tl'?'TL':f.paraBirimi==='usd'?'USD':'EUR';
       const teklif={
         no:f.no, tarih:tarihStr,
         musteriAd:f.musteriAd||'',
@@ -4028,11 +4139,13 @@ async function teklifDocxIndir(id){
         })),
         iskonto:f.iskonto||0,
         toplamFiyat:f.tutar||0,
-        paraBirimi:f.paraBirimi==='tl'?'TL':'EUR',
+        paraBirimi:paraKod,
+        paraSembol:paraSembol,
         teslimYeri:f.teslimYeri||'',
         teslimSuresi:f.teslimSuresi||'4-6 Hafta',
         odemeSarti:f.odemeSarti||'Siparişte Peşin Ödeme',
         opsiyon:f.opsiyon||'30',
+        kullanici:kullanici,
       };
       const blob=await olusturSatisTeklifDocx(teklif);
       const url=URL.createObjectURL(blob);
@@ -4091,16 +4204,17 @@ async function olusturSatisTeklifDocx(teklif){
   const LOGO_B64='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';
   const logoBytes=Uint8Array.from(atob(LOGO_B64),c=>c.charCodeAt(0));
 
-  const para=teklif.paraBirimi==='TL'?'₺':'€';
+  const para=teklif.paraSembol||'€';
+  const paraKod=teklif.paraBirimi||'EUR';
   const fmtPara=(n)=>`${para}${Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2})}`;
+  const kullanici=teklif.kullanici||{ad:'Tolga BAYDERE',tel:'0532 367 68 86',mail:'tolga@ardemendustri.com'};
 
   // Ürün tablosu satırları
   const urunRows=[
     new TableRow({tableHeader:true,children:[
       hcell('SIRA NO',700),hcell('ÜRÜN ADI',5460),hcell('ADET',700),
       hcell(`BİRİM FİYAT (${para}/Adet)`,1300),hcell(`TOPLAM FİYAT (${para})`,1200),
-    ]}),
-    ...(teklif.urunler||[]).map((u,i)=>new TableRow({children:[
+    ]}),    ...(teklif.urunler||[]).map((u,i)=>new TableRow({children:[
       cell([T(String(u.sira),18)],700,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
       cell([T(u.ad||'',18)],5460,i%2?GRI_BG:BEYAZ),
       cell([T(String(u.adet||1),18)],700,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
@@ -4200,9 +4314,9 @@ async function olusturSatisTeklifDocx(teklif){
         }),
         P([],AlignmentType.LEFT,320,0),
         P([T('Teklifimizin tarafınızca olumlu bulunacağını umuyor, değerli geri dönüşlerinizi bekliyoruz.',18)],AlignmentType.LEFT,0,160),
-        P([T('Tolga BAYDERE',20,KOYU,true)]),
-        P([T('Tel : 0532 367 68 86',18)]),
-        P([T('Mail: tolga@ardemendustri.com',18)]),
+        P([T(kullanici.ad,20,KOYU,true)]),
+        P([T('Tel : '+kullanici.tel,18)]),
+        P([T('Mail: '+kullanici.mail,18)]),
         P([],AlignmentType.LEFT,400,0),
         // ── Sayfa 3: Genel Ticari Şartlar ──
         new Paragraph({children:[new PageBreak()]}),

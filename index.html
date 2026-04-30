@@ -612,7 +612,7 @@ tr:hover td{background:rgba(255,255,255,0.015);}
     <div class="mbody">
       <div class="fg fg2">
         <div class="fgrp"><label class="flbl">Müşteri *</label><select class="fsel" id="f-musteri" onchange="fMusteriDegis(this.value)"><option value="">Seçin...</option></select></div>
-        <div class="fgrp"><label class="flbl">Tip</label><select class="fsel" id="f-tip" onchange="fTipDegis()"><option>Teklif</option><option>Fatura</option><option>İş Emri</option></select></div>
+        <div class="fgrp"><label class="flbl">Tip</label><select class="fsel" id="f-tip" onchange="fTipDegis()"><option>Teklif</option><option>Satış Teklifi</option><option>Fatura</option><option>İş Emri</option></select></div>
         <div class="fgrp sp2"><label class="flbl">Açıklama</label><input class="finput" id="f-aciklama" placeholder="Periyodik bakım hizmeti..."></div>
         <div class="fgrp"><label class="flbl">Toplam Tutar *</label><input class="finput" id="f-tutar" type="number" min="0" step="0.01" placeholder="0.00"></div>
         <div class="fgrp"><label class="flbl">Para Birimi</label>
@@ -626,15 +626,55 @@ tr:hover td{background:rgba(255,255,255,0.015);}
       <!-- Teklif alanları -->
       <div id="f-teklif-alanlari" style="margin-top:16px">
 
-        <!-- MAKİNELER -->
-        <div class="sec-div">Makineler — Teklif Verilecekleri Seçin</div>
+        <!-- MAKİNELER (Bakım Teklifi) -->
+        <div class="sec-div" id="f-makine-sec-div">Makineler — Teklif Verilecekleri Seçin</div>
         <div id="f-makine-listesi" style="margin-bottom:8px"></div>
-        <button type="button" class="btn btn-ghost btn-sm" onclick="fMakineEkle()" style="margin-bottom:16px">＋ Manuel Makine Ekle</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="fMakineEkle()" style="margin-bottom:16px" id="f-makine-ekle-btn">＋ Manuel Makine Ekle</button>
 
         <!-- PARÇALAR — her seçili makine için ayrı -->
         <div id="f-parca-bolumu"></div>
 
-        <div class="fg fg2" style="margin-top:16px">
+        <!-- SATIŞ TEKLİFİ ÜRÜNLERİ -->
+        <div id="f-satis-alanlari" style="display:none">
+          <div class="sec-div">Ürünler</div>
+          <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;margin-bottom:6px;padding:0 4px">
+            <span style="font-size:11px;color:var(--text2);font-weight:600">ÜRÜN ADI</span>
+            <span style="font-size:11px;color:var(--text2);font-weight:600;text-align:center;width:60px">ADET</span>
+            <span style="font-size:11px;color:var(--text2);font-weight:600;text-align:right;width:110px">BİRİM FİYAT</span>
+            <span style="font-size:11px;color:var(--text2);font-weight:600;text-align:right;width:110px">TOPLAM</span>
+          </div>
+          <div id="f-urun-listesi"></div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="fUrunEkle()" style="margin:8px 0">＋ Ürün Ekle</button>
+          
+          <!-- Toplam -->
+          <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <label style="font-size:13px;color:var(--text2)">İskonto (%)</label>
+                <input class="finput" id="f-iskonto" type="number" min="0" max="100" placeholder="0" value="0" oninput="fSatisToplamHesapla()" style="width:70px;font-size:13px">
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:12px;color:var(--text2)" id="f-ara-toplam-satir"></div>
+                <div style="font-size:12px;color:var(--text2)" id="f-iskonto-satir"></div>
+                <div style="font-size:16px;font-weight:800;color:var(--accent)" id="f-genel-toplam">€0,00</div>
+                <div style="font-size:11px;color:var(--text2)">KDV Hariç</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ticari Şartlar -->
+          <div class="sec-div" style="margin-top:8px">Ticari Şartlar</div>
+          <div class="fg fg2">
+            <div class="fgrp"><label class="flbl">Proje Adı</label><input class="finput" id="f-proje-adi" placeholder="Proje / referans adı"></div>
+            <div class="fgrp"><label class="flbl">Yetkili Kişi</label><input class="finput" id="f-yetkili" placeholder="Müşteri yetkilisi"></div>
+            <div class="fgrp"><label class="flbl">Teslim Yeri</label><input class="finput" id="f-teslim-yeri" placeholder="İzmir / Müşteri fabrikası"></div>
+            <div class="fgrp"><label class="flbl">Teslim Süresi</label><input class="finput" id="f-teslim-suresi" placeholder="4-6 Hafta"></div>
+            <div class="fgrp"><label class="flbl">Ödeme Şartı</label><input class="finput" id="f-odeme-sarti" placeholder="Siparişte Peşin Ödeme" value="Siparişte Peşin Ödeme"></div>
+            <div class="fgrp"><label class="flbl">Opsiyon (gün)</label><input class="finput" id="f-opsiyon" type="number" placeholder="30" value="30"></div>
+          </div>
+        </div>
+
+        <div class="fg fg2" style="margin-top:16px" id="f-gecerlilik-alani">
           <div class="fgrp"><label class="flbl">Geçerlilik Başlangıç</label><input class="finput" id="f-gec-bas" type="date"></div>
           <div class="fgrp"><label class="flbl">Geçerlilik Bitiş</label><input class="finput" id="f-gec-bit" type="date"></div>
         </div>
@@ -3436,17 +3476,102 @@ let _fParcalar=[];
 
 function openFModal(){
   populateSels();
-  _fMakineler=[];_fParcalar=[];
+  _fMakineler=[];_fParcalar=[];_fUrunler=[];
   renderFMakineler();
+  renderFUrunler();
   document.getElementById('f-parca-bolumu').innerHTML='';
   document.getElementById('f-teklif-alanlari').style.display='';
+  document.getElementById('f-satis-alanlari').style.display='none';
+  document.getElementById('f-makine-sec-div').style.display='';
+  document.getElementById('f-makine-listesi').style.display='';
+  document.getElementById('f-makine-ekle-btn').style.display='';
+  document.getElementById('f-parca-bolumu').style.display='';
+  document.getElementById('f-gecerlilik-alani').style.display='';
+  if(document.getElementById('f-iskonto'))document.getElementById('f-iskonto').value='0';
   openMod('f-modal');
 }
 
 function fTipDegis(){
   const tip=document.getElementById('f-tip').value;
-  document.getElementById('f-teklif-alanlari').style.display=tip==='Teklif'?'':'none';
+  const isBakim=tip==='Teklif';
+  const isSatis=tip==='Satış Teklifi';
+  const isAny=isBakim||isSatis;
+
+  document.getElementById('f-teklif-alanlari').style.display=isAny?'':'none';
+  document.getElementById('f-makine-sec-div').style.display=isBakim?'':'none';
+  document.getElementById('f-makine-listesi').style.display=isBakim?'':'none';
+  document.getElementById('f-makine-ekle-btn').style.display=isBakim?'':'none';
+  document.getElementById('f-parca-bolumu').style.display=isBakim?'':'none';
+  document.getElementById('f-satis-alanlari').style.display=isSatis?'':'none';
+  document.getElementById('f-gecerlilik-alani').style.display=isBakim?'':'none';
+
+  if(isSatis && !_fUrunler.length) fUrunEkle();
 }
+
+// ── SATIŞ TEKLİFİ ÜRÜN SİSTEMİ ──────────────────────────────────────────
+let _fUrunler=[]; // [{uid, ad, adet, birimFiyat}]
+
+function fUrunEkle(){
+  _fUrunler.push({uid:'u_'+Date.now(),ad:'',adet:1,birimFiyat:0});
+  renderFUrunler();
+}
+
+function renderFUrunler(){
+  const cont=document.getElementById('f-urun-listesi');
+  if(!cont)return;
+  if(!_fUrunler.length){
+    cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">Ürün eklemek için butona tıklayın.</div>';
+    return;
+  }
+  cont.innerHTML=_fUrunler.map((u,i)=>{
+    const toplam=(u.adet||0)*(u.birimFiyat||0);
+    const para=document.getElementById('f-para')?.value||'eur';
+    const simge=para==='tl'?'₺':'€';
+    return`<div style="display:grid;grid-template-columns:1fr 60px 110px 110px 28px;gap:6px;align-items:center;margin-bottom:6px">
+      <input class="finput" value="${u.ad}" placeholder="Ürün adı / kod" 
+        oninput="_fUrunler[${i}].ad=this.value" style="font-size:12px">
+      <input class="finput" value="${u.adet}" type="number" min="1" 
+        oninput="_fUrunler[${i}].adet=parseFloat(this.value)||0;fSatisToplamHesapla();renderFUrunler()" 
+        style="font-size:12px;text-align:center">
+      <input class="finput" value="${u.birimFiyat||''}" type="number" min="0" step="0.01" placeholder="0.00"
+        oninput="_fUrunler[${i}].birimFiyat=parseFloat(this.value)||0;fSatisToplamHesapla();renderFUrunler()"
+        style="font-size:12px;text-align:right">
+      <div style="font-size:12px;font-weight:600;text-align:right;padding:0 8px;color:var(--text1)">
+        ${simge}${toplam.toLocaleString('tr-TR',{minimumFractionDigits:2})}
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="_fUrunler.splice(${i},1);renderFUrunler();fSatisToplamHesapla()" 
+        style="padding:4px 6px">🗑️</button>
+    </div>`;
+  }).join('');
+  fSatisToplamHesapla();
+}
+
+function fSatisToplamHesapla(){
+  const para=document.getElementById('f-para')?.value||'eur';
+  const simge=para==='tl'?'₺':'€';
+  const araToplam=_fUrunler.reduce((a,u)=>a+(u.adet||0)*(u.birimFiyat||0),0);
+  const iskonto=parseFloat(document.getElementById('f-iskonto')?.value)||0;
+  const iskontoTutar=araToplam*iskonto/100;
+  const genelToplam=araToplam-iskontoTutar;
+
+  const at=document.getElementById('f-ara-toplam-satir');
+  const is=document.getElementById('f-iskonto-satir');
+  const gt=document.getElementById('f-genel-toplam');
+  const tf=document.getElementById('f-tutar');
+
+  if(at)at.textContent=iskonto>0?`Ara Toplam: ${simge}${araToplam.toLocaleString('tr-TR',{minimumFractionDigits:2})}`:'';
+  if(is)is.textContent=iskonto>0?`İskonto (%${iskonto}): -${simge}${iskontoTutar.toLocaleString('tr-TR',{minimumFractionDigits:2})}`:'';
+  if(gt)gt.textContent=`${simge}${genelToplam.toLocaleString('tr-TR',{minimumFractionDigits:2})}`;
+  if(tf)tf.value=genelToplam.toFixed(2);
+}
+
+function satisTeklifNoOlustur(){
+  const yil=new Date().getFullYear();
+  const teklifler=ST.faturalar.filter(f=>f.tip==='Satış Teklifi'&&f.no&&f.no.startsWith('TB-'+yil));
+  const sonNo=teklifler.reduce((max,f)=>{const n=parseInt((f.no.split('-')[2])||0);return n>max?n:max;},0);
+  return `TB-${yil}-${String(sonNo+1).padStart(6,'0')}`;
+}
+
 
 function fMusteriDegis(musteriId){
   _fMakineler=[];
@@ -3551,7 +3676,8 @@ function saveF(){
   const m=ST.musteriler.find(x=>x.id==musteriId);
   const tip=document.getElementById('f-tip').value;
   const isTeklif=tip==='Teklif';
-  const no=isTeklif?teklifNoOlustur():'F-'+String(ST.faturalar.length+1).padStart(4,'0');
+  const isSatisTeklif=tip==='Satış Teklifi';
+  const no=isTeklif?teklifNoOlustur():isSatisTeklif?satisTeklifNoOlustur():'F-'+String(ST.faturalar.length+1).padStart(4,'0');
   const paraBirimi=document.getElementById('f-para')?document.getElementById('f-para').value:'eur';
   const seciliMakineler=_fMakineler.filter(m=>m.secili).map(m=>({ad:m.ad,seriNo:m.seriNo,bakimPlani:m.bakimPlani,fiyat:m.fiyat,calismaS:'',parcalar:m.parcalar||[]}));
   const teklifParcalar=[];
@@ -3566,9 +3692,18 @@ function saveF(){
     durum:document.getElementById('f-durum').value,
     notlar:document.getElementById('f-notlar').value,
     olusturma:new Date().toISOString(),
-    teklifDurum:isTeklif?'hazirlandi':undefined,
+    teklifDurum:isTeklif||isSatisTeklif?'hazirlandi':undefined,
     teklifMakineler:isTeklif?seciliMakineler:undefined,
     teklifParcalar:isTeklif?teklifParcalar:undefined,
+    // Satış teklifi alanları
+    satisUrunler:isSatisTeklif?[..._fUrunler]:undefined,
+    projeAdi:isSatisTeklif?document.getElementById('f-proje-adi')?.value||'':undefined,
+    yetkiliKisi:isSatisTeklif?document.getElementById('f-yetkili')?.value||'':undefined,
+    teslimYeri:isSatisTeklif?document.getElementById('f-teslim-yeri')?.value||'':undefined,
+    teslimSuresi:isSatisTeklif?document.getElementById('f-teslim-suresi')?.value||'':undefined,
+    odemeSarti:isSatisTeklif?document.getElementById('f-odeme-sarti')?.value||'':undefined,
+    opsiyon:isSatisTeklif?document.getElementById('f-opsiyon')?.value||'30':undefined,
+    iskonto:isSatisTeklif?parseFloat(document.getElementById('f-iskonto')?.value)||0:undefined,
     vadeGun:parseInt(document.getElementById('f-vade-gun')?.value)||45,
     gecerlilikBaslangic:document.getElementById('f-gec-bas')?.value||'',
     gecerlilikBitis:document.getElementById('f-gec-bit')?.value||'',
@@ -3872,37 +4007,236 @@ async function teklifDocxIndir(id){
   const musteri=ST.musteriler.find(m=>String(m.id)===String(f.musteriId));
   showToast('Word dosyası hazırlanıyor...','info');
   try{
-    // Teklif verisini hazırla
-    const teklif={
-      no: f.no,
-      tarih: f.tarih ? f.tarih.split('-').reverse().join('.') : new Date().toLocaleDateString('tr-TR'),
-      musteriAd: f.musteriAd||'',
-      musteriYetkili: musteri?.yetkili||'',
-      makineler: (f.teklifMakineler||[]).map((m,i)=>({
-        no:i+1, ad:m.ad||'', seriNo:m.seriNo||'',
-        bakimPlani:m.bakimPlani||'B BAKIM', calismaS:m.calismaS||'',
-        fiyat:parseFloat(m.fiyat)||0, paraBirimi:f.paraBirimi==='tl'?'TL':'EUR'
-      })),
-      parcalar: (f.teklifParcalar||[]),
-      toplamFiyat: f.tutar||0,
-      paraBirimi: f.paraBirimi==='tl'?'TL':'EUR',
-      vadeSuresi: f.vadeGun||45,
-      gecerlilikBaslangic: f.gecerlilikBaslangic||new Date().toLocaleDateString('tr-TR'),
-      gecerlilikBitis: f.gecerlilikBitis||'',
-    };
-
-    // docxjs'i CDN'den yükle ve kullan
-    const blob = await olusturTeklifDocx(teklif);
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;a.download=`Teklif_${f.no}_${f.musteriAd.replace(/\s+/g,'_')}.docx`;
-    document.body.appendChild(a);a.click();
-    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
-    showToast('Word dosyası indirildi ✓','success');
+    const tarihStr=f.tarih?f.tarih.split('-').reverse().join('.'):'';
+    if(f.tip==='Satış Teklifi'){
+      // Satış teklifi formatı
+      const teklif={
+        no:f.no, tarih:tarihStr,
+        musteriAd:f.musteriAd||'',
+        musteriYetkili:f.yetkiliKisi||musteri?.yetkili||'',
+        projeAdi:f.projeAdi||'',
+        urunler:(f.satisUrunler||[]).map((u,i)=>({
+          sira:i+1, ad:u.ad||'', adet:u.adet||1,
+          birimFiyat:u.birimFiyat||0,
+          toplam:(u.adet||1)*(u.birimFiyat||0),
+        })),
+        iskonto:f.iskonto||0,
+        toplamFiyat:f.tutar||0,
+        paraBirimi:f.paraBirimi==='tl'?'TL':'EUR',
+        teslimYeri:f.teslimYeri||'',
+        teslimSuresi:f.teslimSuresi||'4-6 Hafta',
+        odemeSarti:f.odemeSarti||'Siparişte Peşin Ödeme',
+        opsiyon:f.opsiyon||'30',
+      };
+      const blob=await olusturSatisTeklifDocx(teklif);
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;a.download=`${f.no}_${f.musteriAd.replace(/\s+/g,'_').slice(0,30)}.docx`;
+      document.body.appendChild(a);a.click();
+      setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+      showToast('Word dosyası indirildi ✓','success');
+    } else {
+      // Bakım teklifi formatı (mevcut)
+      const teklif={
+        no:f.no, tarih:tarihStr,
+        musteriAd:f.musteriAd||'',
+        musteriYetkili:musteri?.yetkili||'',
+        makineler:(f.teklifMakineler||[]).map((m,i)=>({
+          no:i+1,ad:m.ad||'',seriNo:m.seriNo||'',
+          bakimPlani:m.bakimPlani||'B BAKIM',calismaS:m.calismaS||'',
+          fiyat:parseFloat(m.fiyat)||0,paraBirimi:f.paraBirimi==='tl'?'TL':'EUR'
+        })),
+        parcalar:(f.teklifParcalar||[]),
+        toplamFiyat:f.tutar||0,
+        paraBirimi:f.paraBirimi==='tl'?'TL':'EUR',
+        vadeSuresi:f.vadeGun||45,
+        gecerlilikBaslangic:f.gecerlilikBaslangic||'',
+        gecerlilikBitis:f.gecerlilikBitis||'',
+      };
+      const blob=await olusturTeklifDocx(teklif);
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;a.download=`Teklif_${f.no}_${f.musteriAd.replace(/\s+/g,'_')}.docx`;
+      document.body.appendChild(a);a.click();
+      setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+      showToast('Word dosyası indirildi ✓','success');
+    }
   }catch(e){
     console.error('Docx hatası:',e);
     showToast('Word dosyası oluşturulamadı: '+e.message,'error');
   }
+}
+
+
+async function olusturSatisTeklifDocx(teklif){
+  const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,
+    AlignmentType,BorderStyle,WidthType,ShadingType,VerticalAlign,ImageRun,PageBreak}=window.docx;
+
+  const MAVI='1B5EA6',KOYU='1F1F1F',GRI_BG='F2F2F2',BEYAZ='FFFFFF',CIZGI='2E75B6',GRI='555555';
+  const b0={style:BorderStyle.NONE,size:0,color:'FFFFFF'};
+  const borders0={top:b0,bottom:b0,left:b0,right:b0};
+  const bL={style:BorderStyle.SINGLE,size:1,color:'CCCCCC'};
+  const bordersL={top:bL,bottom:bL,left:bL,right:bL};
+  const T=(text,size=20,color=KOYU,bold=false)=>new TextRun({text,size,color,bold,font:'Arial'});
+  const P=(children,align=AlignmentType.LEFT,before=0,after=0)=>new Paragraph({alignment:align,spacing:{before,after},children});
+  const cell=(children,w,bg=BEYAZ,align=AlignmentType.LEFT,vAlign=VerticalAlign.CENTER)=>new TableCell({borders:bordersL,width:{size:w,type:WidthType.DXA},shading:{fill:bg,type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},verticalAlign:vAlign,children:[P(children,align)]});
+  const hcell=(text,w)=>cell([T(text,18,BEYAZ,true)],w,MAVI,AlignmentType.CENTER);
+
+  const LOGO_B64='R0lGODlhMwKpAJECAGfIyhNikf///wAAACH5BAEAAAIALAAAAAAzAqkAAAL/lI+py+0Po5y02ouz3rz7D4biSJbmiabqyrbuC8fyTNf2jef6zvf+DwwKh8Si8YhMKpfMpvMJjUqn1Kr1is1qt9yu9wsOi8fksvmMTqvX7Lb7DY/L5/S6/Y7P6/f8vv8PGCg4SFhoeIiYqLjI2Oj4CBkpOUlZaXmJmam5ydnp+QkaKjpKWmp6ipqqusra6voKGys7S1tre4ubq7ubGcD7C7zgG0z8G3BcnJx7PKzsLMuM/DztGt1MjX1qLZ3dPbp97S3OCc49fo5ZHo7OHqluPvMuP08/L1KPn898pN/vLw9hHRSBhgDa+Ifw34eEDMv5aAhR4QN4TygWtFcjosZ3/x02bszhMSRGB/uilFRE76DIlQQnsIxI46XMaAFpNrG2CF/GmSEz8GwI4yfPmjaVbMupM57QjxeWMmzhVCbRovyOJtIXMypMC1oRrujKcipVIg6vYpUBFiLXtP5QsBUpFucQjojaon2bsALefib2eowrF4jBQxKD+i0c4fDZEIo1Ag7cY2QhrzEa83Vpud69zE8nptyhmTDlF5zzYS49uCPq0Q2S4nBNqDPp1ZI901a38PZlkrCzhp4sG6puuo+Ht6RgfHFr0zt7B1I7O7nV4sY5SHeuwK5h5YK2Cv/8dTdv8Iwd+xTPBDEL9YDMf6+tgjsD7OXznqdvlL1b/X6Yrv///R58wgDYl31N4ZcfawUq+MdfARLnAnPjCViCgcghmCCDm1nYnoPhkfcghPMRmAJ/toFYEVAVqvhcT/+h+CKFCGBIgonLweiEe7lB1yFcH8pYIonZCRkketRBZpKO1inZR1g/phYhkTNKWSSNCViJhIcbaNnkS0+KGGJZE0IZpYSJUbmEjxio2Z+X8aF5Ao1YrmjmkWMNxOaFLrYpVZVkxvjnlXDuV+eYYKaY55mJ6jGUn4e+CeecCw5qgKRFuCkBpnz4A4B2kwbqKG52nqQUpQJYSlafhu65aT+dGjkCqh4UOiCOZVIqqxCNjqjqHpwC8Kp8GwJJ56C5xorlsYL/7SroTHzmA2ywtNZH7LBWKktttZVetyOzS3WpT7TAeorsdXfyqu2XjzabXLcAQacWtmb8Gi251pqbqamhinpidbP+9tYB8pJBr7j2gmDuueiCup22+P5LXlpT2jpHwfXC6i63+VIcncMaqwZiV+wyHIfFBmMM8sMbp6uumKveljG/EzMrsL5rmHyxsBCrrCjLkHJ86sdL4vjTwuuW7Kq4Sks7cK1C90xyx1HzvKWUzhotsx04K41y1U9DfXTDU399H5CaDgl0G1tz3XXZ/upl877gjJpZzC5jHRzec+OxNtvTev023GmHuffLtNlduOEHo+0zGn37/bfbMK8ZN6HV/1KtQbI89hu22kkvDTrTg+s5ueRZN3c52ZSPHrSNjEedZMJX65Yy7IRPd2O7O9tec9uvdx677G4evjvwtyPpdOCA8947qk3PJXyfnJXbuNy46309nqzPbPzvp18RvfSV513896Wmvn2q6Td/N+nM3xS+k8q6vnr1lo+9vq6Vs4+8+93nGL+VbCt//Nuf4vp3l7Q9TwfYap/g7JehADJlYL5bCwFrZCwDLuuCzavd/+AnQQc1rYL+M19lMsjBh2hwSuVzoBVC6KLn6cx0LhQb7BYIkhVS733pgeEEdVhAHh5QYTYEHg5fA8RsfbCHPtzKAmd4oBQiLnFDJFXwhBinJP9i4XOh62IXF3caCOZOigMU472Md8QbpHF5S/zC47wYOjCuDItjNOPI2rjDdK0RdXQsVh+3wEU4CvJkUKTbcepHxj0+kGWKPN8f82jCM7xxkEuToyHPiEfv1RBQjNQiAz3ZQireLFyULGXOIse5SNJQlXPM5BRFWUWLAJCMCAOlFCZpSkKiMpaHRKQdy/hINvqskQn8JSZh6ThS5tKUlqwjK335SGKmknnSLOImrYnMeQVymYJsJvYQODQdVvOb2SSnFbVnTCU+Mwzb5GY3SXjHdUZxhePU5PvqeTwinpCWt2ynO73oTXtm75UDLeE1MQjPIJYzTbYMZzCngMt/6tL/eQ1V6EF5eatdJu+hn+RnKAtKMH9K9IsJBaYrDSnLVsrTgxoVKEgZ6lGWXtQLER3pKS3VyEJi1HoEbOmlKpo5oEawHjbNZUAtCs6PLnSnnzrqRjmqRqFCc6ZcqGlRx5VQYurUnCl1qIYMClXfpLOWMWUitK7KzKxK1aR4DJ9XA3jJHJZ1qPRA6zKPKs2turR0QfVhXJE41yRY1a54XStbV4pU4sk0en+NamCroky7plWv1dQr93Sn1IQ1ViWPNcJgJRvQcVr2sHzNrOoui1ie6rMLn5Ws6BRoWNJSVbaogSRjp7nUjJ4UnfhwrTsrWM/RSqept2WqY8cK07P69q6+/wuuT1tHuyzCFbcvxWZ1ASnS5cKxubFNbFLjOb2fFdeZsxXvbkGoXO0atW34tGx0W3Za73bVut/VQmvVy97uyvecXGULfYezWT6eN7m9Ve9vu4ZP6A6uto6ML21XK7UB03UeBv4ngvW73/k+WGSAdbCCJUxQ/lY1uxXeLsoS/OEbHkaFw6VufXWbWt4WuMTcXByKU9y5gP0UwC6GMIzLWwUaC1mQ7SiykY+M5CQreclMbrKTnwzlKEt5ylSuspWvjOUsa3nLXO6yl78M5jCLecxkLrOZz4zmNKt5zWxus5vfDOc4y3nOdK6zne+M5zzrec987rOf/wzoQAt60IQutDChD43oRCt60YxutKMfDelIS3rSlK60pS+N6UxretOc7rSnPw3qUIt61KQutalrUAAAOw==';
+  const logoBytes=Uint8Array.from(atob(LOGO_B64),c=>c.charCodeAt(0));
+
+  const para=teklif.paraBirimi==='TL'?'₺':'€';
+  const fmtPara=(n)=>`${para}${Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2})}`;
+
+  // Ürün tablosu satırları
+  const urunRows=[
+    new TableRow({tableHeader:true,children:[
+      hcell('SIRA NO',700),hcell('ÜRÜN ADI',5460),hcell('ADET',700),
+      hcell(`BİRİM FİYAT (${para}/Adet)`,1300),hcell(`TOPLAM FİYAT (${para})`,1200),
+    ]}),
+    ...(teklif.urunler||[]).map((u,i)=>new TableRow({children:[
+      cell([T(String(u.sira),18)],700,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
+      cell([T(u.ad||'',18)],5460,i%2?GRI_BG:BEYAZ),
+      cell([T(String(u.adet||1),18)],700,i%2?GRI_BG:BEYAZ,AlignmentType.CENTER),
+      cell([T(fmtPara(u.birimFiyat||0),18)],1300,i%2?GRI_BG:BEYAZ,AlignmentType.RIGHT),
+      cell([T(fmtPara(u.toplam||0),18)],1200,i%2?GRI_BG:BEYAZ,AlignmentType.RIGHT),
+    ]})),
+    // İskonto satırı (varsa)
+    ...(teklif.iskonto>0?[new TableRow({children:[
+      new TableCell({borders:bordersL,width:{size:8560,type:WidthType.DXA},columnSpan:4,shading:{fill:GRI_BG,type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},children:[P([T(`İskonto (%${teklif.iskonto})`,18,KOYU,true)],AlignmentType.RIGHT)]}),
+      cell([T(`-${fmtPara((teklif.urunler||[]).reduce((a,u)=>a+(u.toplam||0),0)*teklif.iskonto/100)}`,18,'C0392B',false)],1200,GRI_BG,AlignmentType.RIGHT),
+    ]})]:[]),
+    // Toplam satırı
+    new TableRow({children:[
+      new TableCell({borders:bordersL,width:{size:8560,type:WidthType.DXA},columnSpan:4,shading:{fill:GRI_BG,type:ShadingType.CLEAR},margins:{top:100,bottom:100,left:120,right:120},children:[P([T('İSKONTOLU TOPLAM FİYAT ( KDV HARİÇ )',20,KOYU,true)],AlignmentType.RIGHT)]}),
+      cell([T(fmtPara(teklif.toplamFiyat||0),20,BEYAZ,true)],1200,MAVI,AlignmentType.RIGHT),
+    ]}),
+  ];
+
+  // Ticari şartlar tablosu
+  const sartRows=[
+    ['Teslim Yeri',teklif.teslimYeri||''],
+    ['Teslim Süresi',teklif.teslimSuresi||'4-6 Hafta'],
+    ['Ödeme',teklif.odemeSarti||'Siparişte Peşin Ödeme'],
+    ['Opsiyon',`${teklif.opsiyon||30} gün`],
+  ].map(([k,v])=>new TableRow({children:[
+    cell([T(k,20,KOYU,true)],2200,BEYAZ),
+    cell([T(': '+v,20)],7160,BEYAZ),
+  ]}));
+
+  const madde=(no,text)=>new Paragraph({spacing:{before:60,after:60},children:[T(no+') ',18,KOYU,true),T(text,18)]});
+
+  const doc=new Document({
+    styles:{default:{document:{run:{font:'Arial',size:20,color:KOYU}}}},
+    sections:[{
+      properties:{page:{size:{width:11906,height:16838},margin:{top:900,right:900,bottom:900,left:900}}},
+      children:[
+        // ── Başlık ──
+        new Table({width:{size:9760,type:WidthType.DXA},columnWidths:[4500,5260],
+          borders:{top:b0,bottom:{style:BorderStyle.SINGLE,size:8,color:CIZGI},left:b0,right:b0,insideH:b0,insideV:b0},
+          rows:[new TableRow({children:[
+            new TableCell({borders:borders0,width:{size:4500,type:WidthType.DXA},margins:{top:80,bottom:160,left:0,right:200},children:[
+              new Paragraph({children:[new ImageRun({data:logoBytes,transformation:{width:180,height:60},type:'gif'})]}),
+              P([T('Ardem Basınçlı Hava ve Gaz Çözümleri A.Ş',16,GRI)],AlignmentType.LEFT,60,0),
+              P([T('Ataşehir Mah. 8285 SOK. No.13 Çiğli/İzmir',15,GRI)],AlignmentType.LEFT,0,0),
+              P([T('Tel: (90) 232 375 67 79  |  Fax: (90) 232 375 67 80',15,GRI)],AlignmentType.LEFT,0,0),
+            ]}),
+            new TableCell({borders:borders0,width:{size:5260,type:WidthType.DXA},margins:{top:80,bottom:120,left:200,right:0},verticalAlign:VerticalAlign.BOTTOM,children:[
+              P([T('TEKLİF MEKTUBU',32,MAVI,true)],AlignmentType.RIGHT),
+              P([T(`Tarih: ${teklif.tarih}`,18)],AlignmentType.RIGHT),
+              P([T(`Teklif No: ${teklif.no}`,18)],AlignmentType.RIGHT),
+            ]}),
+          ]})]
+        }),
+        P([],AlignmentType.LEFT,160,0),
+        // Müşteri ve proje bilgileri
+        new Table({width:{size:9760,type:WidthType.DXA},columnWidths:[2200,7560],
+          borders:{top:b0,bottom:b0,left:b0,right:b0,insideH:b0,insideV:b0},
+          rows:[
+            new TableRow({children:[
+              new TableCell({borders:borders0,width:{size:2200,type:WidthType.DXA},margins:{top:40,bottom:40,left:0,right:100},children:[P([T('Firma',20,KOYU,true)])]}),
+              new TableCell({borders:borders0,width:{size:7560,type:WidthType.DXA},margins:{top:40,bottom:40,left:100,right:0},children:[P([T(': '+teklif.musteriAd,20)])]}),
+            ]}),
+            ...(teklif.musteriYetkili?[new TableRow({children:[
+              new TableCell({borders:borders0,width:{size:2200,type:WidthType.DXA},margins:{top:40,bottom:40,left:0,right:100},children:[P([T('İlgili Kişi',20,KOYU,true)])]}),
+              new TableCell({borders:borders0,width:{size:7560,type:WidthType.DXA},margins:{top:40,bottom:40,left:100,right:0},children:[P([T(': '+teklif.musteriYetkili,20)])]}),
+            ]})]:[]),
+            ...(teklif.projeAdi?[new TableRow({children:[
+              new TableCell({borders:borders0,width:{size:2200,type:WidthType.DXA},margins:{top:40,bottom:40,left:0,right:100},children:[P([T('Proje Adı',20,KOYU,true)])]}),
+              new TableCell({borders:borders0,width:{size:7560,type:WidthType.DXA},margins:{top:40,bottom:40,left:100,right:0},children:[P([T(': '+teklif.projeAdi,20)])]}),
+            ]})]:[]),
+          ]
+        }),
+        P([],AlignmentType.LEFT,160,0),
+        P([T('Teklif talebiniz için teşekkür ederiz. İhtiyacınıza uygun ürünlerimizin fiyatlarını aşağıdaki tabloda bulabilirsiniz.',18,GRI)],AlignmentType.LEFT,0,80),
+        P([T('Ticari şartları diğer sayfalarda görebilirsiniz. Ürün görselleri temsilidir, modele göre ölçüler değişkenlik gösterebilir.',18,GRI)],AlignmentType.LEFT,0,160),
+        // Ürün tablosu
+        new Table({width:{size:9760,type:WidthType.DXA},columnWidths:[700,5460,700,1300,1200],rows:urunRows}),
+        P([],AlignmentType.LEFT,400,0),
+        // ── Sayfa 2: Ticari Şartlar ──
+        new Paragraph({children:[new PageBreak()]}),
+        new Table({width:{size:9760,type:WidthType.DXA},columnWidths:[4500,5260],
+          borders:{top:b0,bottom:{style:BorderStyle.SINGLE,size:8,color:CIZGI},left:b0,right:b0,insideH:b0,insideV:b0},
+          rows:[new TableRow({children:[
+            new TableCell({borders:borders0,width:{size:4500,type:WidthType.DXA},margins:{top:80,bottom:160,left:0,right:200},children:[
+              new Paragraph({children:[new ImageRun({data:logoBytes,transformation:{width:180,height:60},type:'gif'})]}),
+            ]}),
+            new TableCell({borders:borders0,width:{size:5260,type:WidthType.DXA},margins:{top:80,bottom:120,left:200,right:0},verticalAlign:VerticalAlign.BOTTOM,children:[
+              P([T(`Tarih: ${teklif.tarih}`,18)],AlignmentType.RIGHT),
+              P([T(`Teklif No: ${teklif.no}`,18)],AlignmentType.RIGHT),
+            ]}),
+          ]})]
+        }),
+        P([],AlignmentType.LEFT,240,0),
+        new Table({width:{size:9760,type:WidthType.DXA},columnWidths:[2200,7560],
+          borders:{top:b0,bottom:b0,left:b0,right:b0,insideH:b0,insideV:b0},
+          rows:sartRows
+        }),
+        P([],AlignmentType.LEFT,320,0),
+        P([T('Teklifimizin tarafınızca olumlu bulunacağını umuyor, değerli geri dönüşlerinizi bekliyoruz.',18)],AlignmentType.LEFT,0,160),
+        P([T('Tolga BAYDERE',20,KOYU,true)]),
+        P([T('Tel : 0532 367 68 86',18)]),
+        P([T('Mail: tolga@ardemendustri.com',18)]),
+        P([],AlignmentType.LEFT,400,0),
+        // ── Sayfa 3: Genel Ticari Şartlar ──
+        new Paragraph({children:[new PageBreak()]}),
+        new Table({width:{size:9760,type:WidthType.DXA},columnWidths:[4500,5260],
+          borders:{top:b0,bottom:{style:BorderStyle.SINGLE,size:8,color:CIZGI},left:b0,right:b0,insideH:b0,insideV:b0},
+          rows:[new TableRow({children:[
+            new TableCell({borders:borders0,width:{size:4500,type:WidthType.DXA},margins:{top:80,bottom:160,left:0,right:200},children:[
+              new Paragraph({children:[new ImageRun({data:logoBytes,transformation:{width:180,height:60},type:'gif'})]}),
+            ]}),
+            new TableCell({borders:borders0,width:{size:5260,type:WidthType.DXA},margins:{top:80,bottom:120,left:200,right:0},verticalAlign:VerticalAlign.BOTTOM,children:[
+              P([T(`Tarih: ${teklif.tarih}`,18)],AlignmentType.RIGHT),
+              P([T(`Teklif No: ${teklif.no}`,18)],AlignmentType.RIGHT),
+            ]}),
+          ]})]
+        }),
+        P([],AlignmentType.LEFT,200,0),
+        P([T('Ticari Şartlar',22,KOYU,true)],AlignmentType.LEFT,0,80),
+        P([T('Genel Ticari Şartlar:',18,KOYU,true)],AlignmentType.LEFT,0,120),
+        madde('1','Teklifimizde belirtilen fiyatlara %20 KDV dahil edilmemiştir. Gümrük işlemleri sırasında yapılacak nihai tarife tespitine istinaden uygulama gereği oluşabilecek ilave gümrük vergileri ithalat aşamasında tarafımızca ödenecek olup, mal faturasına ek ayrı bir kalem olarak tarafınıza yansıtılacaktır.'),
+        madde('2','Fatura EURO olarak kesilecek ve ödeme tarihindeki TCMB Efektif Döviz Satış kuru veya TCMB Döviz saatlik kurundan yüksek olanı üzerinden TL veya Euro olarak ödenecektir.'),
+        madde('3','Bu teklifinin kapsamı, sadece teklifteki ürünlerin aşağıda belirtilen yerde teslim edilmesidir. Her türlü borulama, mekanik bağlantılar ve elektriksel bağlantılar gibi montaj işleri alıcı firma tarafından yapılacaktır. Bu montaj işleri yapılırken gerekli belge ve bilgiler firmamız tarafından ücretsiz verilecektir.'),
+        madde('4','Servis ekibimizin alıcı firmanın tesislerinde çalışma yapabilmesi için gerekli evraklar, sertifikalar ve eğitimler önceden bildirilmelidir.'),
+        madde('5','Cihazlara verilen garanti süreleri, periyodik bakımların Ardem yetkili servislerince orijinal parça kullanılarak yapılması şartıyla geçerlidir.'),
+        madde('6','Ayrıca bir sözleşme yapılmadığı durumlarda alıcı firma tarafından kaşeli ve imzalı olarak gönderilen bu teklif belgesi sipariş onay sözleşmesi yerine geçer.'),
+        madde('7','Alıcı firmanın ödeme şartlarına uymaması halinde Ardem sipariş sözleşmesini tek taraflı olarak feshedebilir. Bu durumda sözleşme bedelinin yüzde 20 tutarında cezai şart ödemesini alıcı firmadan talep edecektir. Vadesinde ödenmeyen faturalara aylık yüzde 3 akdi gecikme faizi yansıtılacaktır.'),
+        madde('8','İş bu sözleşmeden doğan ihtilafların çözüm yeri İzmir Merkez Mahkemeleri ve İcra Müdürlükleri dir.'),
+        madde('9','Faturalanan ürünlerin toplam bedelinin tamamı alıcı firma tarafından ödenmediği sürece mülkiyeti Ardem e aittir.'),
+        P([],AlignmentType.LEFT,240,0),
+        P([T('Ardem Basınçlı Hava Ve Gaz Çözümleri San. Tic.A.Ş. Banka Bilgileri:',18,KOYU,true)]),
+        P([],AlignmentType.LEFT,80,0),
+        P([T('IBAN Numaraları',18,KOYU,true)]),
+        P([T('İş Bankası TR64 0006 4000 0013 4311 2230 26 (TL)',18)]),
+        P([T('İş Bankası TR72 0006 4000 0023 4310 6080 91 (EUR)',18)]),
+        P([],AlignmentType.LEFT,80,0),
+        P([T('Vergi Dairesi/No: ÇİĞLİ /0730821457',18)]),
+      ]
+    }]
+  });
+  const blob=await Packer.toBlob(doc);
+  return blob;
 }
 
 async function olusturTeklifDocx(teklif){

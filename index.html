@@ -3918,7 +3918,7 @@ function renderF(){
   const tbody=document.getElementById('f-tbody');
   if(!list.length){tbody.innerHTML=emptyRow(8,'🧾','Kayıt yok','Yeni teklif/fatura eklemek için butona tıklayın.');}
   else tbody.innerHTML=list.map(f=>{
-    const isTeklif=f.tip==='Servis Teklifi';
+    const isTeklif=f.tip==='Servis Teklifi'||f.tip==='Teklif';
     const isSatisTeklif=f.tip==='Satış Teklifi';
     const isTeklifTuru=isTeklif||isSatisTeklif;
     // Teklif durumu badge

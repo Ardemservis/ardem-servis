@@ -4183,7 +4183,11 @@ function teklifGuncelle(id){
 function teklifDurumDegis(id){
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
   if(!f||(f.tip!=='Servis Teklifi'&&f.tip!=='Satış Teklifi'&&f.tip!=='Teklif'))return;
-  const sirali=['hazirlandi','gonderildi','onaylandi','servis_yapildi','odeme_bekliyor','reddedildi'];
+
+  const isSatis=f.tip==='Satış Teklifi';
+
+  // Her iki teklif tipinde de aynı akış
+  const sirali=['hazirlandi','gonderildi','onaylandi','odeme_bekliyor','reddedildi'];
   const renkler={
     hazirlandi:    {bg:'rgba(148,163,184,0.15)',border:'rgba(148,163,184,0.3)',renk:'#94a3b8'},
     gonderildi:    {bg:'rgba(59,130,246,0.15)', border:'rgba(59,130,246,0.3)', renk:'#60a5fa'},
@@ -4235,32 +4239,28 @@ function teklifDurumSec(id, yeniDurum){
     renderS();
   }
 
-  // Servis Yapıldı → bağlı servis planlarını tamamla + periyot başlat
-  if(yeniDurum==='servis_yapildi'&&f.servisIds&&f.servisIds.length){
-    const servisler=f.servisIds.map(sid=>ST.servisler.find(x=>String(x.id)===String(sid))).filter(Boolean);
-    servisler.forEach(s=>{
-      s.durum='tamamlandi';
-      s.tamamlanmaTarih=today();
-      // Bir sonraki periyot planını oluştur
-      if(s.sonrakiTarih){
-        ST.servisler.push({
-          id:String(Date.now()+Math.random()),
-          musteriId:s.musteriId,musteriAd:s.musteriAd,
-          ekipmanId:s.ekipmanId,ekipmanAd:s.ekipmanAd,ekipmanTip:s.ekipmanTip,
-          tip:s.tip,tarih:s.sonrakiTarih,periyot:s.periyot,
-          sonrakiTarih:s.periyot?addMonths(s.sonrakiTarih,s.periyot):null,
-          notlar:'Otomatik oluşturuldu',durum:'bekliyor',
-          olusturma:new Date().toISOString()
-        });
-      }
-    });
-    addAkt('✅',`Servis tamamlandı: ${f.musteriAd} — ${f.no}`);
-    renderS();updateBadges();renderDash();
-    showToast(`Servis yapıldı — ${servisler.length} plan tamamlandı, sonraki periyot oluşturuldu ✓`,'success');
-  }
-
-  // Ödeme Bekliyor → ödeme modalı aç
+  // Ödeme Bekliyor → bağlı servis planlarını tamamla + ödeme modalı aç
   if(yeniDurum==='odeme_bekliyor'){
+    // Servis planları varsa tamamla ve periyot başlat
+    if(f.servisIds&&f.servisIds.length){
+      const servisler=f.servisIds.map(sid=>ST.servisler.find(x=>String(x.id)===String(sid))).filter(Boolean);
+      servisler.forEach(s=>{
+        s.durum='tamamlandi';
+        s.tamamlanmaTarih=today();
+        if(s.sonrakiTarih){
+          ST.servisler.push({
+            id:String(Date.now()+Math.random()),
+            musteriId:s.musteriId,musteriAd:s.musteriAd,
+            ekipmanId:s.ekipmanId,ekipmanAd:s.ekipmanAd,ekipmanTip:s.ekipmanTip,
+            tip:s.tip,tarih:s.sonrakiTarih,periyot:s.periyot,
+            sonrakiTarih:s.periyot?addMonths(s.sonrakiTarih,s.periyot):null,
+            notlar:'Otomatik oluşturuldu',durum:'bekliyor',
+            olusturma:new Date().toISOString()
+          });
+        }
+      });
+      renderS();updateBadges();renderDash();
+    }
     save();renderF();
     setTimeout(()=>teklifOdemeModalAc(id),200);
     return;

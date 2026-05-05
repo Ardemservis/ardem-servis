@@ -741,35 +741,74 @@ tr:hover td{background:rgba(255,255,255,0.015);}
 
 <!-- MODAL: TEKLİF ÖDEME -->
 <div class="mo" id="teklif-odeme-modal">
-  <div class="modal" style="max-width:440px">
-    <div class="mhd"><div class="mtitle">💰 Ödeme Oluştur</div><button class="mclose" onclick="closeM('teklif-odeme-modal')">✕</button></div>
+  <div class="modal" style="max-width:520px">
+    <div class="mhd"><div class="mtitle">💰 Ödeme Takibine Al</div><button class="mclose" onclick="closeM('teklif-odeme-modal')">✕</button></div>
     <div class="mbody">
       <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px">
         <div style="font-size:11px;color:var(--text2)">TEKLİF</div>
         <div style="font-weight:700;font-size:14px;color:var(--accent)" id="tom-no"></div>
         <div style="font-size:13px;margin-top:2px" id="tom-musteri"></div>
       </div>
-      <div class="fg fg2">
+      <div class="sec-div">Ödeme Bilgileri</div>
+      <div class="fg fg2" style="margin-top:12px">
+        <!-- Para birimi seçimi -->
+        <div class="fgrp sp2">
+          <label class="flbl">Para Birimi *</label>
+          <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 16px;border-radius:8px;border:2px solid var(--accent);background:rgba(232,93,26,0.1);flex:1;justify-content:center;font-weight:600" id="tom-eur-label">
+              <input type="radio" name="tom-para" value="eur" checked onchange="tomParaDegis()" style="accent-color:var(--accent)"> € Euro
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 16px;border-radius:8px;border:2px solid var(--border);background:transparent;flex:1;justify-content:center;font-weight:600" id="tom-usd-label">
+              <input type="radio" name="tom-para" value="usd" onchange="tomParaDegis()" style="accent-color:var(--accent)"> $ Dolar
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 16px;border-radius:8px;border:2px solid var(--border);background:transparent;flex:1;justify-content:center;font-weight:600" id="tom-tl-label">
+              <input type="radio" name="tom-para" value="tl" onchange="tomParaDegis()" style="accent-color:var(--accent)"> ₺ TL
+            </label>
+          </div>
+        </div>
+        <!-- Tutar -->
+        <div class="fgrp" id="tom-tutar-grp">
+          <label class="flbl">Tutar * <span id="tom-simge">€</span></label>
+          <input class="finput" id="tom-tutar" type="number" min="0" step="0.01" placeholder="0.00" oninput="tomKurHesapla()" style="font-size:16px;font-weight:700">
+        </div>
+        <!-- Kur (EUR veya USD seçilince) -->
+        <div class="fgrp" id="tom-kur-grp">
+          <label class="flbl">Döviz Kuru (₺/<span id="tom-kur-simge">€</span>) <span id="tom-kur-tarih" style="font-size:10px;color:var(--text3)"></span></label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input class="finput" id="tom-kur" type="number" min="0" step="0.01" placeholder="38.50" oninput="tomKurHesapla()" style="flex:1">
+            <button type="button" onclick="tomKurCek()" style="white-space:nowrap;padding:8px 12px;border-radius:7px;border:1px solid var(--accent);background:rgba(232,93,26,0.12);color:var(--accent);font-size:12px;cursor:pointer;font-weight:600">🔄 Güncel</button>
+          </div>
+        </div>
+        <!-- TL karşılığı -->
+        <div class="fgrp" id="tom-tl-grp">
+          <label class="flbl">TL Karşılığı</label>
+          <input class="finput" id="tom-tutar-tl" type="number" placeholder="Otomatik" style="background:rgba(255,255,255,0.03);color:var(--text2)">
+        </div>
+        <!-- Vade -->
         <div class="fgrp">
-          <label class="flbl">Tutar * <span id="tom-simge" style="color:var(--accent)">€</span> <span id="tom-para" style="color:var(--text2);font-size:10px"></span></label>
-          <input class="finput" id="tom-tutar" type="number" min="0" step="0.01" placeholder="0.00" style="font-size:16px;font-weight:700">
+          <label class="flbl">Fatura Vadesi *</label>
+          <select class="fsel" id="tom-vade-gun" onchange="tomVadeHesapla()">
+            <option value="">Seçin...</option>
+            <option value="15">15 Gün</option>
+            <option value="30">30 Gün</option>
+            <option value="45">45 Gün</option>
+            <option value="60">60 Gün</option>
+            <option value="90">90 Gün</option>
+          </select>
         </div>
         <div class="fgrp">
-          <label class="flbl">Vade Tarihi *</label>
-          <input class="finput" id="tom-vade" type="date">
+          <label class="flbl">Vade Tarihi</label>
+          <div style="font-size:13px;color:var(--accent);padding:8px 0;font-weight:600" id="tom-vade-preview">—</div>
         </div>
-      </div>
-      <div class="fgrp">
-        <label class="flbl">Açıklama / Not</label>
-        <input class="finput" id="tom-notlar" placeholder="Proje adı, fatura no...">
-      </div>
-      <div style="font-size:12px;color:var(--text2);margin-top:8px;padding:8px;background:rgba(251,191,36,0.08);border-radius:8px;border:1px solid rgba(251,191,36,0.2)">
-        💡 Ödeme Ödemeler sayfasına otomatik eklenecek
+        <div class="fgrp sp2">
+          <label class="flbl">Açıklama / Not</label>
+          <input class="finput" id="tom-notlar" placeholder="Proje adı, fatura no...">
+        </div>
       </div>
     </div>
     <div class="mfoot">
       <button class="btn btn-ghost" onclick="closeM('teklif-odeme-modal')">İptal</button>
-      <button class="btn btn-primary" onclick="teklifOdemeKaydet()">💰 Ödeme Oluştur</button>
+      <button class="btn btn-primary" onclick="teklifOdemeKaydet()">💰 Ödeme Takibine Al</button>
     </div>
   </div>
 </div>
@@ -3921,12 +3960,24 @@ function renderF(){
       </div></td>
     </tr>`;
   }).join('');
-  const toplam=ST.faturalar.reduce((a,f)=>a+(f.tutar||0),0);
-  const odenen=ST.faturalar.filter(f=>f.durum==='odendi').reduce((a,f)=>a+(f.tutar||0),0);
-  const bekleyen=ST.faturalar.filter(f=>f.durum==='bekliyor').reduce((a,f)=>a+(f.tutar||0),0);
+  // Para birimlerini EUR'a çevirerek topla
+  const kur=guncelKur(); // günlük ₺/€ kuru
+  const kurCache=JSON.parse(localStorage.getItem('ardem_kur_cache')||'{}');
+  const usdTry=kurCache.usdTry||kur*0.95; // USD/TRY — cache'de yoksa yaklaşık
+  const euraCevir=(f)=>{
+    const t=f.tutar||0;
+    if(!t)return 0;
+    if(f.paraBirimi==='tl')return t/kur;
+    if(f.paraBirimi==='usd')return t*(kur/usdTry)||t*0.93;
+    return t; // eur varsayılan
+  };
   const teklifler=ST.faturalar.filter(f=>f.tip==='Teklif'||f.tip==='Servis Teklifi'||f.tip==='Satış Teklifi');
   const onaylanan=teklifler.filter(f=>f.teklifDurum==='onaylandi').length;
-  document.getElementById('f-ozet').innerHTML=`Teklif: <b>${teklifler.length}</b> (${onaylanan} onaylı)${toplam>0?' · Toplam: <b>'+fmtEur(toplam)+'</b>':''}`; 
+  const toplamEur=teklifler.reduce((a,f)=>a+euraCevir(f),0);
+  const tlVarMi=teklifler.some(f=>f.paraBirimi==='tl');
+  const usdVarMi=teklifler.some(f=>f.paraBirimi==='usd');
+  const kurNotu=(tlVarMi||usdVarMi)?` <span style="font-size:10px;color:var(--text3)">(kur: ${kur.toFixed(2)} ₺/€)</span>`:'';
+  document.getElementById('f-ozet').innerHTML=`Teklif: <b>${teklifler.length}</b> (${onaylanan} onaylı)${toplamEur>0?' · EUR Toplamı≈ <b>'+fmtEur(toplamEur)+'</b>'+kurNotu:''}`;
 }
 
 function teklifOnizle(id){
@@ -4219,21 +4270,83 @@ function teklifDurumSec(id, yeniDurum){
   save();renderF();
 }
 
+function tomParaDegis(){
+  const secilen=document.querySelector('input[name="tom-para"]:checked')?.value||'eur';
+  const isTl=secilen==='tl';
+  document.getElementById('tom-simge').textContent=secilen==='tl'?'₺':secilen==='usd'?'$':'€';
+  document.getElementById('tom-kur-simge').textContent=secilen==='usd'?'$':'€';
+  document.getElementById('tom-kur-grp').style.display=isTl?'none':'';
+  document.getElementById('tom-tl-grp').style.display=isTl?'none':'';
+  // Radio etiket stilleri
+  ['eur','usd','tl'].forEach(p=>{
+    const lbl=document.getElementById('tom-'+p+'-label');
+    if(lbl){lbl.style.borderColor=p===secilen?'var(--accent)':'var(--border)';lbl.style.background=p===secilen?'rgba(232,93,26,0.1)':'transparent';}
+  });
+  tomKurHesapla();
+}
+
+function tomKurHesapla(){
+  const tutar=parseFloat(document.getElementById('tom-tutar').value)||0;
+  const kur=parseFloat(document.getElementById('tom-kur').value)||51;
+  const tl=tutar*kur;
+  const tlEl=document.getElementById('tom-tutar-tl');
+  if(tlEl)tlEl.value=tl>0?tl.toFixed(2):'';
+}
+
+function tomVadeHesapla(){
+  const gun=parseInt(document.getElementById('tom-vade-gun').value)||0;
+  const prev=document.getElementById('tom-vade-preview');
+  if(!gun||!prev){prev&&(prev.textContent='—');return;}
+  const d=new Date();d.setDate(d.getDate()+gun);
+  prev.textContent=d.toLocaleDateString('tr-TR');
+}
+
+async function tomKurCek(){
+  try{
+    const cache=JSON.parse(localStorage.getItem('ardem_kur_cache')||'{}');
+    const bugun=new Date().toISOString().split('T')[0];
+    if(cache.tarih===bugun&&cache.kur>1){
+      document.getElementById('tom-kur').value=cache.kur.toFixed(2);
+      document.getElementById('tom-kur-tarih').textContent='('+bugun+' · güncel)';
+      tomKurHesapla();return;
+    }
+    const res=await fetch('https://api.exchangerate-api.com/v4/latest/EUR');
+    const data=await res.json();
+    const kur=data.rates?.TRY||51;
+    document.getElementById('tom-kur').value=kur.toFixed(2);
+    document.getElementById('tom-kur-tarih').textContent='('+bugun+')';
+    localStorage.setItem('ardem_kur_cache',JSON.stringify({tarih:bugun,kur}));
+    tomKurHesapla();
+  }catch(e){
+    document.getElementById('tom-kur').value='51.00';
+    tomKurHesapla();
+  }
+}
+
 function teklifOdemeModalAc(id){
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
   if(!f)return;
-  const simge=f.paraBirimi==='tl'?'₺':f.paraBirimi==='usd'?'$':'€';
-  const modal=document.getElementById('teklif-odeme-modal');
-  if(!modal)return;
   document.getElementById('tom-no').textContent=f.no;
   document.getElementById('tom-musteri').textContent=f.musteriAd;
-  document.getElementById('tom-tutar').value=f.tutar||0;
-  document.getElementById('tom-simge').textContent=simge;
-  document.getElementById('tom-para').textContent=f.paraBirimi==='tl'?'TL':f.paraBirimi==='usd'?'USD':'EUR';
-  // Vade tarihi — bugünden 45 gün sonra varsayılan
-  const vade=new Date();vade.setDate(vade.getDate()+45);
-  document.getElementById('tom-vade').value=vade.toISOString().split('T')[0];
+
+  // Para birimini tekliften getir
+  const paraBirimi=f.paraBirimi||'eur';
+  const radios=document.querySelectorAll('input[name="tom-para"]');
+  radios.forEach(r=>{r.checked=r.value===paraBirimi;});
+  tomParaDegis();
+
+  // Tutarı tekliften getir
+  document.getElementById('tom-tutar').value=f.tutar||'';
+  document.getElementById('tom-kur').value='';
+  document.getElementById('tom-tutar-tl').value='';
+  document.getElementById('tom-vade-gun').value='';
+  document.getElementById('tom-vade-preview').textContent='—';
   document.getElementById('tom-notlar').value=f.projeAdi||f.aciklama||'';
+
+  // Güncel kuru çek
+  tomKurCek();
+
+  const modal=document.getElementById('teklif-odeme-modal');
   modal.dataset.teklifId=id;
   modal.classList.add('open');
 }
@@ -4244,36 +4357,50 @@ function teklifOdemeKaydet(){
   const id=modal.dataset.teklifId;
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
   if(!f)return;
-  const tutar=parseFloat(document.getElementById('tom-tutar').value)||0;
-  const vade=document.getElementById('tom-vade').value;
-  const notlar=document.getElementById('tom-notlar').value;
-  if(!tutar){showToast('Tutar giriniz!','error');return;}
-  if(!vade){showToast('Vade tarihi giriniz!','error');return;}
 
-  // Ödemeler'e ekle
+  const secilen=document.querySelector('input[name="tom-para"]:checked')?.value||'eur';
+  const tutar=parseFloat(document.getElementById('tom-tutar').value)||0;
+  const kur=parseFloat(document.getElementById('tom-kur').value)||51;
+  const tutarTl=secilen==='tl'?tutar:(parseFloat(document.getElementById('tom-tutar-tl').value)||tutar*kur);
+  const vadeGun=parseInt(document.getElementById('tom-vade-gun').value)||0;
+  const notlar=document.getElementById('tom-notlar').value;
+
+  if(!tutar){showToast('Tutar giriniz!','error');return;}
+  if(!vadeGun){showToast('Vade seçiniz!','error');return;}
+
+  // Vade tarihi hesapla
+  const vadeD=new Date();vadeD.setDate(vadeD.getDate()+vadeGun);
+  const vadeTarih=vadeD.toISOString().split('T')[0];
+
   if(!ST.odemeler)ST.odemeler=[];
   ST.odemeler.push({
     id:String(Date.now()),
     musteriId:f.musteriId,
     musteriAd:f.musteriAd,
+    tutarEur:secilen==='eur'?tutar:0,
+    tutarTl:tutarTl,
     tutar:tutar,
-    paraBirimi:f.paraBirimi||'eur',
-    vadeTarihi:vade,
+    paraBirimi:secilen,
+    kur:kur,
+    vadeTarih:vadeTarih,
+    vadeGun:vadeGun,
     durum:'bekliyor',
     tip:'Teklif Ödemesi',
     aciklama:notlar||f.no,
     teklifId:id,
     teklifNo:f.no,
+    tarih:today(),
     olusturma:new Date().toISOString(),
   });
 
-  // Teklife de tutar ve vadeyi kaydet
   f.tutar=tutar;
-  f.vadeTarihi=vade;
+  f.paraBirimi=secilen;
+  f.vadeTarih=vadeTarih;
 
   modal.classList.remove('open');
-  save();renderF();renderOdemeler();
-  showToast(`Ödeme oluşturuldu → Ödemeler'e eklendi ✓`,'success');
+  save();renderF();renderOdemeler();updateBadges();
+  const simge=secilen==='tl'?'₺':secilen==='usd'?'$':'€';
+  showToast(`Ödeme takibe alındı — ${simge}${tutar.toLocaleString('tr-TR',{minimumFractionDigits:2})} · Vade: ${vadeD.toLocaleDateString('tr-TR')} ✓`,'success');
 }
 
 async function teklifDocxIndir(id){

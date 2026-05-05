@@ -3757,12 +3757,15 @@ function teklifNoOlustur(){
 
 function saveF(){
   const musteriId=document.getElementById('f-musteri').value;
-  const tutar=document.getElementById('f-tutar').value;
-  if(!musteriId||!tutar){showToast('Müşteri ve tutar zorunludur!','error');return;}
-  const m=ST.musteriler.find(x=>x.id==musteriId);
+  if(!musteriId){showToast('Müşteri seçiniz!','error');return;}
   const tip=document.getElementById('f-tip').value;
   const isTeklif=tip==='Servis Teklifi';
   const isSatisTeklif=tip==='Satış Teklifi';
+  // Satış teklifinde tutar ürünlerden otomatik hesaplanıyor
+  if(isSatisTeklif) fSatisToplamHesapla();
+  const tutar=document.getElementById('f-tutar').value;
+  if(!isSatisTeklif&&!tutar){showToast('Tutar zorunludur!','error');return;}
+  const m=ST.musteriler.find(x=>x.id==musteriId);
   const no=isTeklif?teklifNoOlustur():isSatisTeklif?satisTeklifNoOlustur():'F-'+String(ST.faturalar.length+1).padStart(4,'0');
   const paraBirimi=document.getElementById('f-para')?document.getElementById('f-para').value:'eur';
   const seciliMakineler=_fMakineler.filter(m=>m.secili).map(m=>({ad:m.ad,seriNo:m.seriNo,bakimPlani:m.bakimPlani,fiyat:m.fiyat,calismaS:'',parcalar:m.parcalar||[]}));
@@ -3864,7 +3867,11 @@ function renderF(){
       <td style="font-size:12px;font-weight:700;color:var(--accent)">${f.no}${f.servisIds&&f.servisIds.length?'<br><span style="font-size:10px;color:#60a5fa;font-weight:400">🔧 Servis bağlı</span>':''}</td>
       <td style="font-weight:500;font-size:13px">${f.musteriAd}</td>
       <td style="font-size:12px;color:var(--text2)">${f.aciklama||'—'}</td>
-      <td style="font-weight:600">${f.paraBirimi==='tl'?'₺'+(f.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):fmtEur(f.tutar||0)}</td>
+      <td style="font-weight:600">${
+        f.paraBirimi==='tl'?'₺'+(f.tutarTl||f.tutar||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):
+        f.paraBirimi==='usd'?'$'+(f.tutar||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):
+        fmtEur(f.tutar||0)
+      }</td>
       <td style="font-size:12px">${fmtDate(f.tarih)}</td>
       <td><span class="badge bo">${tipLabel}</span></td>
       <td>${durumHtml}</td>
@@ -3880,9 +3887,9 @@ function renderF(){
   const toplam=ST.faturalar.reduce((a,f)=>a+(f.tutar||0),0);
   const odenen=ST.faturalar.filter(f=>f.durum==='odendi').reduce((a,f)=>a+(f.tutar||0),0);
   const bekleyen=ST.faturalar.filter(f=>f.durum==='bekliyor').reduce((a,f)=>a+(f.tutar||0),0);
-  const teklifler=ST.faturalar.filter(f=>f.tip==='Teklif');
+  const teklifler=ST.faturalar.filter(f=>f.tip==='Teklif'||f.tip==='Servis Teklifi'||f.tip==='Satış Teklifi');
   const onaylanan=teklifler.filter(f=>f.teklifDurum==='onaylandi').length;
-  document.getElementById('f-ozet').innerHTML=`Toplam: <b>${fmtEur(toplam)}</b> · <span style="color:var(--green)">Ödenen: <b>${fmtEur(odenen)}</b></span> · <span style="color:var(--yellow)">Bekleyen: <b>${fmtEur(bekleyen)}</b></span>${teklifler.length?` · Teklif: <b>${teklifler.length}</b> (${onaylanan} onaylı)`:''}`; 
+  document.getElementById('f-ozet').innerHTML=`Teklif: <b>${teklifler.length}</b> (${onaylanan} onaylı)${toplam>0?' · Toplam: <b>'+fmtEur(toplam)+'</b>':''}`; 
 }
 
 function teklifOnizle(id){
@@ -3890,8 +3897,10 @@ function teklifOnizle(id){
   if(!f||f.tip!=='Teklif')return;
   const tipLabel=f.tip==='Teklif'?'Servis Teklifi':f.tip||'Teklif';
   const durumMap={hazirlandi:'📝 Hazırlandı',gonderildi:'📤 Gönderildi',onaylandi:'✅ Onaylandı',reddedildi:'❌ Reddedildi'};
-  const para=f.paraBirimi==='tl'?'₺':'€';
-  const tutar=f.paraBirimi==='tl'?'₺'+(f.tutarTl||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):fmtEur(f.tutar||0);
+  const para=f.paraBirimi==='tl'?'₺':f.paraBirimi==='usd'?'$':'€';
+  const tutar=f.paraBirimi==='tl'?'₺'+(f.tutarTl||f.tutar||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):
+              f.paraBirimi==='usd'?'$'+(f.tutar||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):
+              fmtEur(f.tutar||0);
 
   let makineHtml='';
   if(f.teklifMakineler&&f.teklifMakineler.length){
@@ -3971,58 +3980,65 @@ function teklifOnizle(id){
 
 function teklifDuzenle(id){
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
-  if(!f||f.tip!=='Teklif'){showToast('Teklif bulunamadı','error');return;}
-
-  populateSels();
-  // Modal alanlarını doldur
-  const musteriSel=document.getElementById('f-musteri');
-  musteriSel.value=f.musteriId||'';
-
-  // Müşteriyi seçince makineleri yükle, sonra mevcut seçimleri işaretle
-  _fMakineler=[];_fParcalar=[];
-  const m=ST.musteriler.find(x=>String(x.id)===String(f.musteriId));
-  if(m&&m.ekipmanlar){
-    m.ekipmanlar.forEach(e=>{
-      const mevcut=(f.teklifMakineler||[]).find(tm=>tm.ad.includes(e.tip)||tm.seriNo===e.seriNo);
-      _fMakineler.push({
-        uid:'m_'+e.id,ekId:e.id,
-        ad:(e.marka?e.marka+' ':'')+e.tip+(e.model?' '+e.model:''),
-        seriNo:e.seri||e.seriNo||'',
-        bakimPlani:mevcut?mevcut.bakimPlani:'B BAKIM',
-        fiyat:mevcut?mevcut.fiyat:0,
-        secili:!!mevcut,
-        parcalar:mevcut?(mevcut.parcalar||[]):[]
-      });
-    });
+  if(!f||(f.tip!=='Teklif'&&f.tip!=='Servis Teklifi'&&f.tip!=='Satış Teklifi')){
+    showToast('Teklif bulunamadı','error');return;
   }
-  // Listede olmayan manuel makineler
-  (f.teklifMakineler||[]).forEach(tm=>{
-    const zaten=_fMakineler.find(x=>x.seriNo===tm.seriNo&&tm.seriNo);
-    if(!zaten){
-      _fMakineler.push({uid:'manuel_'+Date.now()+Math.random(),ekId:null,ad:tm.ad,seriNo:tm.seriNo||'',bakimPlani:tm.bakimPlani||'B BAKIM',fiyat:tm.fiyat||0,secili:true,parcalar:tm.parcalar||[]});
-    }
-  });
 
-  document.getElementById('f-tip').value='Teklif';
-  document.getElementById('f-aciklama').value=f.aciklama||'';
-  document.getElementById('f-tutar').value=f.tutar||'';
+  const isSatis=f.tip==='Satış Teklifi';
+  populateSels();
+
+  // Ortak alanlar
+  document.getElementById('f-musteri').value=f.musteriId||'';
+  document.getElementById('f-tip').value=f.tip==='Teklif'?'Servis Teklifi':f.tip;
   document.getElementById('f-para').value=f.paraBirimi||'eur';
   document.getElementById('f-tarih').value=f.tarih||'';
-  document.getElementById('f-vade-gun').value=f.vadeGun||45;
-  document.getElementById('f-durum').value=f.durum||'bekliyor';
   document.getElementById('f-notlar').value=f.notlar||'';
-  if(document.getElementById('f-gec-bas'))document.getElementById('f-gec-bas').value=f.gecerlilikBaslangic||'';
-  if(document.getElementById('f-gec-bit'))document.getElementById('f-gec-bit').value=f.gecerlilikBitis||'';
 
-  renderFMakineler();renderFParcaBolumu();
-  document.getElementById('f-teklif-alanlari').style.display='';
-
-  // Kaydet butonunu güncelleme moduna al
-  const kaydetBtn=document.querySelector('#f-modal .btn-primary');
-  if(kaydetBtn){
-    kaydetBtn.textContent='💾 Güncelle';
-    kaydetBtn.onclick=()=>teklifGuncelle(id);
+  if(isSatis){
+    // Satış teklifi alanlarını doldur
+    _fUrunler=(f.satisUrunler||[]).map(u=>({...u}));
+    document.getElementById('f-yetkili').value=f.yetkiliKisi||'';
+    document.getElementById('f-proje-adi').value=f.projeAdi||'';
+    document.getElementById('f-teslim-suresi').value=f.teslimSuresi||'';
+    document.getElementById('f-odeme-sarti').value=f.odemeSarti||'';
+    document.getElementById('f-teslim-yeri').value=f.teslimYeri||'';
+    document.getElementById('f-opsiyon').value=f.opsiyon||'30';
+    document.getElementById('f-iskonto').value=f.iskonto||0;
+    // UI güncelle
+    fTipDegis();
+    renderFUrunler();
+  } else {
+    // Servis teklifi alanlarını doldur
+    _fMakineler=[];_fParcalar=[];
+    const m=ST.musteriler.find(x=>String(x.id)===String(f.musteriId));
+    if(m&&m.ekipmanlar){
+      m.ekipmanlar.forEach(e=>{
+        const mevcut=(f.teklifMakineler||[]).find(tm=>tm.ad.includes(e.tip)||tm.seriNo===e.seriNo);
+        _fMakineler.push({uid:'m_'+e.id,ekId:e.id,
+          ad:(e.marka?e.marka+' ':'')+e.tip+(e.model?' '+e.model:''),
+          seriNo:e.seri||e.seriNo||'',
+          bakimPlani:mevcut?mevcut.bakimPlani:'B BAKIM',
+          fiyat:mevcut?mevcut.fiyat:0,secili:!!mevcut,
+          parcalar:mevcut?(mevcut.parcalar||[]):[]
+        });
+      });
+    }
+    (f.teklifMakineler||[]).forEach(tm=>{
+      const zaten=_fMakineler.find(x=>x.seriNo===tm.seriNo&&tm.seriNo);
+      if(!zaten) _fMakineler.push({uid:'manuel_'+Date.now()+Math.random(),ekId:null,ad:tm.ad,seriNo:tm.seriNo||'',bakimPlani:tm.bakimPlani||'B BAKIM',fiyat:tm.fiyat||0,secili:true,parcalar:tm.parcalar||[]});
+    });
+    document.getElementById('f-aciklama').value=f.aciklama||'';
+    document.getElementById('f-tutar').value=f.tutar||'';
+    document.getElementById('f-vade-gun').value=f.vadeGun||45;
+    document.getElementById('f-durum').value=f.durum||'bekliyor';
+    if(document.getElementById('f-gec-bas'))document.getElementById('f-gec-bas').value=f.gecerlilikBaslangic||'';
+    if(document.getElementById('f-gec-bit'))document.getElementById('f-gec-bit').value=f.gecerlilikBitis||'';
+    fTipDegis();
+    renderFMakineler();renderFParcaBolumu();
   }
+
+  const kaydetBtn=document.querySelector('#f-modal .btn-primary');
+  if(kaydetBtn){kaydetBtn.textContent='💾 Güncelle';kaydetBtn.onclick=()=>teklifGuncelle(id);}
   document.getElementById('f-modal').querySelector('.mtitle').textContent='✏️ Teklif Düzenle';
   document.getElementById('f-modal').classList.add('open');
 }
@@ -4030,30 +4046,47 @@ function teklifDuzenle(id){
 function teklifGuncelle(id){
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
   if(!f){showToast('Teklif bulunamadı','error');return;}
-  const tutar=document.getElementById('f-tutar').value;
-  if(!tutar){showToast('Tutar zorunludur!','error');return;}
 
-  const seciliMakineler=_fMakineler.filter(m=>m.secili).map(m=>({ad:m.ad,seriNo:m.seriNo,bakimPlani:m.bakimPlani,fiyat:m.fiyat,calismaS:'',parcalar:m.parcalar||[]}));
-  const teklifParcalar=[];
-  seciliMakineler.forEach(m=>{(m.parcalar||[]).forEach(p=>{teklifParcalar.push({makine:m.ad,bakimTipi:m.bakimPlani,ad:p.ad,adet:p.adet||1});});});
+  const isSatis=f.tip==='Satış Teklifi';
 
-  f.aciklama=document.getElementById('f-aciklama').value;
-  f.tutar=parseFloat(tutar);
+  // Ortak alanlar
   f.paraBirimi=document.getElementById('f-para').value;
   f.tarih=document.getElementById('f-tarih').value;
-  f.durum=document.getElementById('f-durum').value;
   f.notlar=document.getElementById('f-notlar').value;
-  f.vadeGun=parseInt(document.getElementById('f-vade-gun')?.value)||45;
-  f.gecerlilikBaslangic=document.getElementById('f-gec-bas')?.value||'';
-  f.gecerlilikBitis=document.getElementById('f-gec-bit')?.value||'';
-  f.teklifMakineler=seciliMakineler;
-  f.teklifParcalar=teklifParcalar;
   f.guncelleme=new Date().toISOString();
 
-  // Butonu sıfırla
+  if(isSatis){
+    // Satış teklifi güncelle
+    f.satisUrunler=_fUrunler.map(u=>({...u}));
+    f.tutar=parseFloat(document.getElementById('f-tutar').value)||0;
+    f.yetkiliKisi=document.getElementById('f-yetkili')?.value||'';
+    f.projeAdi=document.getElementById('f-proje-adi')?.value||'';
+    f.teslimSuresi=document.getElementById('f-teslim-suresi')?.value||'';
+    f.odemeSarti=document.getElementById('f-odeme-sarti')?.value||'';
+    f.teslimYeri=document.getElementById('f-teslim-yeri')?.value||'';
+    f.opsiyon=document.getElementById('f-opsiyon')?.value||'30';
+    f.iskonto=parseFloat(document.getElementById('f-iskonto')?.value)||0;
+  } else {
+    // Servis teklifi güncelle
+    const tutar=document.getElementById('f-tutar').value;
+    if(!tutar){showToast('Tutar zorunludur!','error');return;}
+    f.aciklama=document.getElementById('f-aciklama').value;
+    f.tutar=parseFloat(tutar);
+    f.durum=document.getElementById('f-durum').value;
+    f.vadeGun=parseInt(document.getElementById('f-vade-gun')?.value)||45;
+    f.gecerlilikBaslangic=document.getElementById('f-gec-bas')?.value||'';
+    f.gecerlilikBitis=document.getElementById('f-gec-bit')?.value||'';
+    const seciliMakineler=_fMakineler.filter(m=>m.secili).map(m=>({ad:m.ad,seriNo:m.seriNo,bakimPlani:m.bakimPlani,fiyat:m.fiyat,calismaS:'',parcalar:m.parcalar||[]}));
+    const teklifParcalar=[];
+    seciliMakineler.forEach(m=>{(m.parcalar||[]).forEach(p=>{teklifParcalar.push({makine:m.ad,bakimTipi:m.bakimPlani,ad:p.ad,adet:p.adet||1});});});
+    f.teklifMakineler=seciliMakineler;
+    f.teklifParcalar=teklifParcalar;
+  }
+
+  // Modal sıfırla
   const kaydetBtn=document.querySelector('#f-modal .btn-primary');
   if(kaydetBtn){kaydetBtn.textContent='💾 Kaydet';kaydetBtn.onclick=saveF;}
-  document.getElementById('f-modal').querySelector('.mtitle').textContent='🧾 Teklif / Fatura';
+  document.getElementById('f-modal').querySelector('.mtitle').textContent='🧾 Yeni Teklif';
 
   save();closeM('f-modal');renderF();showToast(`${f.no} güncellendi ✓`,'success');
 }

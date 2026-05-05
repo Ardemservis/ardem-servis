@@ -739,6 +739,41 @@ tr:hover td{background:rgba(255,255,255,0.015);}
   </div>
 </div>
 
+<!-- MODAL: TEKLİF ÖDEME -->
+<div class="mo" id="teklif-odeme-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="mhd"><div class="mtitle">💰 Ödeme Oluştur</div><button class="mclose" onclick="closeM('teklif-odeme-modal')">✕</button></div>
+    <div class="mbody">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px">
+        <div style="font-size:11px;color:var(--text2)">TEKLİF</div>
+        <div style="font-weight:700;font-size:14px;color:var(--accent)" id="tom-no"></div>
+        <div style="font-size:13px;margin-top:2px" id="tom-musteri"></div>
+      </div>
+      <div class="fg fg2">
+        <div class="fgrp">
+          <label class="flbl">Tutar * <span id="tom-simge" style="color:var(--accent)">€</span> <span id="tom-para" style="color:var(--text2);font-size:10px"></span></label>
+          <input class="finput" id="tom-tutar" type="number" min="0" step="0.01" placeholder="0.00" style="font-size:16px;font-weight:700">
+        </div>
+        <div class="fgrp">
+          <label class="flbl">Vade Tarihi *</label>
+          <input class="finput" id="tom-vade" type="date">
+        </div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl">Açıklama / Not</label>
+        <input class="finput" id="tom-notlar" placeholder="Proje adı, fatura no...">
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:8px;padding:8px;background:rgba(251,191,36,0.08);border-radius:8px;border:1px solid rgba(251,191,36,0.2)">
+        💡 Ödeme Ödemeler sayfasına otomatik eklenecek
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeM('teklif-odeme-modal')">İptal</button>
+      <button class="btn btn-primary" onclick="teklifOdemeKaydet()">💰 Ödeme Oluştur</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: TEKLİF ÖNİZLEME -->
 <div class="mo" id="teklif-onizle-modal">
   <div class="modal modal-lg">
@@ -3853,10 +3888,14 @@ function renderF(){
     let durumHtml='';
     if(isTeklifTuru){
       const d=f.teklifDurum||'hazirlandi';
-      const durumMap={hazirlandi:'<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(148,163,184,0.15);color:#94a3b8;font-weight:600">📝 Hazırlandı</span>',
-        gonderildi:'<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(59,130,246,0.15);color:#60a5fa;font-weight:600">📤 Gönderildi</span>',
-        onaylandi:'<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(34,197,94,0.15);color:#4ade80;font-weight:600">✅ Onaylandı</span>',
-        reddedildi:'<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(239,68,68,0.15);color:#f87171;font-weight:600">❌ Reddedildi</span>'};
+      const durumMap={
+        hazirlandi:    '<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(148,163,184,0.15);color:#94a3b8;font-weight:600">📝 Hazırlandı</span>',
+        gonderildi:    '<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(59,130,246,0.15);color:#60a5fa;font-weight:600">📤 Gönderildi</span>',
+        onaylandi:     '<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(34,197,94,0.15);color:#4ade80;font-weight:600">✅ Onaylandı</span>',
+        servis_yapildi:'<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(168,85,247,0.15);color:#c084fc;font-weight:600">🔧 Servis Yapıldı</span>',
+        odeme_bekliyor:'<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(251,191,36,0.15);color:#fbbf24;font-weight:600">💰 Ödeme Bekliyor</span>',
+        reddedildi:    '<span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(239,68,68,0.15);color:#f87171;font-weight:600">❌ Reddedildi</span>',
+      };
       durumHtml=durumMap[d]||durumMap.hazirlandi;
     } else {
       durumHtml=durumBadge(f.durum);
@@ -3896,7 +3935,8 @@ function teklifOnizle(id){
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
   if(!f||f.tip!=='Teklif')return;
   const tipLabel=f.tip==='Teklif'?'Servis Teklifi':f.tip||'Teklif';
-  const durumMap={hazirlandi:'📝 Hazırlandı',gonderildi:'📤 Gönderildi',onaylandi:'✅ Onaylandı',reddedildi:'❌ Reddedildi'};
+  const durumMap={hazirlandi:'📝 Hazırlandı',gonderildi:'📤 Gönderildi',onaylandi:'✅ Onaylandı',
+    servis_yapildi:'🔧 Servis Yapıldı',odeme_bekliyor:'💰 Ödeme Bekliyor',reddedildi:'❌ Reddedildi'};
   const para=f.paraBirimi==='tl'?'₺':f.paraBirimi==='usd'?'$':'€';
   const tutar=f.paraBirimi==='tl'?'₺'+(f.tutarTl||f.tutar||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):
               f.paraBirimi==='usd'?'$'+(f.tutar||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):
@@ -4093,15 +4133,18 @@ function teklifGuncelle(id){
 
 function teklifDurumDegis(id){
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
-  if(!f||(f.tip!=='Servis Teklifi'&&f.tip!=='Satış Teklifi'))return;
-  const sirali=['hazirlandi','gonderildi','onaylandi','reddedildi'];
+  if(!f||(f.tip!=='Servis Teklifi'&&f.tip!=='Satış Teklifi'&&f.tip!=='Teklif'))return;
+  const sirali=['hazirlandi','gonderildi','onaylandi','servis_yapildi','odeme_bekliyor','reddedildi'];
   const renkler={
-    hazirlandi: {bg:'rgba(148,163,184,0.15)',border:'rgba(148,163,184,0.3)',renk:'#94a3b8'},
-    gonderildi: {bg:'rgba(59,130,246,0.15)',border:'rgba(59,130,246,0.3)',renk:'#60a5fa'},
-    onaylandi:  {bg:'rgba(34,197,94,0.15)', border:'rgba(34,197,94,0.3)', renk:'#4ade80'},
-    reddedildi: {bg:'rgba(239,68,68,0.15)', border:'rgba(239,68,68,0.3)', renk:'#f87171'},
+    hazirlandi:    {bg:'rgba(148,163,184,0.15)',border:'rgba(148,163,184,0.3)',renk:'#94a3b8'},
+    gonderildi:    {bg:'rgba(59,130,246,0.15)', border:'rgba(59,130,246,0.3)', renk:'#60a5fa'},
+    onaylandi:     {bg:'rgba(34,197,94,0.15)',  border:'rgba(34,197,94,0.3)',  renk:'#4ade80'},
+    servis_yapildi:{bg:'rgba(168,85,247,0.15)', border:'rgba(168,85,247,0.3)', renk:'#c084fc'},
+    odeme_bekliyor:{bg:'rgba(251,191,36,0.15)', border:'rgba(251,191,36,0.3)', renk:'#fbbf24'},
+    reddedildi:    {bg:'rgba(239,68,68,0.15)',  border:'rgba(239,68,68,0.3)',  renk:'#f87171'},
   };
-  const etiket={hazirlandi:'📝 Hazırlandı',gonderildi:'📤 Gönderildi',onaylandi:'✅ Onaylandı',reddedildi:'❌ Reddedildi'};
+  const etiket={hazirlandi:'📝 Hazırlandı',gonderildi:'📤 Gönderildi',onaylandi:'✅ Onaylandı',
+    servis_yapildi:'🔧 Servis Yapıldı',odeme_bekliyor:'💰 Ödeme Bekliyor',reddedildi:'❌ Reddedildi'};
   const mevcut=f.teklifDurum||'hazirlandi';
 
   document.getElementById('td-no').textContent=f.no;
@@ -4129,22 +4172,86 @@ function teklifDurumDegis(id){
 function teklifDurumSec(id, yeniDurum){
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
   if(!f)return;
-  const etiket={hazirlandi:'📝 Hazırlandı',gonderildi:'📤 Gönderildi',onaylandi:'✅ Onaylandı',reddedildi:'❌ Reddedildi'};
+  const etiket={hazirlandi:'📝 Hazırlandı',gonderildi:'📤 Gönderildi',onaylandi:'✅ Onaylandı',
+    servis_yapildi:'🔧 Servis Yapıldı',odeme_bekliyor:'💰 Ödeme Bekliyor',reddedildi:'❌ Reddedildi'};
   f.teklifDurum=yeniDurum;
   closeM('teklif-durum-modal');
 
-  // Teklif onaylandıysa bağlı servis planlarını da "onaylandi" yap
+  // Servis planı senkron
   if(yeniDurum==='onaylandi'&&f.servisIds&&f.servisIds.length){
     f.servisIds.forEach(sid=>{
       const s=ST.servisler.find(x=>String(x.id)===String(sid));
       if(s&&s.durum!=='tamamlandi')s.durum='onaylandi';
     });
-    showToast(`Teklif onaylandı — ${f.servisIds.length} servis planı güncellendi ✓`,'success');
     renderS();
-  } else {
-    showToast(`Teklif durumu: ${etiket[yeniDurum]} ✓`,'success');
   }
+
+  // Ödeme Bekliyor → ödeme modalı aç
+  if(yeniDurum==='odeme_bekliyor'){
+    save();renderF();
+    setTimeout(()=>teklifOdemeModalAc(id),200);
+    return;
+  }
+
+  showToast(`Durum: ${etiket[yeniDurum]} ✓`,'success');
   save();renderF();
+}
+
+function teklifOdemeModalAc(id){
+  const f=ST.faturalar.find(x=>String(x.id)===String(id));
+  if(!f)return;
+  const simge=f.paraBirimi==='tl'?'₺':f.paraBirimi==='usd'?'$':'€';
+  const modal=document.getElementById('teklif-odeme-modal');
+  if(!modal)return;
+  document.getElementById('tom-no').textContent=f.no;
+  document.getElementById('tom-musteri').textContent=f.musteriAd;
+  document.getElementById('tom-tutar').value=f.tutar||0;
+  document.getElementById('tom-simge').textContent=simge;
+  document.getElementById('tom-para').textContent=f.paraBirimi==='tl'?'TL':f.paraBirimi==='usd'?'USD':'EUR';
+  // Vade tarihi — bugünden 45 gün sonra varsayılan
+  const vade=new Date();vade.setDate(vade.getDate()+45);
+  document.getElementById('tom-vade').value=vade.toISOString().split('T')[0];
+  document.getElementById('tom-notlar').value=f.projeAdi||f.aciklama||'';
+  modal.dataset.teklifId=id;
+  modal.classList.add('open');
+}
+
+function teklifOdemeKaydet(){
+  const modal=document.getElementById('teklif-odeme-modal');
+  if(!modal)return;
+  const id=modal.dataset.teklifId;
+  const f=ST.faturalar.find(x=>String(x.id)===String(id));
+  if(!f)return;
+  const tutar=parseFloat(document.getElementById('tom-tutar').value)||0;
+  const vade=document.getElementById('tom-vade').value;
+  const notlar=document.getElementById('tom-notlar').value;
+  if(!tutar){showToast('Tutar giriniz!','error');return;}
+  if(!vade){showToast('Vade tarihi giriniz!','error');return;}
+
+  // Ödemeler'e ekle
+  if(!ST.odemeler)ST.odemeler=[];
+  ST.odemeler.push({
+    id:String(Date.now()),
+    musteriId:f.musteriId,
+    musteriAd:f.musteriAd,
+    tutar:tutar,
+    paraBirimi:f.paraBirimi||'eur',
+    vadeTarihi:vade,
+    durum:'bekliyor',
+    tip:'Teklif Ödemesi',
+    aciklama:notlar||f.no,
+    teklifId:id,
+    teklifNo:f.no,
+    olusturma:new Date().toISOString(),
+  });
+
+  // Teklife de tutar ve vadeyi kaydet
+  f.tutar=tutar;
+  f.vadeTarihi=vade;
+
+  modal.classList.remove('open');
+  save();renderF();renderOdemeler();
+  showToast(`Ödeme oluşturuldu → Ödemeler'e eklendi ✓`,'success');
 }
 
 async function teklifDocxIndir(id){

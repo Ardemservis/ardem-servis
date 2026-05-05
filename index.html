@@ -3012,8 +3012,6 @@ function renderS(){
       <td>${periyotlar.length?`<span class="badge bo">${periyotlar.join('/')} Aylık</span>`:'<span class="badge bgr">Tek Sefer</span>'}</td>
       <td>${durumBadge(genelDurum)}</td>
       <td><div style="display:flex;gap:5px;flex-wrap:wrap">
-        ${!hepsiTamamlandi&&hepsiOnaylandi?`<button class="btn btn-success btn-sm" onclick="tamamlaServisGrup('${ids}')">✅ Tamamla</button>`:''}
-        ${!hepsiTamamlandi&&!hepsiOnaylandi?`<button class="btn btn-primary btn-sm" onclick="onaylaServisGrup('${ids}')" style="background:rgba(251,191,36,0.2);border:1px solid #fbbf24;color:#fbbf24">👍 Müşteri Onayı</button>`:''}
         <button class="btn btn-ghost btn-sm" onclick="servisTeklifOlustur('${ids}')" style="background:rgba(59,130,246,0.15);border:1px solid #3b82f6;color:#60a5fa">📄 Teklif</button>
         ${!hepsiTamamlandi?`<button class="btn btn-ghost btn-sm" onclick="erteleServisGrup('${ids}')">📅 Ertele</button>`:''}
         <button class="btn btn-ghost btn-sm" onclick="servisDuzenle('${ids}')">✏️</button>
@@ -3933,7 +3931,7 @@ function renderF(){
 
 function teklifOnizle(id){
   const f=ST.faturalar.find(x=>String(x.id)===String(id));
-  if(!f||f.tip!=='Teklif')return;
+  if(!f)return;
   const tipLabel=f.tip==='Teklif'?'Servis Teklifi':f.tip||'Teklif';
   const durumMap={hazirlandi:'📝 Hazırlandı',gonderildi:'📤 Gönderildi',onaylandi:'✅ Onaylandı',
     servis_yapildi:'🔧 Servis Yapıldı',odeme_bekliyor:'💰 Ödeme Bekliyor',reddedildi:'❌ Reddedildi'};
@@ -4184,6 +4182,30 @@ function teklifDurumSec(id, yeniDurum){
       if(s&&s.durum!=='tamamlandi')s.durum='onaylandi';
     });
     renderS();
+  }
+
+  // Servis Yapıldı → bağlı servis planlarını tamamla + periyot başlat
+  if(yeniDurum==='servis_yapildi'&&f.servisIds&&f.servisIds.length){
+    const servisler=f.servisIds.map(sid=>ST.servisler.find(x=>String(x.id)===String(sid))).filter(Boolean);
+    servisler.forEach(s=>{
+      s.durum='tamamlandi';
+      s.tamamlanmaTarih=today();
+      // Bir sonraki periyot planını oluştur
+      if(s.sonrakiTarih){
+        ST.servisler.push({
+          id:String(Date.now()+Math.random()),
+          musteriId:s.musteriId,musteriAd:s.musteriAd,
+          ekipmanId:s.ekipmanId,ekipmanAd:s.ekipmanAd,ekipmanTip:s.ekipmanTip,
+          tip:s.tip,tarih:s.sonrakiTarih,periyot:s.periyot,
+          sonrakiTarih:s.periyot?addMonths(s.sonrakiTarih,s.periyot):null,
+          notlar:'Otomatik oluşturuldu',durum:'bekliyor',
+          olusturma:new Date().toISOString()
+        });
+      }
+    });
+    addAkt('✅',`Servis tamamlandı: ${f.musteriAd} — ${f.no}`);
+    renderS();updateBadges();renderDash();
+    showToast(`Servis yapıldı — ${servisler.length} plan tamamlandı, sonraki periyot oluşturuldu ✓`,'success');
   }
 
   // Ödeme Bekliyor → ödeme modalı aç

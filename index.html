@@ -3607,7 +3607,7 @@ function fTipDegis(){
 let _fUrunler=[]; // [{uid, ad, adet, alisFiyat, birimFiyat}]
 
 function fUrunEkle(){
-  _fUrunler.push({uid:'u_'+Date.now(),ad:'',adet:1,alisFiyat:0,birimFiyat:0});
+  _fUrunler.push({uid:'u_'+Date.now(),ad:'',adet:1,alisFiyat:0,birimFiyat:0,karPct:null});
   renderFUrunler();
 }
 
@@ -3627,49 +3627,85 @@ function renderFUrunler(){
     const kar=satisToplam-alisToplam;
     const karPct=alisToplam>0?((kar/alisToplam)*100).toFixed(1):null;
     const karRenk=kar>0?'#4ade80':kar<0?'#f87171':'var(--text2)';
+    const karPctGoster=u.karPct!=null&&u.karPct!==''?u.karPct:'';
 
     return`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px">
-      <!-- Satır 1: Ürün adı -->
-      <input class="finput" value="${u.ad}" placeholder="Ürün adı / kod"
-        oninput="_fUrunler[${i}].ad=this.value" style="font-size:12px;margin-bottom:6px;width:100%">
-      <!-- Satır 2: Adet | Alış | Satış | Toplam | Sil -->
-      <div style="display:grid;grid-template-columns:55px 1fr 1fr 1fr 28px;gap:6px;align-items:center">
+      <input class="finput" value="${u.ad.replace(/"/g,'&quot;')}" placeholder="Ürün adı / kod"
+        oninput="_fUrunler[${i}].ad=this.value" style="font-size:12px;margin-bottom:6px;width:100%;box-sizing:border-box">
+      <div style="display:grid;grid-template-columns:50px 1fr 70px 1fr 90px 28px;gap:6px;align-items:end">
         <div>
           <div style="font-size:10px;color:var(--text2);margin-bottom:2px">ADET</div>
-          <input class="finput" value="${u.adet}" type="number" min="1"
+          <input class="finput" value="${u.adet}" type="number" min="1" step="1"
             oninput="_fUrunler[${i}].adet=parseFloat(this.value)||0;fSatisToplamHesapla()" onchange="renderFUrunler()"
             style="font-size:12px;text-align:center;-moz-appearance:textfield;appearance:textfield">
         </div>
         <div>
           <div style="font-size:10px;color:var(--text2);margin-bottom:2px">ALIŞ (${simge})</div>
           <input class="finput" value="${u.alisFiyat||''}" type="number" min="0" step="0.01" placeholder="0.00"
-            oninput="_fUrunler[${i}].alisFiyat=parseFloat(this.value)||0;fSatisToplamHesapla()" onchange="renderFUrunler()"
+            oninput="_fUrunler[${i}].alisFiyat=parseFloat(this.value)||0;fKarHesapla(${i})" onchange="renderFUrunler()"
             style="font-size:12px;text-align:right;-moz-appearance:textfield;appearance:textfield">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--accent);margin-bottom:2px;font-weight:700">KÂR %</div>
+          <input class="finput" value="${karPctGoster}" type="number" min="0" step="0.1" placeholder="—"
+            oninput="_fUrunler[${i}].karPct=this.value===''?null:parseFloat(this.value)||0;fKarPctUygula(${i})" onchange="renderFUrunler()"
+            style="font-size:12px;text-align:center;-moz-appearance:textfield;appearance:textfield;border-color:rgba(232,93,26,0.4)">
         </div>
         <div>
           <div style="font-size:10px;color:var(--text2);margin-bottom:2px">SATIŞ (${simge})</div>
           <input class="finput" value="${u.birimFiyat||''}" type="number" min="0" step="0.01" placeholder="0.00"
-            oninput="_fUrunler[${i}].birimFiyat=parseFloat(this.value)||0;fSatisToplamHesapla()" onchange="renderFUrunler()"
+            oninput="_fUrunler[${i}].birimFiyat=parseFloat(this.value)||0;_fUrunler[${i}].karPct=null;fSatisToplamHesapla()" onchange="renderFUrunler()"
             style="font-size:12px;text-align:right;-moz-appearance:textfield;appearance:textfield">
         </div>
         <div style="text-align:right">
           <div style="font-size:10px;color:var(--text2);margin-bottom:2px">TOPLAM</div>
-          <div style="font-size:12px;font-weight:700;color:var(--text1);padding:7px 0">
+          <div style="font-size:12px;font-weight:700;color:var(--text1);padding:8px 0">
             ${simge}${satisToplam.toLocaleString('tr-TR',{minimumFractionDigits:2})}
           </div>
         </div>
         <button class="btn btn-danger btn-sm" onclick="_fUrunler.splice(${i},1);renderFUrunler();fSatisToplamHesapla()"
-          style="padding:4px 6px;margin-top:16px">🗑️</button>
+          style="padding:4px 6px;margin-bottom:2px">🗑️</button>
       </div>
-      <!-- Satır 3: Kar göstergesi (sadece alış girilmişse) -->
       ${u.alisFiyat>0?`<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:12px;font-size:11px">
         <span style="color:var(--text2)">Alış Toplamı: ${simge}${alisToplam.toLocaleString('tr-TR',{minimumFractionDigits:2})}</span>
-        <span style="font-weight:700;color:${karRenk}">Kâr: ${simge}${kar.toLocaleString('tr-TR',{minimumFractionDigits:2})}${karPct?` (%${karPct})`:''}
-        </span>
+        <span style="font-weight:700;color:${karRenk}">Kâr: ${simge}${kar.toLocaleString('tr-TR',{minimumFractionDigits:2})}${karPct?' (%'+karPct+')':''}</span>
       </div>`:''}
     </div>`;
   }).join('');
   fSatisToplamHesapla();
+}
+
+
+// Alış değişince karPct varsa satışı güncelle
+function fKarHesapla(i){
+  const u=_fUrunler[i];
+  if(!u)return;
+  if(u.karPct!=null&&u.karPct!==''){
+    fKarPctUygula(i);
+  } else {
+    fSatisToplamHesapla();
+  }
+}
+
+// Kâr % değişince satış fiyatını hesapla
+function fKarPctUygula(i){
+  const u=_fUrunler[i];
+  if(!u)return;
+  const alis=parseFloat(u.alisFiyat)||0;
+  const pct=parseFloat(u.karPct)||0;
+  if(alis>0&&pct>=0){
+    u.birimFiyat=parseFloat((alis*(1+pct/100)).toFixed(2));
+  }
+  fSatisToplamHesapla();
+  // Satış input'unu güncelle (re-render olmadan)
+  const urunDiv=document.getElementById('f-urun-listesi');
+  if(urunDiv){
+    const inputs=urunDiv.querySelectorAll('div[style*="border-radius:8px"]');
+    if(inputs[i]){
+      const satisInput=inputs[i].querySelectorAll('input[type=number]')[3];
+      if(satisInput&&document.activeElement!==satisInput)satisInput.value=u.birimFiyat||'';
+    }
+  }
 }
 
 function fSatisToplamHesapla(){
@@ -3857,7 +3893,7 @@ function saveF(){
     teklifMakineler:isTeklif?seciliMakineler:undefined,
     teklifParcalar:isTeklif?teklifParcalar:undefined,
     // Satış teklifi alanları
-    satisUrunler:isSatisTeklif?_fUrunler.map(u=>({uid:u.uid,ad:u.ad,adet:u.adet,alisFiyat:u.alisFiyat||0,birimFiyat:u.birimFiyat})):undefined,
+    satisUrunler:isSatisTeklif?_fUrunler.map(u=>({uid:u.uid,ad:u.ad,adet:u.adet,alisFiyat:u.alisFiyat||0,birimFiyat:u.birimFiyat,karPct:u.karPct??null})):undefined,
     projeAdi:isSatisTeklif?document.getElementById('f-proje-adi')?.value||'':undefined,
     yetkiliKisi:isSatisTeklif?document.getElementById('f-yetkili')?.value||'':undefined,
     teslimYeri:isSatisTeklif?document.getElementById('f-teslim-yeri')?.value||'':undefined,
@@ -3942,7 +3978,7 @@ function renderF(){
     return`<tr style="cursor:pointer" onclick="teklifOnizle('${f.id}')">
       <td style="font-size:12px;font-weight:700;color:var(--accent)">${f.no}${f.servisIds&&f.servisIds.length?'<br><span style="font-size:10px;color:#60a5fa;font-weight:400">🔧 Servis bağlı</span>':''}</td>
       <td style="font-weight:500;font-size:13px">${f.musteriAd}</td>
-      <td style="font-size:12px;color:var(--text2)">${f.aciklama||'—'}</td>
+      <td style="font-size:12px;color:var(--text2)">${f.projeAdi||f.aciklama||'—'}</td>
       <td style="font-weight:600">${
         f.paraBirimi==='tl'?'₺'+(f.tutarTl||f.tutar||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):
         f.paraBirimi==='usd'?'$'+(f.tutar||0).toLocaleString('tr-TR',{minimumFractionDigits:2}):

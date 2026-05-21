@@ -3858,7 +3858,7 @@ function fToplamHesapla(){
 
 function teklifNoOlustur(){
   const yil=new Date().getFullYear();
-  const teklifler=ST.faturalar.filter(f=>f.tip==='Teklif'&&f.no&&f.no.startsWith('TKF-'+yil));
+  const teklifler=ST.faturalar.filter(f=>(f.tip==='Teklif'||f.tip==='Servis Teklifi')&&f.no&&f.no.startsWith('TKF-'+yil));
   const sonNo=teklifler.reduce((max,f)=>{const n=parseInt((f.no.split('-')[2])||0);return n>max?n:max;},0);
   return `TKF-${yil}-${String(sonNo+1).padStart(3,'0')}`;
 }
